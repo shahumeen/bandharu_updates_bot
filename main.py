@@ -11,7 +11,7 @@ import os
 from dotenv import load_dotenv
 from utils import update_db_with_api
 from command_handlers import *
-from send_messages import notify_job, daily_stats
+from send_messages import notify_job
 
 load_dotenv()
 TOKEN = os.getenv("BOT_API")
@@ -46,7 +46,8 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("settings", settings))
     app.add_handler(CommandHandler("unsub", unsub))
     app.add_handler(CommandHandler("findchannel", findchannel))
-    app.add_handler(CommandHandler("islandstats", daily_stats))
+    app.add_handler(CommandHandler("islandstats", island_stats))
+    app.add_handler(CommandHandler("vesselstats", vessel_stats))
     # admin
     app.add_handler(CommandHandler("addchannel", addchannel))
     app.add_handler(CommandHandler("channelsubvessel", channelsubvessel))

@@ -156,17 +156,6 @@ def log_port_event(
     vessel.last_port_log_id = port_log.id
     vessel.save()
 
-    # def get_users_to_notify():
-    #     port_users = (
-    #         User.select().join(PortSubscription).where(PortSubscription.port == port)
-    #     )
-    #     vessel_users = (
-    #         User.select()
-    #         .join(VesselSubscription)
-    #         .where(VesselSubscription.vessel == vessel)
-    #     )
-    #     return port_users | vessel_users
-
     for user in get_users_to_notify_for_log(port_log):
         PortLogNotification.get_or_create(
             port_log=port_log,
