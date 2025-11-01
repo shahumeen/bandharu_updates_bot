@@ -50,8 +50,8 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("vesselstats", vessel_stats))
     # admin
     app.add_handler(CommandHandler("addchannel", addchannel))
-    app.add_handler(CommandHandler("channelsubvessel", channelsubvessel))
-    app.add_handler(CommandHandler("channelsubisland", channelsubisland))
+    app.add_handler(CommandHandler("channeladdvessel", channelsubvessel))
+    app.add_handler(CommandHandler("channeladdisland", channelsubisland))
 
     app.add_handler(CallbackQueryHandler(callback_handler))
 
