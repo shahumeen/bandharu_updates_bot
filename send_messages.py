@@ -174,8 +174,8 @@ def _format_male_departure(vessel_id: int, dict: dict, user: User):
             return None
 
         contact = (
-            f"\n📞 *Contact:*{dict[vessel_id]["contact"]}"
-            if dict[vessel_id]["contact"]
+            f"\n📞 *Contact:*{dict[vessel_id]['contact']}"
+            if dict[vessel_id]['contact']
             else ""
         )
         departure_time = _fmt_time(last_departure.timestamp)
@@ -222,7 +222,7 @@ async def arrival_notify(arrivals, context, user: User):
 
     for v in arrivals:
         contact = (
-            f"\n📞 *Contact:*{arrivals[v]["contact"]}" if arrivals[v]["contact"] else ""
+            f"\n📞 *Contact:*{arrivals[v]['contact']}" if arrivals[v]['contact'] else ""
         )
 
         island = (
@@ -315,8 +315,8 @@ async def departures_notify(departures, context, user: User):
             contact = f"\n📞 *Contact:* {contact}"
 
         contact = (
-            f"\n📞 *Contact:*{departures[v]["contact"]}"
-            if departures[v]["contact"]
+            f"\n📞 *Contact:*{departures[v]['contact']}"
+            if departures[v]['contact']
             else ""
         )
         port_name = (
