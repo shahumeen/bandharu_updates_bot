@@ -386,7 +386,7 @@ async def notify_job(context):
     )
 
     # 1) Refresh DB from API
-    update_db_with_api(FOLLOWME_API_KEY)
+    # update_db_with_api(FOLLOWME_API_KEY)
 
     # 2) Collect all un-notified port logs grouped as arrivals/departures
     updates = all_notify()

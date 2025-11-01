@@ -36,7 +36,7 @@ if __name__ == "__main__":
     print("Starting the bot...")
     midnight_mle = dtime(0, 0, tzinfo=ZoneInfo("Indian/Maldives"))
     # app.job_queue.run_once(daily_stats, when=timedelta(seconds=10), name="daily stats")
-    app.job_queue.run_repeating(notify_job, interval=60, first=3.0)
+    app.job_queue.run_repeating(notify_job, interval=15, first=3.0)
 
     # Command handlers
     # users
