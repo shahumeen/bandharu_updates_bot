@@ -17,8 +17,6 @@ from models import (
     PortLog,
     PortLogNotification,
 )
-
-from stats_calculator import get_daily_port_stats
 from utils import _seconds_between, _format_duration
 from models import Vessel
 

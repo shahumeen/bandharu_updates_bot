@@ -8,59 +8,6 @@ def mv_time():
     return datetime.now(ZoneInfo("Indian/Maldives"))
 
 
-def get_users_to_notify_for_log(port_log: PortLog):
-    """Get the list of users who should be notified about a port log entry."""
-    port = port_log.port
-    vessel = port_log.vessel
-
-    # 1) Users who are subscribed to this vessel AND have either:
-    #    - a subscription to this specific port, or
-    #    - no port subscriptions at all
-    vessel_users = (
-        User.select()
-        .join(VesselSubscription)
-        .where(
-            (VesselSubscription.vessel == vessel)
-            & (
-                # Either user has this port in their subscriptions
-                (
-                    PortSubscription.select()
-                    .where(
-                        (PortSubscription.user == User)
-                        & (PortSubscription.port == port)
-                    )
-                    .exists()
-                )
-                |
-                # Or user has no port subscriptions at all
-                ~(
-                    PortSubscription.select()
-                    .where(PortSubscription.user == User)
-                    .exists()
-                )
-            )
-        )
-        .distinct()
-    )
-
-    # 2) Chats with main_port set to this port (additional notifications)
-    # Note: Only groups can set main_port so no need to check chat_type
-    group_main_port_users = User.select().where(User.main_port == port)
-
-    # Combine all recipients, deduplicate by chat_id
-    unique = {}
-
-    # Add vessel subscribers (with matching port or no port subscriptions)
-    for u in vessel_users:
-        unique[u.chat_id] = u
-
-    # Add group chats with matching main_port
-    for u in group_main_port_users:
-        unique[u.chat_id] = u
-
-    return list(unique.values())
-
-
 # If a vessel just arrived, ignore a transient 'departure' for this many seconds
 PORT_EVENT_HYSTERESIS_SECONDS = 120
 
@@ -441,6 +388,69 @@ def get_user_subscriptions(chat_id: int) -> dict:
         for vs in VesselSubscription.select().where(VesselSubscription.user == user)
     ]
     return {"ports": ports, "vessels": vessels}
+
+
+def get_users_to_notify_for_log(port_log: PortLog):
+    """Get the list of users who should be notified about a port log entry."""
+    port = port_log.port
+    vessel = port_log.vessel
+
+    # 1) Users who are subscribed to this vessel AND either:
+    #    - have a subscription to this specific port, or
+    #    - have no subscriptions at all
+    vessel_users = (
+        User.select()
+        .join(VesselSubscription)
+        .where(
+            (VesselSubscription.vessel == vessel)
+            & (
+                # User has this port in their subscriptions
+                (
+                    PortSubscription.select()
+                    .where(
+                        (PortSubscription.user == User)
+                        & (PortSubscription.port == port)
+                    )
+                    .exists()
+                )
+                |
+                # OR they have no port subscriptions at all AND this is their subscribed vessel
+                (
+                    ~(
+                        PortSubscription.select()
+                        .where(PortSubscription.user == User)
+                        .exists()
+                    )
+                    & (
+                        VesselSubscription.select()
+                        .where(
+                            (VesselSubscription.user == User)
+                            & (VesselSubscription.vessel == vessel)
+                        )
+                        .exists()
+                    )
+                )
+            )
+        )
+        .distinct()
+    )
+
+    # 2) Chats with main_port set to this port (additional notifications)
+    # Note: Only groups can set main_port so no need to check chat_type
+    group_main_port_users = User.select().where(User.main_port == port)
+
+    # Combine all recipients, deduplicate by chat_id
+    unique = {}
+
+    # Add vessel subscribers (with matching port or no port subscriptions)
+    for u in vessel_users:
+        unique[u.chat_id] = u
+
+    # Add group chats with matching main_port
+    for u in group_main_port_users:
+        unique[u.chat_id] = u
+
+    return list(unique.values())
 
 
 if __name__ == "__main__":
