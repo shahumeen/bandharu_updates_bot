@@ -1,0 +1,337 @@
+import requests
+import json
+from bs4 import BeautifulSoup
+from datetime import datetime
+from telegram.helpers import escape_markdown
+import re
+from model_helpers import (
+    create_port,
+    initialize_db,
+    create_vessel,
+    update_port_logs,
+    PortLog,
+    Vessel,
+    PortLogNotification,
+    User,
+)
+
+
+def _to_datetime(ts):
+    if ts is None:
+        return None
+    if isinstance(ts, datetime):
+        return ts
+    try:
+        # Try ISO-style parsing first
+        return datetime.fromisoformat(str(ts))
+    except Exception:
+        # Give up and return None — callers will handle None
+        return None
+
+
+def _seconds_between(new_ts, old_ts):
+    """Return seconds between two timestamps or None on failure.
+
+    Handles datetime objects and ISO-like strings. If tz-awareness mismatches
+    (naive vs aware) we fallback to comparing naive times by dropping tzinfo.
+    """
+    n = _to_datetime(new_ts)
+    o = _to_datetime(old_ts)
+    if not n or not o:
+        return None
+    try:
+        return (n - o).total_seconds()
+    except TypeError:
+        # likely naive vs aware mismatch — try comparing naive datetimes
+        try:
+            return (n.replace(tzinfo=None) - o.replace(tzinfo=None)).total_seconds()
+        except Exception:
+            return None
+    except Exception:
+        return None
+
+
+def _format_duration(seconds: float | None) -> str | None:
+    """Format seconds into 'HhMm' or 'Mm' without seconds (floor to minutes)."""
+    if seconds is None:
+        return None
+    try:
+        minutes = int(seconds) // 60
+    except Exception:
+        return None
+    hours = minutes // 60
+    mins = minutes % 60
+    days = hours // 24
+    hours = hours % 24
+
+    parts: list[str] = []
+    if days > 0:
+        parts.append(f"{days}d")
+    if hours > 0:
+        parts.append(f"{hours}h")
+    if mins > 0:
+        parts.append(f"{mins}m")
+
+    # If all units are zero (duration < 60s), show '0m'
+    if not parts:
+        return "0m"
+
+    return " ".join(parts)
+
+
+def _fmt_time(ts):
+    try:
+        if hasattr(ts, "strftime"):
+            return ts.strftime("%H:%M")
+        s = str(ts)
+        if " " in s:
+            return s.split()[1][:5]
+        return s
+    except Exception:
+        return "Unknown"
+
+
+def _format_male(vessel_id: int, dict: dict, user: User):
+    """Format arrival message for Male' with special focus on transit from user's main port.
+
+    Args:
+        vessel_id: ID of the arriving vessel
+        dict: Dictionary containing vessel arrival info
+        user: User object to get their main_port for transit calculation
+
+    Returns:
+        Formatted message string if transit info available, None otherwise
+    """
+    # Only proceed if user has a main port set
+    if not user.main_port:
+        return None
+
+    vessel = Vessel.get_by_id(vessel_id)
+    if not vessel:
+        return None
+
+    # Get the last departure from user's main port
+    try:
+        last_departure = (
+            PortLog.select()
+            .where(
+                PortLog.vessel == vessel_id,
+                PortLog.port == user.main_port,
+                PortLog.event == "departure",
+            )
+            .order_by(PortLog.timestamp.desc())
+            .first()
+        )
+
+        if not last_departure:
+            return None
+
+        # Calculate transit time using helper functions
+        transit_seconds = _seconds_between(
+            dict["arrival_time"], last_departure.timestamp
+        )
+        transit_time = _format_duration(transit_seconds)
+        departure_time = _fmt_time(last_departure.timestamp)
+        last_port_name = user.main_port.name
+
+        # Escape special characters for Markdown
+        vessel_name = escape_markdown(dict[vessel_id], version=2)
+        port_name = escape_markdown(dict["port_name"], version=2)
+        vessel_type = escape_markdown(vessel.vessel_type or "Unknown", version=2)
+        last_port = escape_markdown(last_port_name, version=2)
+        departure = escape_markdown(departure_time, version=2)
+        transit = escape_markdown(transit_time or "Unknown", version=2)
+        hashtag = re.sub("[^0-9a-zA-Z]+", "", vessel.name).lower()
+
+        # Format the message
+        formatted_response = f"""
+🔵⚓*[{vessel_name}](m.followme.mv/public/?id={vessel_id}) ARRIVED MAALE*⚓
+━━━━━━━━━━━━━━━━━━━━━━━
+📍 *Location:* {port_name}
+⏱️ *Arrival Time:* {_fmt_time(dict['arrival_time'])}
+📋 *Type:* {vessel_type}
+
+📅 *Departed {last_port}:* {departure}
+⏳ *Transit Time:* {transit}
+━━━━━━━━━━━━━━━━━━━━━━━
+_\\#{hashtag}_
+_\\#malearrival_
+"""
+        return formatted_response
+
+    except Exception as e:
+        print(f"Error formatting Male message: {str(e)}")
+        return None
+
+
+def api_request(api_key):
+    url = f"https://followme.mv/api/v4/public/{api_key}"
+    api_req = requests.get(url).text
+
+    # converts api data to python dictionary
+    all_vessels_dict = json.loads(
+        BeautifulSoup(api_req, features="html.parser").find("body").get_text()
+    )
+
+    return all_vessels_dict["data"]
+
+
+def update_port_info(api_data):
+    for vessel in api_data:
+        name = api_data[vessel]["port"]
+        if name == "":
+            continue
+        else:
+            create_port(name)
+
+
+def update_vessel_info(api_data):
+    for vessel in api_data:
+        name = api_data[vessel]["name"]
+        vessel_type = api_data[vessel]["type"]
+        create_vessel(vessel, name, vessel_type)
+
+
+def all_notify() -> dict:
+    """
+    Inspect the last 50 PortLog entries across all ports and return a dict
+    of un-notified logs with vessel info.
+
+    Returns a dict with 'arrivals' and 'departures' keys. Each value is a dict
+    keyed by PortLog.id with the same structure as notify():
+      - portlog_id, vessel_id, name, vessel_type, contact, last_port_name,
+        event, timestamp, transit_time
+
+    For arrivals, also includes:
+      - departed: the time the vessel left its previous port (if known)
+
+    For departures, also includes:
+      - stay_time: how long the vessel stayed at this port
+    """
+
+    arrivals: dict = {}
+    departures: dict = {}
+
+    # Get last 50 un-notified logs across all ports
+    query = (
+        PortLog.select()
+        .where(PortLog.notified == False)  # noqa: E712
+        .order_by(PortLog.timestamp.desc())
+        .limit(50)
+    )
+
+    for log in query:
+        if not log.notified:
+            vessel = log.vessel
+
+            # Find previous log for this vessel
+            prev_log = (
+                PortLog.select()
+                .where((PortLog.vessel == vessel) & (PortLog.timestamp < log.timestamp))
+                .order_by(PortLog.id.desc())
+                .first()
+            )
+
+            if log.event == "arrival":
+                transit_seconds = None
+                departed_str = None
+                if prev_log:
+                    # Calculate transit time from previous log (robust)
+                    transit_seconds = _seconds_between(
+                        log.timestamp, prev_log.timestamp
+                    )
+
+                    # Format departure time if previous log exists
+                    try:
+                        prev_ts = prev_log.timestamp
+                        now = datetime.now()
+                        if prev_ts.date() == now.date():
+                            departed_str = prev_ts.strftime("%H:%M")
+                        else:
+                            departed_str = prev_ts.strftime("%d %b %H:%M")
+                    except Exception:
+                        try:
+                            departed_str = prev_log.timestamp.replace(
+                                microsecond=0
+                            ).isoformat()
+                        except Exception:
+                            departed_str = str(prev_log.timestamp)
+
+                arrivals[log.id] = {
+                    "portlog_id": log.id,
+                    "vessel_id": vessel.id,
+                    "name": vessel.name,
+                    "vessel_type": vessel.vessel_type,
+                    "contact": vessel.contact,
+                    "port_name": log.port.name,
+                    "last_port_name": prev_log.port.name if prev_log else None,
+                    "event": log.event,
+                    "timestamp": log.timestamp,
+                    "transit_time": _format_duration(transit_seconds),
+                    "departed": departed_str,
+                }
+
+            elif log.event == "departure":
+                # Calculate stay duration if we have a previous arrival at this port
+                stay_seconds = None
+                if prev_log and prev_log.event == "arrival":
+                    try:
+                        if prev_log.port.id == log.port.id:
+                            stay_seconds = _seconds_between(
+                                log.timestamp, prev_log.timestamp
+                            )
+                    except Exception:
+                        stay_seconds = None
+
+                departures[log.id] = {
+                    "portlog_id": log.id,
+                    "vessel_id": vessel.id,
+                    "name": vessel.name,
+                    "vessel_type": vessel.vessel_type,
+                    "contact": vessel.contact,
+                    "port_name": log.port.name,
+                    "last_port_name": log.port.name,
+                    "event": log.event,
+                    "timestamp": log.timestamp,
+                    "stay_time": _format_duration(stay_seconds),
+                }
+
+    return {
+        "arrivals": arrivals,
+        "departures": departures,
+    }
+
+
+def update_db_with_api(api_key: str, bot_start: bool = False):
+    initialize_db()
+
+    all_vessels = api_request(api_key)
+    update_port_info(all_vessels)
+    update_vessel_info(all_vessels)
+    # Check if this is initial sync by seeing if we have any port logs
+    is_initial = PortLog.select().count() == 0 or bot_start
+    if bot_start:
+        PortLogNotification.update(sent=True).execute()
+        print("Bot start: Port logs set to sent")
+    update_port_logs(all_vessels, is_initial_sync=is_initial)
+    return True
+
+
+def all_ports(api_key: str):
+    initialize_db()
+    # Ensure that any existing historical port logs are marked as notified
+    # when the bot starts. This prevents the bot from re-sending notifications
+    # for events that occurred before this process started.
+    try:
+        PortLog.update(notified=True).execute()
+    except Exception:
+        # If the DB update fails for any reason, continue — it's non-fatal.
+        pass
+    all_vessels = api_request(api_key)
+    update_port_info(all_vessels)
+    update_vessel_info(all_vessels)
+    # Check if this is initial sync by seeing if we have any port logs
+    is_initial = PortLog.select().count() == 0
+    update_port_logs(all_vessels, is_initial_sync=is_initial)
+
+    return all_notify()

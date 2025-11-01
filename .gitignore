@@ -1,0 +1,8 @@
+old/
+vessels_bot.db
+.venv/
+__pycache__/
+.env
+vessels_bot.db-shm
+vessels_bot.db-wal
+api_sample.json
