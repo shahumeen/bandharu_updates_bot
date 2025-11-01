@@ -115,7 +115,7 @@ def _format_male_arrival(vessel_id: int, dict: dict, user: User):
             _fmt_time(dict["arrival_time"]) or "Unknown", version=2
         )
         arrival_time = escape_markdown(transit_time or "Unknown", version=2)
-        hashtag = re.sub("[^0-9a-zA-Z]+", "", vessel.name).lower()
+        hashtag = re.sub(r"[^0-9a-zA-Z]+", "", vessel.name).lower()
 
         # Format the message
         formatted_response = f"""
@@ -197,7 +197,7 @@ def _format_male_departure(vessel_id: int, dict: dict, user: User):
             ),
             version=2,
         )
-        hashtag = re.sub("[^0-9a-zA-Z]+", "", vessel.name).lower()
+        hashtag = re.sub(r"[^0-9a-zA-Z]+", "", vessel.name).lower()
 
         # Format the message
         formatted_response = f"""
@@ -239,9 +239,9 @@ async def arrival_notify(arrivals, context, user: User):
         vessel_type = escape_markdown(
             arrivals[v]["vessel_type"] or "Unknown", version=2
         )
-        hashtag = re.sub("[^0-9a-zA-Z]+", "", arrivals[v]["name"]).lower()
+        hashtag = re.sub(r"[^0-9a-zA-Z]+", "", arrivals[v]["name"]).lower()
         port_hashtag = (
-            f'_\\#{re.sub("[^0-9a-zA-Z]+", "", arrivals[v]["port_name"])}_\n'
+            f'_\\#{re.sub(r"[^0-9a-zA-Z]+", "", arrivals[v]["port_name"])}_\n'
             if user.chat_type == "private"
             else ""
         )
@@ -336,9 +336,9 @@ async def departures_notify(departures, context, user: User):
         vessel_type = escape_markdown(
             departures[v]["vessel_type"] or "Unknown", version=2
         )
-        hashtag = re.sub("[^0-9a-zA-Z]+", "", departures[v]["name"]).lower()
+        hashtag = re.sub(r"[^0-9a-zA-Z]+", "", departures[v]["name"]).lower()
         port_hashtag = (
-            f'_\\#{re.sub("[^0-9a-zA-Z]+", "", departures[v]["port_name"])}_\n'
+            f'_\\#{re.sub(r"[^0-9a-zA-Z]+", "", departures[v]["port_name"])}_\n'
             if user.chat_type == "private"
             else ""
         )
