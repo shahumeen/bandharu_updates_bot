@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
-from collections import defaultdict, Counter
-from typing import Dict, List, Tuple
+from collections import defaultdict
 from model_helpers import Port, PortLog, Vessel, mv_time
 
 

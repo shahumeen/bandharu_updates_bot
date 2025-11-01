@@ -2,17 +2,13 @@ import requests
 import json
 from bs4 import BeautifulSoup
 from datetime import datetime
-from telegram.helpers import escape_markdown
-import re
 from model_helpers import (
     create_port,
     initialize_db,
     create_vessel,
     update_port_logs,
     PortLog,
-    Vessel,
     PortLogNotification,
-    User,
 )
 
 

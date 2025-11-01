@@ -3,11 +3,6 @@ import requests
 from model_helpers import Vessel
 import json
 
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
 
 def update_contacts(update_all: bool = False):
     """Update contact information for vessels in the database.

@@ -1,5 +1,3 @@
-from telegram import Update
-from telegram.ext import ContextTypes
 from telegram.helpers import escape_markdown
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -11,12 +9,13 @@ from utils import (
     all_notify,
 )
 from model_helpers import (
-    User,
-    Port,
-    PortLog,
-    PortLogNotification,
     update_notified,
     get_users_to_notify_for_log,
+)
+from models import (
+    User,
+    PortLog,
+    PortLogNotification,
 )
 
 from stats_calculator import get_daily_port_stats
