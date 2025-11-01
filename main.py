@@ -25,15 +25,15 @@ app = (
     .build()
 )
 
-print("initial call initiated")
+print("initial call initiated", flush=True)
 update_db_with_api(
     api_key=FOLLOWME_API_KEY, bot_start=True
 )  # to ensure no notifiactions at bot start
-print("initial call finished")
+print("initial call finished", flush=True)
 
 
 if __name__ == "__main__":
-    print("Starting the bot...")
+    print("Starting the bot...", flush=True)
     midnight_mle = dtime(0, 0, tzinfo=ZoneInfo("Indian/Maldives"))
     # app.job_queue.run_once(daily_stats, when=timedelta(seconds=10), name="daily stats")
     app.job_queue.run_repeating(notify_job, interval=15, first=3.0)

@@ -14,7 +14,7 @@ def update_contacts(update_all: bool = False):
 
     for vessel in all_vessels:
         if not update_all and vessel.contact != None:
-            print(f"Skipped: {vessel.name} | {vessel.contact}")
+            print(f"Skipped: {vessel.name} | {vessel.contact}", flush=True)
             continue
 
         try:
@@ -32,11 +32,11 @@ def update_contacts(update_all: bool = False):
                 old_contact = vessel.contact
                 vessel.contact = contact
                 vessel.save()
-                print(f"Updated contact for {vessel.name}: {old_contact} -> {contact}")
+                print(f"Updated contact for {vessel.name}: {old_contact} -> {contact}", flush=True)
             else:
-                print(f"No contact info for {vessel.name}")
+                print(f"No contact info for {vessel.name}", flush=True)
         except Exception as e:
-            print(f"Error getting contact for vessel {vessel.id}: {e}")
+            print(f"Error getting contact for vessel {vessel.id}: {e}", flush=True)
 
 
 def save_to_json():
@@ -71,7 +71,7 @@ def load_contacts_from_file():
 
         except:
             # Handle any rare race-condition insert errors
-            print(f"Error for vessel: {vessel_id}")
+            print(f"Error for vessel: {vessel_id}", flush=True)
 
 
 if __name__ == "__main__":

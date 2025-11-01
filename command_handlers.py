@@ -902,7 +902,7 @@ async def send_port_stats(context, chat_id, port_id):
     )
 
     formatted_response = f"{highlights}\n{vessel_rankings}{peak_hours}{daily_totals}"
-    print(formatted_response)
+    print(formatted_response, flush=True)
     await context.bot.send_message(
         chat_id=chat_id,
         text=formatted_response,

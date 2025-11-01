@@ -134,7 +134,7 @@ _\\#malearrival_
         return formatted_response
 
     except Exception as e:
-        print(f"Error formatting Male message: {str(e)}")
+        print(f"Error formatting Male message: {str(e)}", flush=True)
         return None
 
 
@@ -213,7 +213,7 @@ _\\#maledeparture_
         return formatted_response
 
     except Exception as e:
-        print(f"Error formatting Male message: {str(e)}")
+        print(f"Error formatting Male message: {str(e)}", flush=True)
         return None
 
 
@@ -232,7 +232,6 @@ async def arrival_notify(arrivals, context, user: User):
         )
 
         vessel_name = escape_markdown(arrivals[v]["name"].upper(), version=2)
-        print(vessel_name)
         arrival_time = escape_markdown(
             _fmt_time(arrivals[v].get("timestamp")), version=2
         )
@@ -299,7 +298,10 @@ _\\#{hashtag}_
             f"name:{vessel_name} | type:{vessel_type}\ndepart-time:{arrival_time}\ncontact{contact}\n\n"
         )
         update_notified(user, arrivals[v]["portlog_id"])
-        print(f"{arrivals[v]['portlog_id']} | status updated to notified for {chat_id}")
+        print(
+            f"{arrivals[v]['portlog_id']} | status updated to notified for {chat_id}",
+            flush=True,
+        )
 
 
 async def departures_notify(departures, context, user: User):
@@ -370,19 +372,22 @@ _\\#{hashtag}_
         )
 
         print(
-            f"name:{vessel_name} | type:{vessel_type}\ndepart-time:{departure_time} | stayed:{port_stay} | contact{contact}\n\n"
+            f"name:{vessel_name} | type:{vessel_type}\ndepart-time:{departure_time} | stayed:{port_stay} | contact{contact}\n\n",
+            flush=True,
         )
 
         update_notified(user, departures[v]["portlog_id"])
         print(
-            f"{departures[v]['portlog_id']} | status updated to notified for {chat_id}"
+            f"{departures[v]['portlog_id']} | status updated to notified for {chat_id}",
+            flush=True,
         )
 
 
 async def notify_job(context):
 
     print(
-        f"{datetime.now(ZoneInfo('Europe/Istanbul')).replace(microsecond=0)} Updating started!\n"
+        f"{datetime.now(ZoneInfo('Europe/Istanbul')).replace(microsecond=0)} Updating started!\n",
+        flush=True,
     )
 
     # 1) Refresh DB from API
@@ -448,6 +453,7 @@ async def notify_job(context):
                 pass
 
     print(
-        f"{datetime.now(ZoneInfo('Europe/Istanbul')).replace(microsecond=0)} Done Updating!\n"
+        f"{datetime.now(ZoneInfo('Europe/Istanbul')).replace(microsecond=0)} Done Updating!\n",
+        flush=True,
     )
-    print("_" * 50 + "\n")
+    print("_" * 50 + "\n", flush=True)

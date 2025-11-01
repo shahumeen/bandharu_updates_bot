@@ -454,5 +454,5 @@ def get_users_to_notify_for_log(port_log: PortLog):
 
 
 if __name__ == "__main__":
-    print(mv_time())
+    print(mv_time(), flush=True)
     initialize_db()
