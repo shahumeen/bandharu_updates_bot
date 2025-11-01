@@ -59,8 +59,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = (
         "Hello! Welcome to the Vessel Update Bot.\n\n"
-        "Use /subisland <name> to subscribe to island/port updates.\n"
-        "Use /subvessel <name or id> to subscribe to a vessel.\n"
+        "Use /addisland <name> to subscribe to island/port updates.\n"
+        "Use /addvessel <name or id> to subscribe to a vessel.\n"
         "Use /settings to see your subscriptions."
     )
     await context.bot.send_message(chat_id=chat_id, text=text)

@@ -5,3 +5,4 @@ __pycache__/
 vessels_bot.db-shm
 vessels_bot.db-wal
 api_sample.json
+pyproject.toml
