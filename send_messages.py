@@ -61,33 +61,33 @@ def _fmt_time(ts):
         return "Unknown"
 
 
-def _format_male_arrival(vessel_id: int, dict: dict, user: User):
-    """Format arrival message for Male' with special focus on transit from user's main port.
+def _format_male_arrival(event: dict, user: User):
+    """Format Male' arrival message focusing on transit from the user's main port.
 
-    Args:
-        vessel_id: ID of the arriving vessel
-        dict: Dictionary containing vessel arrival info
-        user: User object to get their main_port for transit calculation
-
-    Returns:
-        Formatted message string if transit info available, None otherwise
+    Expects a single event payload with keys from utils.all_notify()['arrivals'][id].
     """
     # Only proceed if user has a main port set
     if not user.main_port:
         return None
 
-    vessel = Vessel.get_by_id(int(vessel_id))
+    try:
+        vessel_id = int(event.get("vessel_id"))
+    except Exception:
+        return None
+
+    # Be tolerant if vessel is missing in DB
+    vessel = Vessel.get_or_none(Vessel.id == vessel_id)
     if not vessel:
         return None
 
-    # Get the last departure from user's main port
     try:
+        # Last departure from the user's main port
         last_departure = (
             PortLog.select()
             .where(
-                PortLog.vessel == vessel_id,
-                PortLog.port == user.main_port,
-                PortLog.event == "departure",
+                (PortLog.vessel == vessel_id)
+                & (PortLog.port == user.main_port)
+                & (PortLog.event == "departure")
             )
             .order_by(PortLog.timestamp.desc())
             .first()
@@ -96,27 +96,24 @@ def _format_male_arrival(vessel_id: int, dict: dict, user: User):
         if not last_departure:
             return None
 
-        # Calculate transit time using helper functions
+        # Calculate transit from user's main port departure to this arrival
         transit_seconds = _seconds_between(
-            dict["arrival_time"], last_departure.timestamp
+            event.get("timestamp"), last_departure.timestamp
         )
-        transit_time = _format_duration(transit_seconds)
-        departure_time = _fmt_time(last_departure.timestamp)
-        last_port_name = user.main_port.name
+        transit_fmt = _format_duration(transit_seconds) or "Unknown"
+        arrival_time_fmt = _fmt_time(event.get("timestamp"))
+        departure_time_fmt = _fmt_time(last_departure.timestamp)
 
-        # Escape special characters for Markdown
-        vessel_name = escape_markdown(dict[vessel_id], version=2)
-        port_name = escape_markdown(dict["port_name"], version=2)
+        # Escape for MarkdownV2
+        vessel_name = escape_markdown(event.get("name", "Unknown"), version=2)
+        port_name = escape_markdown(event.get("port_name", "Unknown"), version=2)
         vessel_type = escape_markdown(vessel.vessel_type or "Unknown", version=2)
-        last_port = escape_markdown(last_port_name, version=2)
-        departure = escape_markdown(departure_time, version=2)
-        transit = escape_markdown(
-            _fmt_time(dict["arrival_time"]) or "Unknown", version=2
-        )
-        arrival_time = escape_markdown(transit_time or "Unknown", version=2)
+        last_port = escape_markdown(user.main_port.name, version=2)
+        departure = escape_markdown(departure_time_fmt, version=2)
+        arrival_time = escape_markdown(arrival_time_fmt or "Unknown", version=2)
+        transit = escape_markdown(transit_fmt, version=2)
         hashtag = re.sub(r"[^0-9a-zA-Z]+", "", vessel.name).lower()
 
-        # Format the message
         formatted_response = f"""
 🔵⚓*[{vessel_name}](m.followme.mv/public/?id={vessel_id}) ARRIVED MALE*⚓
 ━━━━━━━━━━━━━━━━━━━━━━━
@@ -131,39 +128,33 @@ _\\#{hashtag}_
 _\\#malearrival_
 """
         return formatted_response
-
     except Exception as e:
         print(f"Error formatting Male message: {str(e)}", flush=True)
         return None
 
 
-def _format_male_departure(vessel_id: int, dict: dict, user: User):
-    """Format arrival message for Male' with special focus on transit from user's main port.
-
-    Args:
-        vessel_id: ID of the arriving vessel
-        dict: Dictionary containing vessel arrival info
-        user: User object to get their main_port for transit calculation
-
-    Returns:
-        Formatted message string if transit info available, None otherwise
-    """
-    # Only proceed if user has a main port set
+def _format_male_departure(event: dict, user: User):
+    """Format Male' departure message, including stay duration if available."""
     if not user.main_port:
         return None
 
-    vessel = Vessel.get_by_id(int(vessel_id))
+    try:
+        vessel_id = int(event.get("vessel_id"))
+    except Exception:
+        return None
+
+    vessel = Vessel.get_or_none(Vessel.id == vessel_id)
     if not vessel:
         return None
 
-    # Get the last departure from user's main port
     try:
+        # Last departure from user's main port (for context)
         last_departure = (
             PortLog.select()
             .where(
-                PortLog.vessel == vessel_id,
-                PortLog.port == user.main_port,
-                PortLog.event == "departure",
+                (PortLog.vessel == vessel_id)
+                & (PortLog.port == user.main_port)
+                & (PortLog.event == "departure")
             )
             .order_by(PortLog.timestamp.desc())
             .first()
@@ -172,33 +163,21 @@ def _format_male_departure(vessel_id: int, dict: dict, user: User):
         if not last_departure:
             return None
 
-        contact = (
-            f"\n📞 *Contact:*{dict[vessel_id]['contact']}"
-            if dict[vessel_id]['contact']
-            else ""
-        )
-        departure_time = _fmt_time(last_departure.timestamp)
-        last_port_name = user.main_port.name
+        contact_val = event.get("contact")
+        contact = f"\n📞 *Contact:*{contact_val}" if contact_val else ""
+
+        departure_time_fmt = _fmt_time(last_departure.timestamp)
 
         # Escape special characters for Markdown
-        vessel_name = escape_markdown(dict[vessel_id], version=2)
+        vessel_name = escape_markdown(event.get("name", "Unknown"), version=2)
         vessel_type = escape_markdown(vessel.vessel_type or "Unknown", version=2)
-        last_port = escape_markdown(last_port_name, version=2)
-        departure = escape_markdown(departure_time, version=2)
+        last_port = escape_markdown(user.main_port.name, version=2)
+        departure = escape_markdown(departure_time_fmt, version=2)
         stay_duration = escape_markdown(
-            _fmt_time(dict["stay_time"]) or "Unknown", version=2
-        )
-        departure_time = escape_markdown(
-            (
-                _fmt_time(dict[vessel_id].get("timestamp"))
-                if dict[vessel_id].get("timestamp")
-                else "Unknown"
-            ),
-            version=2,
+            (event.get("stay_time") or "Unknown"), version=2
         )
         hashtag = re.sub(r"[^0-9a-zA-Z]+", "", vessel.name).lower()
 
-        # Format the message
         formatted_response = f"""
 🟣⚓*[{vessel_name}](m.followme.mv/public/?id={vessel_id}) DEPARTED MALE*⚓
 ━━━━━━━━━━━━━━━━━━━━━━━
@@ -210,7 +189,6 @@ _\\#{hashtag}_
 _\\#maledeparture_
 """
         return formatted_response
-
     except Exception as e:
         print(f"Error formatting Male message: {str(e)}", flush=True)
         return None
@@ -283,7 +261,9 @@ _\\#{hashtag}_
 {port_hashtag}_\\#arrival_
 """
         if (arrivals[v]["port_name"] in male_ports_lst) and user.main_port:
-            formatted_response = _format_male_arrival(v, arrivals, user)
+            male_msg = _format_male_arrival(arrivals[v], user)
+            if male_msg:
+                formatted_response = male_msg
 
         chat_id = getattr(user, "chat_id", user)
         await context.bot.send_message(
@@ -360,7 +340,9 @@ _\\#{hashtag}_
 {port_hashtag}_\\#departure_
 """
         if (departures[v]["port_name"] in male_ports_lst) and user.main_port:
-            formatted_response = _format_male_departure(v, departures, user)
+            male_msg = _format_male_departure(departures[v], user)
+            if male_msg:
+                formatted_response = male_msg
 
         chat_id = getattr(user, "chat_id", user)
         await context.bot.send_message(
