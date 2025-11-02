@@ -4,6 +4,7 @@ from telegram.ext import (
 )
 from telegram.helpers import escape_markdown
 import re
+from peewee import JOIN
 from model_helpers import (
     Port,
     Vessel,
@@ -22,6 +23,10 @@ from stats_calculator import get_daily_port_stats
 
 load_dotenv()
 ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
+
+# Small helper for MarkdownV2 escaping
+def esc_md(value) -> str:
+    return escape_markdown(str(value), version=2)
 ### --- User command handlers ---
 
 
@@ -58,12 +63,21 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             pass
 
     text = (
-        "Hello! Welcome to the Vessel Update Bot.\n\n"
-        "Use /addisland <name> to subscribe to island/port updates.\n"
-        "Use /addvessel <name or id> to subscribe to a vessel.\n"
-        "Use /settings to see your subscriptions."
+        "*👋 Welcome to Vessel Updates*\n\n"
+        "Stay notified about islands and vessels you care about.\n\n"
+        "🧭 *Quick commands:*\n"
+        "• */addisland* <name> \- Subscribe to an island/port 🏝\n"
+        "• */addvessel* <name or id> \- Subscribe to a vessel ⛴\n"
+        "• */settings* \- View your subscriptions ⚙️\n"
+        "• */unsub* \- Manage and remove subscriptions 🔕\n"
+        "• */listchannels* \- List all available channels 📣\n"
+        "• */islandstats* <island> \- Today’s stats 📊\n"
+        "• */vesselstats* <vessel> \- Vessel stats (beta) 🧪\n\n"
+        "💡 Tip: Type part of a name, then pick from the list."
     )
-    await context.bot.send_message(chat_id=chat_id, text=text)
+    await context.bot.send_message(
+        chat_id=chat_id, text=text, parse_mode="MarkdownV2", disable_web_page_preview=True
+    )
 
 
 async def unrecognized_command(
@@ -71,7 +85,8 @@ async def unrecognized_command(
 ) -> None:
     """Handle any messages that are not commands."""
     await update.message.reply_text(
-        "Unrecognized command. Use /start to see available commands."
+        "🤖 I couldn’t recognize that. Try */start* for a list of commands.",
+        parse_mode="MarkdownV2",
     )
 
 
@@ -108,7 +123,14 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not context.args:
         await context.bot.send_message(
-            chat_id=chat_id, text="Usage: /subisland <island name>"
+            chat_id=chat_id,
+            text=(
+                "*🏝 Add an island*\n"
+                "Use: */addisland* <island name>\n"
+                "Example: */addisland* Male\n\n"
+                "Pro tip: You can type part of the name and I’ll show matches. 🔎"
+            ),
+            parse_mode="MarkdownV2",
         )
         return
 
@@ -121,7 +143,9 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not matches:
         await context.bot.send_message(
-            chat_id=chat_id, text=f"No ports found matching '{name}'."
+            chat_id=chat_id,
+            text=f"😕 No islands found matching ‘{esc_md(name)}’. Try a shorter part of the name.",
+            parse_mode="MarkdownV2",
         )
         return
 
@@ -137,7 +161,9 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # If only one match and already subscribed
     if len(matches) == 1 and matches[0].id in subbed_ports:
         await context.bot.send_message(
-            chat_id=chat_id, text=f"You are already subscribed to {matches[0].name}."
+            chat_id=chat_id,
+            text=f"🔔 You’re already subscribed to {esc_md(matches[0].name)}.",
+            parse_mode="MarkdownV2",
         )
         return
 
@@ -147,26 +173,31 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
         sub, created, err = subscribe_user_to_port(chat_id, port.id)
         if sub:
             await context.bot.send_message(
-                chat_id=chat_id, text=f"Subscribed to {port.name}."
+                chat_id=chat_id,
+                text=f"✅ Subscribed to {esc_md(port.name)}! You’ll get updates as they happen.",
+                parse_mode="MarkdownV2",
             )
         else:
             if err == "limit_reached":
                 await context.bot.send_message(
                     chat_id=chat_id,
-                    text="You have reached the maximum of 10 port subscriptions.",
+                    text="⚠️ You’ve reached the maximum of 10 island subscriptions. Remove one with */unsub* to add more.",
+                    parse_mode="MarkdownV2",
                 )
             else:
                 await context.bot.send_message(
-                    chat_id=chat_id, text=f"Failed to subscribe to {port.name}."
+                    chat_id=chat_id,
+                    text=f"❌ Failed to subscribe to {esc_md(port.name)}. Please try again shortly.",
+                    parse_mode="MarkdownV2",
                 )
         return
 
     # Show already subscribed ports first
     msg_parts = []
     if already_subbed:
-        msg_parts.append("Already subscribed to:")
+        msg_parts.append("*🔔 Already subscribed:*")
         for p in already_subbed:
-            msg_parts.append(f"- {p.name}")
+            msg_parts.append(f"• {esc_md(p.name)}")
 
     # Then show keyboard for available ones
     keyboard = []
@@ -177,16 +208,20 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not keyboard:
         # All matches are already subscribed
-        await context.bot.send_message(chat_id=chat_id, text="\n".join(msg_parts))
+        await context.bot.send_message(
+            chat_id=chat_id, text="\n".join(msg_parts), parse_mode="MarkdownV2"
+        )
         return
 
     msg = (
-        "\n".join(msg_parts + ["", "Available ports to subscribe:"])
+        "\n".join(msg_parts + ["", "*➕ Available islands to subscribe:*"])
         if msg_parts
-        else "Choose a port to subscribe:"
+        else "*➕ Choose an island to subscribe:*"
     )
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await context.bot.send_message(chat_id=chat_id, text=msg, reply_markup=reply_markup)
+    await context.bot.send_message(
+        chat_id=chat_id, text=msg, reply_markup=reply_markup, parse_mode="MarkdownV2"
+    )
 
 
 async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -222,7 +257,14 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not context.args:
         await context.bot.send_message(
-            chat_id=chat_id, text="Usage: /subvessel <vessel name or id>"
+            chat_id=chat_id,
+            text=(
+                "*⛴ Add a vessel*\n"
+                "Use: */addvessel* <vessel name or id>\n"
+                "Examples: */addvessel* Speed Star  |  */addvessel* 123\n\n"
+                "Tip: Try a keyword (e.g., ‘Star’) to see a list. 🔎"
+            ),
+            parse_mode="MarkdownV2",
         )
         return
 
@@ -237,31 +279,39 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         v = Vessel.get_or_none(Vessel.id == int(q))
         if not v:
             await context.bot.send_message(
-                chat_id=chat_id, text=f"Vessel with id {q} not found."
+                chat_id=chat_id,
+                text=f"😕 No vessel found with id {esc_md(q)}.",
+                parse_mode="MarkdownV2",
             )
             return
 
         if v.id in subbed_vessels:
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"You are already subscribed to {v.name} ({v.id}).",
+                text=f"🔔 You’re already subscribed to {esc_md(v.name)} \({v.id}\).",
+                parse_mode="MarkdownV2",
             )
             return
 
         sub, created, err = subscribe_user_to_vessel(chat_id, v.id)
         if sub:
             await context.bot.send_message(
-                chat_id=chat_id, text=f"Subscribed to vessel {v.name} ({v.id})."
+                chat_id=chat_id,
+                text=f"✅ Subscribed to {esc_md(v.name)} \({v.id}\)! I’ll keep you posted.",
+                parse_mode="MarkdownV2",
             )
         else:
             if err == "limit_reached":
                 await context.bot.send_message(
                     chat_id=chat_id,
-                    text="You have reached the maximum of 10 vessel subscriptions.",
+                    text="⚠️ You’ve reached the maximum of 10 vessel subscriptions. Use */unsub* to free a slot.",
+                    parse_mode="MarkdownV2",
                 )
             else:
                 await context.bot.send_message(
-                    chat_id=chat_id, text="Failed to subscribe to vessel."
+                    chat_id=chat_id,
+                    text="❌ Failed to subscribe to this vessel. Please try again.",
+                    parse_mode="MarkdownV2",
                 )
         return
 
@@ -277,7 +327,7 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not matches:
         await context.bot.send_message(
-            chat_id=chat_id, text=f"No vessels found matching '{q}'."
+            chat_id=chat_id, text=f"😕 No vessels found matching ‘{esc_md(q)}’. Try a shorter keyword.", parse_mode="MarkdownV2"
         )
         return
 
@@ -285,7 +335,8 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(matches) == 1 and matches[0].id in subbed_vessels:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"You are already subscribed to {matches[0].name} ({matches[0].id}).",
+            text=f"🔔 You’re already subscribed to {esc_md(matches[0].name)} \({matches[0].id}\).",
+            parse_mode="MarkdownV2",
         )
         return
 
@@ -295,53 +346,55 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         sub, created, err = subscribe_user_to_vessel(chat_id, v.id)
         if sub:
             await context.bot.send_message(
-                chat_id=chat_id, text=f"Subscribed to vessel {v.name} ({v.id})."
+                chat_id=chat_id,
+                text=f"✅ Subscribed to {esc_md(v.name)} \({v.id}\)!",
+                parse_mode="MarkdownV2",
             )
         else:
             if err == "limit_reached":
                 await context.bot.send_message(
                     chat_id=chat_id,
-                    text="You have reached the maximum of 10 vessel subscriptions.",
+                    text="⚠️ You’ve reached the maximum of 10 vessel subscriptions. Use */unsub* to remove one.",
+                    parse_mode="MarkdownV2",
                 )
             else:
                 await context.bot.send_message(
-                    chat_id=chat_id, text="Failed to subscribe to vessel."
+                    chat_id=chat_id, text="Failed to subscribe to vessel.", parse_mode="MarkdownV2"
                 )
         return
 
     # Show already subscribed vessels first
     msg_parts = []
     if already_subbed:
-        msg_parts.append("Already subscribed to:")
+        msg_parts.append("*🔔 Already subscribed:*")
         for v in already_subbed:
-            msg_parts.append(f"- {v.name} ({v.id})")
+            msg_parts.append(f"• {esc_md(v.name)} \({v.id}\)")
 
     # Then show keyboard for available ones
     keyboard = []
     for v in available:
         keyboard.append(
-            [
-                InlineKeyboardButton(
-                    f"{v.name} ({v.id})", callback_data=f"sub_vessel:{v.id}"
-                )
-            ]
+            [InlineKeyboardButton(f"{v.name}", callback_data=f"sub_vessel:{v.id}")]
         )
 
     if not keyboard:
         # All matches are already subscribed
-        await context.bot.send_message(chat_id=chat_id, text="\n".join(msg_parts))
+        await context.bot.send_message(
+            chat_id=chat_id, text="\n".join(msg_parts), parse_mode="MarkdownV2"
+        )
         return
 
     msg = (
-        "\n".join(msg_parts + ["", "Available vessels to subscribe:"])
+        "\n".join(msg_parts + ["", "*➕ Available vessels to subscribe:*"])
         if msg_parts
-        else "Choose a vessel to subscribe:"
+        else "*➕ Choose a vessel to subscribe:*"
     )
     reply_markup = InlineKeyboardMarkup(keyboard)
     await context.bot.send_message(
         chat_id=chat_id,
         text=msg,
         reply_markup=reply_markup,
+        parse_mode="MarkdownV2",
     )
 
 
@@ -355,20 +408,20 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     def esc(s):
         return escape_markdown(str(s), version=2)
 
-    lines = ["Your subscriptions:\n"]
+    lines = ["*🧾 Your subscriptions*:\n"]
     if port_list:
-        lines.append("Ports:")
+        lines.append("*🏝 Ports:*")
         for p in port_list:
-            lines.append(f" \\- {esc(p.name)}")
+            lines.append(f"• {esc(p.name)}")
     else:
-        lines.append("Ports: None")
+        lines.append("*🏝 Ports:* \- None")
 
     if vessel_list:
-        lines.append("\nVessels:")
+        lines.append("\n*⛴ Vessels:*")
         for v in vessel_list:
-            lines.append(f" \\- {esc(v.name)}")
+            lines.append(f"• {esc(v.name)}")
     else:
-        lines.append("\nVessels: None")
+        lines.append("\n*⛴ Vessels:* \- None")
 
     await context.bot.send_message(
         chat_id=chat_id, text="\n".join(lines), parse_mode="MarkdownV2"
@@ -388,7 +441,7 @@ async def unsub(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    f"Unsub {p.name}", callback_data=f"unsub_port:{p.id}"
+                    f"🔕 Unsubscribe {p.name}", callback_data=f"unsub_port:{p.id}"
                 )
             ]
         )
@@ -396,76 +449,29 @@ async def unsub(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    f"Unsub {v.name}", callback_data=f"unsub_vessel:{v.id}"
+                    f"🔕 Unsubscribe {v.name}", callback_data=f"unsub_vessel:{v.id}"
                 )
             ]
         )
 
     if not keyboard:
         await context.bot.send_message(
-            chat_id=chat_id, text="You have no subscriptions to unsubscribe."
+            chat_id=chat_id,
+            text="🔎 No active subscriptions found. Use */addisland* or */addvessel* to get started!",
+            parse_mode="MarkdownV2",
         )
         return
 
     reply_markup = InlineKeyboardMarkup(keyboard)
     await context.bot.send_message(
         chat_id=chat_id,
-        text="Choose a subscription to remove:",
+        text="*🔕 Choose a subscription to remove:*",
         reply_markup=reply_markup,
+        parse_mode="MarkdownV2",
     )
 
 
-async def findchannel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Search for a port and get its channel information if it exists.
-    Usage: /findchannel <port name>"""
-    chat = update.effective_chat
-    chat_id = chat.id
-
-    if not context.args:
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text="Usage: /findchannel <port name>\nExample: /findchannel Male",
-        )
-        return
-
-    port_name = " ".join(context.args).strip()
-
-    # Find matching ports
-    matches = list(Port.select().where(Port.name.contains(port_name)))
-
-    if not matches:
-        await context.bot.send_message(
-            chat_id=chat_id, text=f"No ports found matching '{port_name}'"
-        )
-        return
-
-    if len(matches) == 1:
-        port = matches[0]
-        channel = port.channel
-        if channel:
-            await context.bot.send_message(
-                chat_id=chat_id, text=f"Channel for {port.name}: @{channel.username}"
-            )
-        else:
-            await context.bot.send_message(
-                chat_id=chat_id,
-                text=f"No channel found for {port.name} :(\nPlease request @shahumeen to make a channel for {port.name}",
-            )
-    else:
-        # Show keyboard for multiple matches
-        keyboard = []
-        for p in matches:
-            keyboard.append(
-                [InlineKeyboardButton(p.name, callback_data=f"get_port_channel:{p.id}")]
-            )
-
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text=f"Multiple ports found matching '{port_name}'. Please select one:",
-            reply_markup=reply_markup,
-        )
-
+## findchannel removed per request
 
 async def channelsubvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Admin command to subscribe a channel to a vessel.
@@ -475,7 +481,7 @@ async def channelsubvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if int(chat_id) != int(ADMIN_CHAT_ID):
         await context.bot.send_message(
-            chat_id=chat_id, text="This command can only be used by admin"
+            chat_id=chat_id, text="⛔️ This command can only be used by admin"
         )
         return
 
@@ -495,7 +501,7 @@ async def channelsubvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not channel:
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"Channel @{channel_username} not found. Please add it first using /addchannel",
+                text=f"😕 Channel @{channel_username} not found. Please add it first using /addchannel",
             )
             return
 
@@ -508,7 +514,7 @@ async def channelsubvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if not matches:
             await context.bot.send_message(
-                chat_id=chat_id, text=f"No vessels found matching '{vessel_name}'."
+                chat_id=chat_id, text=f"😕 No vessels found matching '{vessel_name}'."
             )
             return
 
@@ -516,7 +522,7 @@ async def channelsubvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if len(matches) == 1 and matches[0].id in subbed_vessels:
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"Channel @{channel_username} is already subscribed to {matches[0].name} ({matches[0].id}).",
+                text=f"🔔 Channel @{channel_username} is already subscribed to {matches[0].name} ({matches[0].id}).",
             )
             return
 
@@ -527,17 +533,17 @@ async def channelsubvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if sub:
                 await context.bot.send_message(
                     chat_id=chat_id,
-                    text=f"Channel @{channel_username} subscribed to vessel {v.name} ({v.id}).",
+                    text=f"✅ Channel @{channel_username} subscribed to vessel {v.name} ({v.id}).",
                 )
             else:
                 if err == "limit_reached":
                     await context.bot.send_message(
                         chat_id=chat_id,
-                        text="Channel has reached the maximum of 10 vessel subscriptions.",
+                        text="⚠️ Channel has reached the maximum of 10 vessel subscriptions.",
                     )
                 else:
                     await context.bot.send_message(
-                        chat_id=chat_id, text="Failed to subscribe channel to vessel."
+                        chat_id=chat_id, text="❌ Failed to subscribe channel to vessel."
                     )
             return
 
@@ -548,7 +554,7 @@ async def channelsubvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 keyboard.append(
                     [
                         InlineKeyboardButton(
-                            f"{v.name} ({v.id})",
+                            f"{v.name}",
                             callback_data=f"channel_sub_vessel:{channel.chat_id}:{v.id}",
                         )
                     ]
@@ -557,25 +563,98 @@ async def channelsubvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not keyboard:
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"Channel @{channel_username} is already subscribed to all matching vessels.",
+                text=f"🔔 Channel @{channel_username} is already subscribed to all matching vessels.",
             )
             return
 
         reply_markup = InlineKeyboardMarkup(keyboard)
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"Choose a vessel to subscribe channel @{channel_username} to:",
+            text=f"➕ Choose a vessel to subscribe channel @{channel_username} to:",
             reply_markup=reply_markup,
         )
 
     except ValueError:
         await context.bot.send_message(
             chat_id=chat_id,
-            text="Invalid channel username format",
+            text="❗️ Invalid channel username format",
         )
     except Exception as e:
-        await context.bot.send_message(chat_id=chat_id, text=f"Error: {str(e)}")
+        await context.bot.send_message(chat_id=chat_id, text=f"❌ Error: {str(e)}")
 
+
+async def listchannels(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """List all available channels. Optionally filter by @username or island name."""
+    chat = update.effective_chat
+    chat_id = chat.id
+
+    try:
+        # Optional filter: by island name or @username
+        q = " ".join(context.args).strip() if getattr(context, "args", None) else ""
+
+        # Base query: all channel users with optional left join to main port
+        base = (
+            User.select(User, Port)
+            .join(Port, JOIN.LEFT_OUTER, on=(User.main_port == Port.id))
+            .where((User.chat_type == "channel") & (User.username.is_null(False)))
+        )
+
+        if q:
+            if q.startswith("@"):
+                uq = q.lstrip("@")
+                base = base.where(User.username.contains(uq))
+                channel_users = base.order_by(User.username.asc(nulls="LAST"))
+            else:
+                # Search by island name if available
+                base = base.where(Port.name.contains(q))
+                channel_users = base.order_by(Port.name.asc(), User.username.asc(nulls="LAST"))
+        else:
+            # Default: list ALL channels alphabetically by username
+            channel_users = base.order_by(User.username.asc(nulls="LAST"))
+
+        if not channel_users:
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=(
+                    (
+                        f"📣 Channels matching {q}\n\n" if q else "📣 Available channels\n\n"
+                    )
+                    + ("🔎 No channels available yet." if not q else "🔎 No channels match your search.")
+                ),
+                disable_web_page_preview=True,
+            )
+            return
+
+        if q:
+            header = (
+                f"📣 Channels matching @{q.lstrip('@')}\n"
+                if q.startswith("@")
+                else f"📣 Channels for islands matching {q}\n"
+            )
+        else:
+            header = "📣 Available channels\n"
+
+        lines = [header]
+        for cu in channel_users:
+            port_name = cu.main_port.name if cu.main_port else "Unknown"
+            username = cu.username or ""
+            username_display = username.lstrip("@")
+            # Show channel list primarily; include island name if available
+            suffix = f" – {port_name}" if cu.main_port else ""
+            lines.append(f"• @{username_display}{suffix}")
+
+        text = "\n".join(lines)
+        # Do NOT set Markdown parse mode to keep @mentions clickable across all characters
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=text,
+            disable_web_page_preview=True,
+        )
+    except Exception as e:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=f"❌ Error fetching channels: {str(e)}",
+        )
 
 async def channelsubisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Admin command to subscribe a channel to a port/island.
@@ -585,7 +664,7 @@ async def channelsubisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if int(chat_id) != int(ADMIN_CHAT_ID):
         await context.bot.send_message(
-            chat_id=chat_id, text="This command can only be used by admin"
+            chat_id=chat_id, text="⛔️ This command can only be used by admin"
         )
         return
 
@@ -605,7 +684,7 @@ async def channelsubisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not channel:
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"Channel @{channel_username} not found. Please add it first using /addchannel",
+                text=f"😕 Channel @{channel_username} not found. Please add it first using /addchannel",
             )
             return
 
@@ -616,7 +695,7 @@ async def channelsubisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if not matches:
             await context.bot.send_message(
-                chat_id=chat_id, text=f"No ports found matching '{port_name}'."
+                chat_id=chat_id, text=f"😕 No islands found matching '{port_name}'."
             )
             return
 
@@ -635,18 +714,18 @@ async def channelsubisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if sub:
                 await context.bot.send_message(
                     chat_id=chat_id,
-                    text=f"Channel @{channel_username} subscribed to {port.name}.",
+                    text=f"✅ Channel @{channel_username} subscribed to {port.name}.",
                 )
             else:
                 if err == "limit_reached":
                     await context.bot.send_message(
                         chat_id=chat_id,
-                        text="Channel has reached the maximum of 10 port subscriptions.",
+                        text="⚠️ Channel has reached the maximum of 10 island subscriptions.",
                     )
                 else:
                     await context.bot.send_message(
                         chat_id=chat_id,
-                        text=f"Failed to subscribe channel to {port.name}.",
+                        text=f"❌ Failed to subscribe channel to {port.name}.",
                     )
             return
 
@@ -666,24 +745,24 @@ async def channelsubisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not keyboard:
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"Channel @{channel_username} is already subscribed to all matching ports.",
+                text=f"🔔 Channel @{channel_username} is already subscribed to all matching islands.",
             )
             return
 
         reply_markup = InlineKeyboardMarkup(keyboard)
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"Choose a port to subscribe channel @{channel_username} to:",
+            text=f"➕ Choose an island to subscribe channel @{channel_username} to:",
             reply_markup=reply_markup,
         )
 
     except ValueError:
         await context.bot.send_message(
             chat_id=chat_id,
-            text="Invalid channel username format",
+            text="❗️ Invalid channel username format",
         )
     except Exception as e:
-        await context.bot.send_message(chat_id=chat_id, text=f"Error: {str(e)}")
+        await context.bot.send_message(chat_id=chat_id, text=f"❌ Error: {str(e)}")
 
 
 async def addchannel(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -694,7 +773,7 @@ async def addchannel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if int(chat_id) != int(ADMIN_CHAT_ID):
         await context.bot.send_message(
-            chat_id=chat_id, text="This command can only be used by admin"
+            chat_id=chat_id, text="⛔️ This command can only be used by admin"
         )
         return
 
@@ -717,7 +796,7 @@ async def addchannel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if not matches:
             await context.bot.send_message(
-                chat_id=chat_id, text=f"No ports found matching '{port_name}'"
+                chat_id=chat_id, text=f"😕 No islands found matching '{port_name}'"
             )
             return
 
@@ -739,41 +818,84 @@ async def addchannel(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup = InlineKeyboardMarkup(keyboard)
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"Multiple ports found matching '{port_name}'. Please select one:",
+                text=f"🔎 Multiple islands found matching '{port_name}'. Please select one:",
                 reply_markup=reply_markup,
             )
             return
 
-        # Create or update the user
-        user, created = User.get_or_create(
-            chat_id=channel_id,
-            defaults={
-                "chat_type": "channel",
-                "username": channel_username,
-                "first_name": port_name,
-                "main_port": port,
-            },
-        )
+        # If a channel already exists for this port, update it; otherwise create/assign
+        existing_channel = port.channel
+        if existing_channel:
+            if existing_channel.chat_id == channel_id:
+                # Same channel record: update metadata
+                existing_channel.chat_type = "channel"
+                existing_channel.username = channel_username
+                existing_channel.first_name = port_name
+                existing_channel.main_port = port
+                existing_channel.save()
+                await context.bot.send_message(
+                    chat_id=chat_id,
+                    text=f"✅ Updated channel {channel_username} for island {port_name}",
+                )
+            else:
+                # Reassign to new channel_id: detach old, attach/update new
+                try:
+                    new_user, _ = User.get_or_create(chat_id=channel_id)
+                except Exception:
+                    # Fallback if get_or_create fails due to type or pk issues
+                    new_user = User.create(
+                        chat_id=channel_id,
+                        chat_type="channel",
+                        username=channel_username,
+                        first_name=port_name,
+                        last_name=None,
+                    )
+                # Detach old channel from this port to keep uniqueness
+                existing_channel.main_port = None
+                existing_channel.save()
 
-        if not created:
-            user.chat_type = "channel"
-            user.username = channel_username
-            user.first_name = port_name
-            user.main_port = port
-            user.save()
+                # Update/attach new channel
+                new_user.chat_type = "channel"
+                new_user.username = channel_username
+                new_user.first_name = port_name
+                new_user.main_port = port
+                new_user.save()
 
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text=f"Successfully {'added' if created else 'updated'} channel {channel_username} for port {port_name}",
-        )
+                await context.bot.send_message(
+                    chat_id=chat_id,
+                    text=f"✅ Reassigned island {port_name} to channel {channel_username}",
+                )
+        else:
+            # No channel yet for this port: create or update provided channel user
+            user, created = User.get_or_create(
+                chat_id=channel_id,
+                defaults={
+                    "chat_type": "channel",
+                    "username": channel_username,
+                    "first_name": port_name,
+                    "main_port": port,
+                },
+            )
+
+            if not created:
+                user.chat_type = "channel"
+                user.username = channel_username
+                user.first_name = port_name
+                user.main_port = port
+                user.save()
+
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=f"✅ Successfully {'added' if created else 'updated'} channel {channel_username} for island {port_name}",
+            )
 
     except ValueError:
         await context.bot.send_message(
             chat_id=chat_id,
-            text="Invalid channel ID format. Please provide a valid integer ID",
+            text="❗️ Invalid channel ID format. Please provide a valid integer ID",
         )
     except Exception as e:
-        await context.bot.send_message(chat_id=chat_id, text=f"Error: {str(e)}")
+        await context.bot.send_message(chat_id=chat_id, text=f"❌ Error: {str(e)}")
 
 
 # stats
@@ -790,7 +912,12 @@ async def island_stats(
     if not context.args:
         await context.bot.send_message(
             chat_id=chat_id,
-            text="Usage: /island_stats <island name>\nExample: /island_stats Male",
+            text=(
+                "*📊 Island stats*\n"
+                "Use: */islandstats* <island name>\n"
+                "Example: */islandstats* Male"
+            ),
+            parse_mode="MarkdownV2",
         )
         return
 
@@ -803,7 +930,7 @@ async def island_stats(
 
     if not matches:
         await context.bot.send_message(
-            chat_id=chat_id, text=f'No ports found matching "{port_name}".'
+            chat_id=chat_id, text=f"😕 No islands found matching ‘{esc_md(port_name)}’.", parse_mode="MarkdownV2"
         )
         return
 
@@ -822,8 +949,9 @@ async def island_stats(
         reply_markup = InlineKeyboardMarkup(keyboard)
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f'Multiple ports found matching "{port_name}". Please select one:',
+            text=f"🔎 Multiple islands found matching ‘{esc_md(port_name)}’. Please select one:",
             reply_markup=reply_markup,
+            parse_mode="MarkdownV2",
         )
         return
 
@@ -915,7 +1043,7 @@ async def vessel_stats(
     update: Update = None, context: ContextTypes.DEFAULT_TYPE = None
 ):
 
-    response = "Coming soon إن شاء الله"
+    response = "⏳ Coming soon، إن شاء الله"
     await context.bot.send_message(
         chat_id=context._chat_id,
         text=response,
@@ -966,16 +1094,22 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             pid = int(data.split(":", 1)[1])
             sub, created, err = subscribe_user_to_port(click_id, pid)
             if sub:
-                await cq.edit_message_text(text=f"Subscribed to port (id={pid}).")
+                try:
+                    port = Port.get_by_id(pid)
+                    await cq.edit_message_text(text=f"Subscribed to {port.name}.")
+                except Exception:
+                    await cq.edit_message_text(text=f"Subscribed to port.")
             else:
                 if err == "limit_reached":
                     await cq.edit_message_text(
                         text="You have reached the maximum of 10 port subscriptions."
                     )
                 else:
-                    await cq.edit_message_text(
-                        text=f"Failed to subscribe to port (id={pid})."
-                    )
+                    try:
+                        port = Port.get_by_id(pid)
+                        await cq.edit_message_text(text=f"Failed to subscribe to {port.name}.")
+                    except Exception:
+                        await cq.edit_message_text(text=f"Failed to subscribe to port.")
         except Exception:
             await cq.edit_message_text(text="Invalid selection.")
 
@@ -984,16 +1118,22 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             vid = int(data.split(":", 1)[1])
             sub, created, err = subscribe_user_to_vessel(click_id, vid)
             if sub:
-                await cq.edit_message_text(text=f"Subscribed to vessel (id={vid}).")
+                try:
+                    v = Vessel.get_by_id(vid)
+                    await cq.edit_message_text(text=f"Subscribed to {v.name}.")
+                except Exception:
+                    await cq.edit_message_text(text=f"Subscribed to vessel.")
             else:
                 if err == "limit_reached":
                     await cq.edit_message_text(
                         text="You have reached the maximum of 10 vessel subscriptions."
                     )
                 else:
-                    await cq.edit_message_text(
-                        text=f"Failed to subscribe to vessel (id={vid})."
-                    )
+                    try:
+                        v = Vessel.get_by_id(vid)
+                        await cq.edit_message_text(text=f"Failed to subscribe to {v.name}.")
+                    except Exception:
+                        await cq.edit_message_text(text=f"Failed to subscribe to vessel.")
         except Exception:
             await cq.edit_message_text(text="Invalid selection.")
 
@@ -1002,11 +1142,17 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             pid = int(data.split(":", 1)[1])
             ok = unsubscribe_user_from_port(click_id, pid)
             if ok:
-                await cq.edit_message_text(text=f"Unsubscribed from port (id={pid}).")
+                try:
+                    port = Port.get_by_id(pid)
+                    await cq.edit_message_text(text=f"Unsubscribed from {port.name}.")
+                except Exception:
+                    await cq.edit_message_text(text=f"Unsubscribed from port.")
             else:
-                await cq.edit_message_text(
-                    text=f"Failed to unsubscribe from port (id={pid})."
-                )
+                try:
+                    port = Port.get_by_id(pid)
+                    await cq.edit_message_text(text=f"Failed to unsubscribe from {port.name}.")
+                except Exception:
+                    await cq.edit_message_text(text=f"Failed to unsubscribe from port.")
         except Exception:
             await cq.edit_message_text(text="Invalid selection.")
 
@@ -1015,11 +1161,17 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             vid = int(data.split(":", 1)[1])
             ok = unsubscribe_user_from_vessel(click_id, vid)
             if ok:
-                await cq.edit_message_text(text=f"Unsubscribed from vessel (id={vid}).")
+                try:
+                    v = Vessel.get_by_id(vid)
+                    await cq.edit_message_text(text=f"Unsubscribed from {v.name}.")
+                except Exception:
+                    await cq.edit_message_text(text=f"Unsubscribed from vessel.")
             else:
-                await cq.edit_message_text(
-                    text=f"Failed to unsubscribe from vessel (id={vid})."
-                )
+                try:
+                    v = Vessel.get_by_id(vid)
+                    await cq.edit_message_text(text=f"Failed to unsubscribe from {v.name}.")
+                except Exception:
+                    await cq.edit_message_text(text=f"Failed to unsubscribe from vessel.")
         except Exception:
             await cq.edit_message_text(text="Invalid selection.")
 
@@ -1031,26 +1183,62 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             try:
                 port = Port.get_by_id(port_id)
-                user, created = User.get_or_create(
-                    chat_id=channel_id,
-                    defaults={
-                        "chat_type": "channel",
-                        "username": channel_username,
-                        "first_name": port.name,
-                        "main_port": port,
-                    },
-                )
+                existing_channel = port.channel
+                if existing_channel:
+                    if existing_channel.chat_id == channel_id:
+                        existing_channel.chat_type = "channel"
+                        existing_channel.username = channel_username
+                        existing_channel.first_name = port.name
+                        existing_channel.main_port = port
+                        existing_channel.save()
+                        await cq.edit_message_text(
+                            text=f"✅ Updated channel {channel_username} for island {port.name}"
+                        )
+                    else:
+                        # Reassign: detach old, attach/update new user
+                        try:
+                            new_user, _ = User.get_or_create(chat_id=channel_id)
+                        except Exception:
+                            new_user = User.create(
+                                chat_id=channel_id,
+                                chat_type="channel",
+                                username=channel_username,
+                                first_name=port.name,
+                                last_name=None,
+                            )
+                        existing_channel.main_port = None
+                        existing_channel.save()
 
-                if not created:
-                    user.chat_type = "channel"
-                    user.username = channel_username
-                    user.first_name = port.name
-                    user.main_port = port
-                    user.save()
+                        new_user.chat_type = "channel"
+                        new_user.username = channel_username
+                        new_user.first_name = port.name
+                        new_user.main_port = port
+                        new_user.save()
 
-                await cq.edit_message_text(
-                    text=f"Successfully {'added' if created else 'updated'} channel {channel_username} for port {port.name}"
-                )
+                        await cq.edit_message_text(
+                            text=f"✅ Reassigned island {port.name} to channel {channel_username}"
+                        )
+                else:
+                    user, created = User.get_or_create(
+                        chat_id=channel_id,
+                        defaults={
+                            "chat_type": "channel",
+                            "username": channel_username,
+                            "first_name": port.name,
+                            "main_port": port,
+                        },
+                    )
+
+                    if not created:
+                        user.chat_type = "channel"
+                        user.username = channel_username
+                        user.first_name = port.name
+                        user.main_port = port
+                        user.save()
+
+                    await cq.edit_message_text(
+                        text=f"✅ Successfully {'added' if created else 'updated'} channel {channel_username} for island {port.name}"
+                    )
             except Port.DoesNotExist:
                 await cq.edit_message_text(text=f"Error: Port (id={port_id}) not found")
             except Exception as e:
@@ -1063,9 +1251,17 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             pid = int(data.split(":", 1)[1])
             ok = set_main_port(click_id, pid)
             if ok:
-                await cq.edit_message_text(text=f"Main port set to id={pid}.")
+                try:
+                    port = Port.get_by_id(pid)
+                    await cq.edit_message_text(text=f"Main port set to {port.name}.")
+                except Exception:
+                    await cq.edit_message_text(text=f"Main port set.")
             else:
-                await cq.edit_message_text(text=f"Failed to set main port (id={pid}).")
+                try:
+                    port = Port.get_by_id(pid)
+                    await cq.edit_message_text(text=f"Failed to set main port to {port.name}.")
+                except Exception:
+                    await cq.edit_message_text(text=f"Failed to set main port.")
         except Exception:
             await cq.edit_message_text(text="Invalid selection.")
 
@@ -1082,18 +1278,30 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             sub, created, err = subscribe_user_to_vessel(channel_id, vid)
             if sub:
-                await cq.edit_message_text(
-                    text=f"Channel (id={channel_id}) subscribed to vessel (id={vid})."
-                )
+                try:
+                    v = Vessel.get_by_id(vid)
+                    await cq.edit_message_text(
+                        text=f"Channel (id={channel_id}) subscribed to {v.name}."
+                    )
+                except Exception:
+                    await cq.edit_message_text(
+                        text=f"Channel (id={channel_id}) subscribed to vessel."
+                    )
             else:
                 if err == "limit_reached":
                     await cq.edit_message_text(
                         text="Channel has reached the maximum of 10 vessel subscriptions."
                     )
                 else:
-                    await cq.edit_message_text(
-                        text=f"Failed to subscribe channel to vessel (id={vid})."
-                    )
+                    try:
+                        v = Vessel.get_by_id(vid)
+                        await cq.edit_message_text(
+                            text=f"Failed to subscribe channel to {v.name}."
+                        )
+                    except Exception:
+                        await cq.edit_message_text(
+                            text=f"Failed to subscribe channel to vessel."
+                        )
         except Exception:
             await cq.edit_message_text(text="Invalid selection.")
 
@@ -1110,37 +1318,34 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             sub, created, err = subscribe_user_to_port(channel_id, pid)
             if sub:
-                await cq.edit_message_text(
-                    text=f"Channel (id={channel_id}) subscribed to port (id={pid})."
-                )
+                try:
+                    port = Port.get_by_id(pid)
+                    await cq.edit_message_text(
+                        text=f"Channel (id={channel_id}) subscribed to {port.name}."
+                    )
+                except Exception:
+                    await cq.edit_message_text(
+                        text=f"Channel (id={channel_id}) subscribed to port."
+                    )
             else:
                 if err == "limit_reached":
                     await cq.edit_message_text(
                         text="Channel has reached the maximum of 10 port subscriptions."
                     )
                 else:
-                    await cq.edit_message_text(
-                        text=f"Failed to subscribe channel to port (id={pid})."
-                    )
+                    try:
+                        port = Port.get_by_id(pid)
+                        await cq.edit_message_text(
+                            text=f"Failed to subscribe channel to {port.name}."
+                        )
+                    except Exception:
+                        await cq.edit_message_text(
+                            text=f"Failed to subscribe channel to port."
+                        )
         except Exception:
             await cq.edit_message_text(text="Invalid selection.")
 
-    elif data.startswith("get_port_channel:"):
-        try:
-            port_id = int(data.split(":", 1)[1])
-            try:
-                port = Port.get_by_id(port_id)
-                channel = port.channel
-                if channel:
-                    await cq.edit_message_text(
-                        text=f"Channel for {port.name}: @{channel.username}"
-                    )
-                else:
-                    await cq.edit_message_text(text=f"No channel found for {port.name}")
-            except Port.DoesNotExist:
-                await cq.edit_message_text(text=f"Error: Port not found")
-        except Exception:
-            await cq.edit_message_text(text="Invalid selection.")
+    # get_port_channel callback removed with /findchannel
 
     elif data.startswith("get_port_stats:"):
         try:

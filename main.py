@@ -45,7 +45,7 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("addvessel", subvessel))
     app.add_handler(CommandHandler("settings", settings))
     app.add_handler(CommandHandler("unsub", unsub))
-    app.add_handler(CommandHandler("findchannel", findchannel))
+    app.add_handler(CommandHandler("listchannels", listchannels))
     app.add_handler(CommandHandler("islandstats", island_stats))
     app.add_handler(CommandHandler("vesselstats", vessel_stats))
     # admin
