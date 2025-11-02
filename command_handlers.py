@@ -64,16 +64,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = (
         "*👋 Welcome to Vessel Updates*\n\n"
-        "Stay notified about islands and vessels you care about\.") + "\n\n" + (
+        "Stay notified about islands and vessels you care about\\.") + "\n\n" + (
         "🧭 *Quick commands:*\n"
-        "• */addisland* <name> \- Subscribe to an island/port 🏝\n"
-        "• */addvessel* <name or id> \- Subscribe to a vessel ⛴\n"
-        "• */settings* \- View your subscriptions ⚙️\n"
-        "• */unsub* \- Manage and remove subscriptions 🔕\n"
-        "• */listchannels* \- List all available channels 📣\n"
-        "• */islandstats* <island> \- Today’s stats 📊\n"
-        "• */vesselstats* <vessel> \- Vessel stats \(beta\) 🧪\n\n"
-        "💡 Tip: Type part of a name, then pick from the list\.") + "\n" + (
+        "• */addisland* \\<name\\> \\- Subscribe to an island/port 🏝\n"
+        "• */addvessel* \\<name or id\\> \\- Subscribe to a vessel ⛴\n"
+        "• */settings* \\- View your subscriptions ⚙️\n"
+        "• */unsub* \\- Manage and remove subscriptions 🔕\n"
+        "• */listchannels* \\- List all available channels 📣\n"
+        "• */islandstats* \\<island\\> \\- Today’s stats 📊\n"
+        "• */vesselstats* \\<vessel\\> \\- Vessel stats \\(beta\\) 🧪\n\n"
+        "💡 Tip: Type part of a name, then pick from the list\\.") + "\n" + (
         "👾 Uses [FollowMe.mv](FollowMe.mv) data"
     )
     await context.bot.send_message(
@@ -86,7 +86,7 @@ async def unrecognized_command(
 ) -> None:
     """Handle any messages that are not commands."""
     await update.message.reply_text(
-        "🤖 I couldn’t recognize that\. Try */start* for a list of commands\.",
+        "🤖 I couldn’t recognize that\\. Try */start* for a list of commands\\.",
         parse_mode="MarkdownV2",
     )
 
@@ -127,9 +127,9 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=chat_id,
             text=(
                 "*🏝 Add an island*\n"
-                "Use: */addisland* <island name>\n"
+                "Use: */addisland* \\<island name\\>\n"
                 "Example: */addisland* Male\n\n"
-                "Pro tip: You can type part of the name and I’ll show matches\. 🔎"
+                "Pro tip: You can type part of the name and I’ll show matches\\. 🔎"
             ),
             parse_mode="MarkdownV2",
         )
@@ -145,7 +145,7 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not matches:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"😕 No islands found matching ‘{esc_md(name)}’\. Try a shorter part of the name\.",
+            text=f"😕 No islands found matching ‘{esc_md(name)}’\\. Try a shorter part of the name\\.",
             parse_mode="MarkdownV2",
         )
         return
@@ -175,20 +175,20 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if sub:
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"✅ Subscribed to {esc_md(port.name)}\! You’ll get updates as they happen\.",
+                text=f"✅ Subscribed to {esc_md(port.name)}\\! You’ll get updates as they happen\\.",
                 parse_mode="MarkdownV2",
             )
         else:
             if err == "limit_reached":
                 await context.bot.send_message(
                     chat_id=chat_id,
-                    text="⚠️ You’ve reached the maximum of 10 island subscriptions\. Remove one with */unsub* to add more\.",
+                    text="⚠️ You’ve reached the maximum of 10 island subscriptions\\. Remove one with */unsub* to add more\\.",
                     parse_mode="MarkdownV2",
                 )
             else:
                 await context.bot.send_message(
                     chat_id=chat_id,
-                    text=f"❌ Failed to subscribe to {esc_md(port.name)}\. Please try again shortly\.",
+                    text=f"❌ Failed to subscribe to {esc_md(port.name)}\\. Please try again shortly\\.",
                     parse_mode="MarkdownV2",
                 )
         return
@@ -261,9 +261,9 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=chat_id,
             text=(
                 "*⛴ Add a vessel*\n"
-                "Use: */addvessel* <vessel name or id>\n"
+                "Use: */addvessel* \\<vessel name or id\\>\n"
                 "Examples: */addvessel* Speed Star  \|  */addvessel* 123\n\n"
-                "Tip: Try a keyword \(e\.g\., ‘Star’\) to see a list\. 🔎"
+                "Tip: Try a keyword \\(e\\.g\\., ‘Star’\\) to see a list\\. 🔎"
             ),
             parse_mode="MarkdownV2",
         )
@@ -289,7 +289,7 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if v.id in subbed_vessels:
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"🔔 You’re already subscribed to {esc_md(v.name)} \({v.id}\)\.",
+                text=f"🔔 You’re already subscribed to {esc_md(v.name)} \\({v.id}\\)\\.",
                 parse_mode="MarkdownV2",
             )
             return
@@ -298,20 +298,20 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if sub:
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"✅ Subscribed to {esc_md(v.name)} \({v.id}\)\! I’ll keep you posted\.",
+                text=f"✅ Subscribed to {esc_md(v.name)} \\({v.id}\\)\\! I’ll keep you posted\\.",
                 parse_mode="MarkdownV2",
             )
         else:
             if err == "limit_reached":
                 await context.bot.send_message(
                     chat_id=chat_id,
-                    text="⚠️ You’ve reached the maximum of 10 vessel subscriptions\. Use */unsub* to free a slot\.",
+                    text="⚠️ You’ve reached the maximum of 10 vessel subscriptions\\. Use */unsub* to free a slot\\.",
                     parse_mode="MarkdownV2",
                 )
             else:
                 await context.bot.send_message(
                     chat_id=chat_id,
-                    text="❌ Failed to subscribe to this vessel\. Please try again\.",
+                    text="❌ Failed to subscribe to this vessel\\. Please try again\\.",
                     parse_mode="MarkdownV2",
                 )
         return
@@ -328,7 +328,7 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not matches:
         await context.bot.send_message(
-            chat_id=chat_id, text=f"😕 No vessels found matching ‘{esc_md(q)}’\. Try a shorter keyword\.", parse_mode="MarkdownV2"
+            chat_id=chat_id, text=f"😕 No vessels found matching ‘{esc_md(q)}’\\. Try a shorter keyword\\.", parse_mode="MarkdownV2"
         )
         return
 
@@ -336,7 +336,7 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(matches) == 1 and matches[0].id in subbed_vessels:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"🔔 You’re already subscribed to {esc_md(matches[0].name)} \({matches[0].id}\)\.",
+            text=f"🔔 You’re already subscribed to {esc_md(matches[0].name)} \\({matches[0].id}\\)\\.",
             parse_mode="MarkdownV2",
         )
         return
@@ -476,7 +476,7 @@ async def unsub(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def channelsubvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Admin command to subscribe a channel to a vessel.
-    Usage: /channeladdvessel <channel_username> <vessel_name>"""
+    Usage: /channeladdvessel \<channel_username\> \<vessel_name\>"""
     chat = update.effective_chat
     chat_id = chat.id
 
@@ -491,7 +491,7 @@ async def channelsubvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=chat_id,
             text=(
                 "*Usage:*\n"
-                "`/channeladdvessel <channel_username> <vessel_name>`\n"
+                "`/channeladdvessel \<channel_username\> \<vessel_name\>`\n"
                 "*Example:*\n"
                 "`/channeladdvessel @channel1 speedstar`"
             ),
@@ -665,7 +665,7 @@ async def listchannels(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def channelsubisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Admin command to subscribe a channel to a port/island.
-    Usage: /channeladdisland <channel_username> <port_name>"""
+    Usage: /channeladdisland \<channel_username\> \<port_name\>"""
     chat = update.effective_chat
     chat_id = chat.id
 
@@ -680,7 +680,7 @@ async def channelsubisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=chat_id,
             text=(
                 "*Usage:*\n"
-                "`/channeladdisland <channel_username> <port_name>`\n"
+                "`/channeladdisland \<channel_username\> \<port_name\>`\n"
                 "*Example:*\n"
                 "`/channeladdisland @channel1 Male`"
             ),
@@ -796,9 +796,9 @@ async def addchannel(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=chat_id,
             text=(
                 "*Usage:*\n"
-                "`/addchannel <port_name> <channel_id> <channel_username>`\n"
+                "`/addchannel \<port_name\> \<channel_id\> \<channel_username\>`\n"
                 "*Example:*\n"
-                "`/addchannel Male -10012345674490 @male_port`"
+                "`/addchannel Male 10012345674490 @male_port`"
             ),
             parse_mode="MarkdownV2",
         )
@@ -933,7 +933,7 @@ async def island_stats(
             chat_id=chat_id,
             text=(
                 "*📊 Island stats*\n"
-                "Use: */islandstats* <island name>\n"
+                "Use: */islandstats* \<island name\>\n"
                 "Example: */islandstats* Male"
             ),
             parse_mode="MarkdownV2",
