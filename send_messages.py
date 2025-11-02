@@ -77,7 +77,7 @@ def _format_male_arrival(vessel_id: int, dict: dict, user: User):
     if not user.main_port:
         return None
 
-    vessel = Vessel.get_by_id(vessel_id)
+    vessel = Vessel.get_by_id(int(vessel_id))
     if not vessel:
         return None
 
