@@ -5,8 +5,7 @@ import re
 import os
 from dotenv import load_dotenv
 from utils import (
-    update_db_with_api,
-    all_notify,
+    all_notify
 )
 from model_helpers import (
     update_notified,
@@ -153,7 +152,7 @@ def _format_male_departure(vessel_id: int, dict: dict, user: User):
     if not user.main_port:
         return None
 
-    vessel = Vessel.get_by_id(vessel_id)
+    vessel = Vessel.get_by_id(int(vessel_id))
     if not vessel:
         return None
 
