@@ -74,7 +74,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• */islandstats* \\<island\\> \\- Today’s stats 📊\n"
         "• */vesselstats* \\<vessel\\> \\- Vessel stats \\(beta\\) 🧪\n\n"
         "💡 Tip: Type part of a name, then pick from the list\\.") + "\n" + (
-        "👾 Uses [FollowMe.mv](FollowMe.mv) data"
+        "👾 Uses FollowMe\\.mv data"
     )
     await context.bot.send_message(
         chat_id=chat_id, text=text, parse_mode="MarkdownV2", disable_web_page_preview=True
