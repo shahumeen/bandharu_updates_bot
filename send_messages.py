@@ -1,5 +1,5 @@
 from telegram.helpers import escape_markdown
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import re
 import os
@@ -15,9 +15,11 @@ from models import (
     User,
     PortLog,
     PortLogNotification,
+    Port,
 )
 from utils import _seconds_between, _format_duration
 from models import Vessel
+from typing import Optional, List, Any
 
 load_dotenv()
 TOKEN = os.getenv("BOT_API")
@@ -59,6 +61,61 @@ def _fmt_time(ts):
         return s
     except Exception:
         return "Unknown"
+
+
+def _ensure_datetime(ts: Any) -> Optional[datetime]:
+    """Best-effort convert a timestamp-like value to datetime.
+
+    Accepts datetime or ISO-like string; returns None if parsing fails.
+    """
+    if isinstance(ts, datetime):
+        return ts
+    if ts is None:
+        return None
+    try:
+        # Attempt ISO parsing; fall back to str() + fromisoformat
+        return datetime.fromisoformat(str(ts))
+    except Exception:
+        return None
+
+
+def _has_recent_event(
+    vessel_id: int,
+    event: str,
+    current_ts: Any,
+    within_hours: int = 5,
+    restrict_port_names: Optional[List[str]] = None,
+) -> bool:
+    """Return True if the vessel has an event of type `event` within the last `within_hours` hours
+    before `current_ts`. If `restrict_port_names` is provided, only consider logs whose Port.name is in
+    that list (case-sensitive match to stored names).
+    """
+    ts = _ensure_datetime(current_ts)
+    if not ts:
+        return False
+
+    window_start = ts - timedelta(hours=within_hours)
+
+    base_condition = (
+        (PortLog.vessel == vessel_id)
+        & (PortLog.event == event)
+        & (PortLog.timestamp >= window_start)
+        & (PortLog.timestamp < ts)
+    )
+
+    try:
+        if restrict_port_names:
+            q = (
+                PortLog.select()
+                .join(Port)
+                .where(base_condition & (Port.name.in_(restrict_port_names)))
+            )
+        else:
+            q = PortLog.select().where(base_condition)
+
+        return q.exists()
+    except Exception:
+        return False
 
 
 def _format_male_arrival(event: dict, user: User):
@@ -148,31 +205,15 @@ def _format_male_departure(event: dict, user: User):
         return None
 
     try:
-        # Last departure from user's main port (for context)
-        last_departure = (
-            PortLog.select()
-            .where(
-                (PortLog.vessel == vessel_id)
-                & (PortLog.port == user.main_port)
-                & (PortLog.event == "departure")
-            )
-            .order_by(PortLog.timestamp.desc())
-            .first()
-        )
 
-        if not last_departure:
-            return None
 
         contact_val = event.get("contact")
         contact = f"\n📞 *Contact:*{contact_val}" if contact_val else ""
 
-        departure_time_fmt = _fmt_time(last_departure.timestamp)
-
         # Escape special characters for Markdown
         vessel_name = escape_markdown(event.get("name", "Unknown"), version=2)
         vessel_type = escape_markdown(vessel.vessel_type or "Unknown", version=2)
-        last_port = escape_markdown(user.main_port.name, version=2)
-        departure = escape_markdown(departure_time_fmt, version=2)
+        last_port = escape_markdown(event.get("port_name"), version=2)
         stay_duration = escape_markdown(
             (event.get("stay_time") or "Unknown"), version=2
         )
@@ -182,7 +223,7 @@ def _format_male_departure(event: dict, user: User):
 🟣⚓*[{vessel_name}](m.followme.mv/public/?id={vessel_id}) DEPARTED MALE*⚓
 ━━━━━━━━━━━━━━━━━━━━━━━
 📋 *Type:* {vessel_type}{contact}
-📅 *Departed {last_port}:* {departure}
+📅 *Departed from:* {last_port}
 ⏳ *Stay Duration:* {stay_duration}
 ━━━━━━━━━━━━━━━━━━━━━━━
 _\\#{hashtag}_
@@ -260,7 +301,22 @@ async def arrival_notify(arrivals, context, user: User):
 _\\#{hashtag}_
 {port_hashtag}_\\#arrival_
 """
-        if (arrivals[v]["port_name"] in male_ports_lst) and user.main_port:
+        # Apply Male-specific formatting only if user's main_port is NOT a Male port
+        if (
+            (arrivals[v]["port_name"] in male_ports_lst)
+            and user.main_port
+            and (user.main_port.name not in male_ports_lst)
+        ):
+            # If there's already a Male arrival for this vessel within the last 5 hours, skip notifying.
+            if _has_recent_event(
+                vessel_id,
+                "arrival",
+                arrivals[v].get("timestamp"),
+                within_hours=5,
+                restrict_port_names=male_ports_lst,
+            ):
+                update_notified(user, arrivals[v]["portlog_id"])
+                continue
             male_msg = _format_male_arrival(arrivals[v], user)
             if male_msg:
                 formatted_response = male_msg
@@ -326,6 +382,7 @@ async def departures_notify(departures, context, user: User):
         port_stay = escape_markdown(
             departures[v].get("stay_time") or "Unknown", version=2
         )
+        vessel_id = departures[v]["vessel_id"]
 
         formatted_response = f"""
 🔴⚓*[{vessel_name}](m.followme.mv/public/?id={departures[v]["vessel_id"]}) DEPARTED*⚓
@@ -339,7 +396,22 @@ async def departures_notify(departures, context, user: User):
 _\\#{hashtag}_
 {port_hashtag}_\\#departure_
 """
-        if (departures[v]["port_name"] in male_ports_lst) and user.main_port:
+        # Apply Male-specific formatting only if user's main_port is NOT a Male port
+        if (
+            (departures[v]["port_name"] in male_ports_lst)
+            and user.main_port
+            and (user.main_port.name not in male_ports_lst)
+        ):
+            # If there's already a Male departure for this vessel within the last 5 hours, skip notifying.
+            if _has_recent_event(
+                vessel_id,
+                "departure",
+                departures[v].get("timestamp"),
+                within_hours=5,
+                restrict_port_names=male_ports_lst,
+            ):
+                update_notified(user, departures[v]["portlog_id"])
+                continue
             male_msg = _format_male_departure(departures[v], user)
             if male_msg:
                 formatted_response = male_msg
