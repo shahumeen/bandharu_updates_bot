@@ -1,6 +1,7 @@
 # models_and_processor.py
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from peewee import JOIN
 from models import *
 
 
@@ -396,42 +397,29 @@ def get_users_to_notify_for_log(port_log: PortLog):
     vessel = port_log.vessel
 
     # 1) Users who are subscribed to this vessel AND either:
-    #    - have a subscription to this specific port, or
-    #    - have no subscriptions at all
+    #    - have a subscription to this specific port, OR
+    #    - have no port subscriptions at all (follow vessel across all ports)
+    # Implemented using LEFT JOINs with aliases to avoid correlated subquery pitfalls.
+    PSThis = PortSubscription.alias()
+    PSAny = PortSubscription.alias()
+
     vessel_users = (
         User.select()
         .join(VesselSubscription)
-        .where(
-            (VesselSubscription.vessel == vessel)
-            & (
-                # User has this port in their subscriptions
-                (
-                    PortSubscription.select()
-                    .where(
-                        (PortSubscription.user == User)
-                        & (PortSubscription.port == port)
-                    )
-                    .exists()
-                )
-                |
-                # OR they have no port subscriptions at all AND this is their subscribed vessel
-                (
-                    ~(
-                        PortSubscription.select()
-                        .where(PortSubscription.user == User)
-                        .exists()
-                    )
-                    & (
-                        VesselSubscription.select()
-                        .where(
-                            (VesselSubscription.user == User)
-                            & (VesselSubscription.vessel == vessel)
-                        )
-                        .exists()
-                    )
-                )
-            )
+        .where(VesselSubscription.vessel == vessel)
+        .switch(User)
+        .join(
+            PSThis,
+            on=((PSThis.user == User.chat_id) & (PSThis.port == port)),
+            join_type=JOIN.LEFT_OUTER,
         )
+        .switch(User)
+        .join(
+            PSAny,
+            on=(PSAny.user == User.chat_id),
+            join_type=JOIN.LEFT_OUTER,
+        )
+        .where((PSThis.id.is_null(False)) | (PSAny.id.is_null(True)))
         .distinct()
     )
 
