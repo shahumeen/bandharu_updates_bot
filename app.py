@@ -10,6 +10,12 @@ Heroku Procfile should point to this file, e.g.:
 from threading import Thread
 import sys
 import traceback
+from utils import update_db_with_api
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+FOLLOWME_API_KEY = os.getenv("FOLLOWME_API")
 
 
 def _start_api_calls_loop() -> None:
@@ -107,6 +113,11 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    print("initial call initiated", flush=True)
+    update_db_with_api(
+        api_key=FOLLOWME_API_KEY, bot_start=True
+    )  # to ensure no notifiactions at bot start
+    print("initial call finished", flush=True)
     try:
         main()
     except KeyboardInterrupt:
