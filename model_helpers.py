@@ -148,14 +148,14 @@ def log_port_event(
             sent=is_initial_sync,
         )
 
-    # Constrain PortLogNotification table size to limit DB usage
-    try:
-        trim_portlognotification_rows()  # uses default cap from env PLN_MAX_ROWS
-    except Exception:
-        # best-effort: never block core logging due to cleanup failure
-        pass
+    # # Constrain PortLogNotification table size to limit DB usage
+    # try:
+    #     trim_portlognotification_rows()  # uses default cap from env PLN_MAX_ROWS
+    # except Exception:
+    #     # best-effort: never block core logging due to cleanup failure
+    #     pass
 
-    return port_log
+    # return port_log
 
 
 def get_vessel_location(vessel_id: int) -> tuple[Port, str, datetime] | None:
