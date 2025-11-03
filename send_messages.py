@@ -244,8 +244,8 @@ async def arrival_notify(arrivals, context, user: User):
         )
 
         island = (
-            f'\n🏝️ *Island:* {escape_markdown(arrivals[v]["port_name"], version=2)}'
-            if user.chat_type == "private"
+            f'\n📍 *Location:* {escape_markdown(arrivals[v]["port_name"], version=2)}'
+            if user.chat_type in ("private", "group")
             else ""
         )
 
@@ -293,7 +293,7 @@ async def arrival_notify(arrivals, context, user: User):
 ⏱️ *Arrival Time:* {arrival_time}
 📋 *Type:* {vessel_type}{contact}
 
-⛵️ *Route:* {route}
+🗺 *Route:* {route}
 📅 *Departed:* {departure_time}
 ⏳ *Transit Time:* {transit_time}
 
@@ -354,9 +354,9 @@ async def departures_notify(departures, context, user: User):
             if departures[v]['contact']
             else ""
         )
-        port_name = (
-            f'\n🏝️ *Island:* {escape_markdown(departures[v]["port_name"], version=2)}'
-            if user.chat_type == "private"
+        island = (
+            f'\n📍 *Location:* {escape_markdown(arrivals[v]["port_name"], version=2)}'
+            if user.chat_type in ("private", "group")
             else ""
         )
 
@@ -387,7 +387,7 @@ async def departures_notify(departures, context, user: User):
         formatted_response = f"""
 🔴⚓*[{vessel_name}](m.followme.mv/public/?id={departures[v]["vessel_id"]}) DEPARTED*⚓
 ━━━━━━━━━━━━━━━━━━━━━━━
-{port_name}
+{island}
 ⏱️ *Departure Time:* {departure_time}
 📋 *Type:* {vessel_type}{contact}
 ⏳ *Stay Duration:* {port_stay}

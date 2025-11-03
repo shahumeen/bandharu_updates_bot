@@ -63,18 +63,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             pass
 
     text = (
-        "*👋 Welcome to Vessel Updates*\n\n"
+        "*👋 Welcome to Bandharu Updates Bot*\n\n"
         "Stay notified about islands and vessels you care about\\.") + "\n\n" + (
         "🧭 *Quick commands:*\n"
         "• */addisland* \\<name\\> \\- Subscribe to an island/port 🏝\n"
         "• */addvessel* \\<name or id\\> \\- Subscribe to a vessel ⛴\n"
         "• */settings* \\- View your subscriptions ⚙️\n"
         "• */unsub* \\- Manage and remove subscriptions 🔕\n"
-        "• */listchannels* \\- List all available channels 📣\n"
         "• */islandstats* \\<island\\> \\- Today’s stats 📊\n"
         "• */vesselstats* \\<vessel\\> \\- Vessel stats \\(beta\\) 🧪\n\n"
-        "💡 Tip: Type part of a name, then pick from the list\\.") + "\n" + (
-        "👾 Uses FollowMe\\.mv data"
+        f"Island update channels: ['BandharuUpdates']('https://t.me/addlist/ziV1Htn9OR9iNWI1')") + "\n" + (
+        "👾 Uses FollowMe\\.mv API"
     )
     await context.bot.send_message(
         chat_id=chat_id, text=text, parse_mode="MarkdownV2", disable_web_page_preview=True
@@ -442,7 +441,7 @@ async def unsub(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    f"🔕 Unsubscribe {p.name}", callback_data=f"unsub_port:{p.id}"
+                    f"🔕🏝 Unsubscribe {p.name}", callback_data=f"unsub_port:{p.id}"
                 )
             ]
         )
@@ -450,7 +449,7 @@ async def unsub(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    f"🔕 Unsubscribe {v.name}", callback_data=f"unsub_vessel:{v.id}"
+                    f"🔕⛴ Unsubscribe {v.name}", callback_data=f"unsub_vessel:{v.id}"
                 )
             ]
         )
