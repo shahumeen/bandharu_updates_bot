@@ -23,7 +23,7 @@ async def island_stats(
             chat_id=chat_id,
             text=(
                 "*📊 Island stats*\n"
-                "Use: */islandstats* <island name>\n"
+                "Use: */islandstats* \\<island name\\>\n"
                 "Example: */islandstats* Male"
             ),
             parse_mode="MarkdownV2",
@@ -60,7 +60,7 @@ async def island_stats(
         reply_markup = InlineKeyboardMarkup(keyboard)
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"🔎 Multiple islands found matching ‘{esc_md(port_name)}’\. Please select one:",
+            text=f"🔎 Multiple islands found matching ‘{esc_md(port_name)}’\\. Please select one:",
             reply_markup=reply_markup,
             parse_mode="MarkdownV2",
         )

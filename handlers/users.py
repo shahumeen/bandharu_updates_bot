@@ -254,7 +254,7 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text=(
                 "*⛴ Add a vessel*\n"
                 "Use: */addvessel* \\<vessel name or id\\>\n"
-                "Examples: */addvessel* Speed Star  |  */addvessel* 123\n\n"
+                "Examples: */addvessel* Speed Star  \\|  */addvessel* 123\n\n"
                 "Tip: Try a keyword \\(e\\.g\\., ‘Star’\\) to see a list\\. 🔎"
             ),
             parse_mode="MarkdownV2",
@@ -442,7 +442,7 @@ async def unsub(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    f"🔕Unsubscribe: 📍{p.name}", callback_data=f"unsub_port:{p.id}"
+                    f"Unsubscribe: {p.name} 📍", callback_data=f"unsub_port:{p.id}"
                 )
             ]
         )
@@ -450,7 +450,7 @@ async def unsub(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    f"🔕Unsubscribe: ⛴{v.name}", callback_data=f"unsub_vessel:{v.id}"
+                    f"Unsubscribe: {v.name} ⛴", callback_data=f"unsub_vessel:{v.id}"
                 )
             ]
         )
@@ -510,7 +510,7 @@ async def toggledepartures(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # Toggle flag
-    new_value = not bool(user.notify_on_departure)
+    new_value = not user.notify_on_departure
     user.notify_on_departure = new_value
     try:
         user.save()

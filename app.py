@@ -40,16 +40,22 @@ def _run_bot() -> None:
         start,
         subisland,
         subvessel,
+        toggledepartures,
         settings,
         unsub,
         listchannels,
         island_stats,
         vessel_stats,
+        # admin
         addchannel,
         channelsubvessel,
         channelsubisland,
         callback_handler,
         unrecognized_command,
+        channelsettings,
+        channelunsub,
+        togglechanneldepartures,
+        removechannel,
     )
     from send_messages import notify_job
 
@@ -62,6 +68,7 @@ def _run_bot() -> None:
     bot_main.app.add_handler(CommandHandler("start", start))
     bot_main.app.add_handler(CommandHandler("addisland", subisland))
     bot_main.app.add_handler(CommandHandler("addvessel", subvessel))
+    bot_main.app.add_handler(CommandHandler("toggledepartures", toggledepartures))
     bot_main.app.add_handler(CommandHandler("settings", settings))
     bot_main.app.add_handler(CommandHandler("unsub", unsub))
     bot_main.app.add_handler(CommandHandler("listchannels", listchannels))
@@ -72,12 +79,16 @@ def _run_bot() -> None:
     bot_main.app.add_handler(CommandHandler("addchannel", addchannel))
     bot_main.app.add_handler(CommandHandler("channeladdvessel", channelsubvessel))
     bot_main.app.add_handler(CommandHandler("channeladdisland", channelsubisland))
+    bot_main.app.add_handler(CommandHandler("channelsettings", channelsettings))
+    bot_main.app.add_handler(CommandHandler("channelunsub", channelunsub))
+    bot_main.app.add_handler(
+        CommandHandler("togglechanneldepartures", togglechanneldepartures)
+    )
+    bot_main.app.add_handler(CommandHandler("removechannel", removechannel))
 
     # Callback queries and non-command text
     bot_main.app.add_handler(CallbackQueryHandler(callback_handler))
-    bot_main.app.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, unrecognized_command)
-    )
+    bot_main.app.add_handler(MessageHandler(filters.COMMAND, unrecognized_command))
 
     # Blocking call; handles SIGTERM/SIGINT on Heroku for graceful shutdown
     bot_main.app.run_polling()
