@@ -441,7 +441,7 @@ async def unsub(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    f"🔕🏝 Unsubscribe {p.name}", callback_data=f"unsub_port:{p.id}"
+                    f"🔕Unsubscribe: 📍{p.name}", callback_data=f"unsub_port:{p.id}"
                 )
             ]
         )
@@ -449,7 +449,7 @@ async def unsub(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    f"🔕⛴ Unsubscribe {v.name}", callback_data=f"unsub_vessel:{v.id}"
+                    f"🔕Unsubscribe: ⛴{v.name}", callback_data=f"unsub_vessel:{v.id}"
                 )
             ]
         )
