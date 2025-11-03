@@ -72,7 +72,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• */unsub* \\- Manage and remove subscriptions 🔕\n"
         "• */islandstats* \\<island\\> \\- Today’s stats 📊\n"
         "• */vesselstats* \\<vessel\\> \\- Vessel stats \\(beta\\) 🧪\n\n"
-        f"Island update channels: ['BandharuUpdates']('https://t.me/addlist/ziV1Htn9OR9iNWI1')") + "\n" + (
+        f"Island update channels: [BandharuUpdates]('https://t.me/addlist/ziV1Htn9OR9iNWI1')") + "\n" + (
         "👾 Uses FollowMe\\.mv API"
     )
     await context.bot.send_message(
