@@ -352,7 +352,7 @@ async def departures_notify(departures, context, user: User):
             else ""
         )
         island = (
-            f'\n📍 *Location:* {escape_markdown(arrivals[v]["port_name"], version=2)}'
+            f'\n📍 *Location:* {escape_markdown(departures[v]["port_name"], version=2)}'
             if user.chat_type in ("private", "group")
             else ""
         )
