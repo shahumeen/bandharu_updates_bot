@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 import os
 from dotenv import load_dotenv
 from utils import update_db_with_api
-from command_handlers import *
+from handlers import *
 from send_messages import notify_job
 
 load_dotenv()
@@ -44,6 +44,7 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("addisland", subisland))
     app.add_handler(CommandHandler("addvessel", subvessel))
     app.add_handler(CommandHandler("settings", settings))
+    app.add_handler(CommandHandler("toggledepartures", toggledepartures))
     app.add_handler(CommandHandler("unsub", unsub))
     app.add_handler(CommandHandler("listchannels", listchannels))
     app.add_handler(CommandHandler("islandstats", island_stats))
@@ -52,12 +53,14 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("addchannel", addchannel))
     app.add_handler(CommandHandler("channeladdvessel", channelsubvessel))
     app.add_handler(CommandHandler("channeladdisland", channelsubisland))
+    app.add_handler(CommandHandler("channelsettings", channelsettings))
+    app.add_handler(CommandHandler("channelunsub", channelunsub))
+    app.add_handler(CommandHandler("togglechanneldepartures", togglechanneldepartures))
+    app.add_handler(CommandHandler("removechannel", removechannel))
 
     app.add_handler(CallbackQueryHandler(callback_handler))
 
     # Handle all non-command messages
-    app.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, unrecognized_command)
-    )
+    app.add_handler(MessageHandler(~filters.COMMAND, unrecognized_command))
 
     app.run_polling()

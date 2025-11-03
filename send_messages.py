@@ -4,9 +4,7 @@ from zoneinfo import ZoneInfo
 import re
 import os
 from dotenv import load_dotenv
-from utils import (
-    all_notify
-)
+from utils import all_notify
 from model_helpers import (
     update_notified,
     get_users_to_notify_for_log,
@@ -23,9 +21,7 @@ from typing import Optional, List, Any
 
 load_dotenv()
 TOKEN = os.getenv("BOT_API")
-CHANNEL_ID = os.getenv("CHANNEL_ID")
 FOLLOWME_API_KEY = os.getenv("FOLLOWME_API")
-PORT_NAME = os.getenv("PORT_NAME")
 male_ports_lst = [
     "Male North Harbour",
     "Male South Harbor",
@@ -206,7 +202,6 @@ def _format_male_departure(event: dict, user: User):
 
     try:
 
-
         contact_val = event.get("contact")
         contact = f"\n📞 *Contact:*{contact_val}" if contact_val else ""
 
@@ -341,6 +336,8 @@ _\\#{hashtag}_
 
 async def departures_notify(departures, context, user: User):
     """Send departure notifications (departures is a dict keyed by portlog id) to a single user/chat."""
+    if not user.notify_on_departure:
+        return
 
     for v in departures:
         contact = departures[v].get("contact", None)

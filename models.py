@@ -56,6 +56,7 @@ class User(BaseModel):
     main_port = ForeignKeyField(
         Port, null=True, backref="main_port_chats", on_delete="CASCADE"
     )
+    notify_on_departure = BooleanField(default=True)
 
 
 class Vessel(BaseModel):

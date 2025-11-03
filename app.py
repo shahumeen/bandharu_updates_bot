@@ -36,7 +36,7 @@ def _run_bot() -> None:
         MessageHandler,
         filters,
     )
-    from command_handlers import (
+    from handlers import (
         start,
         subisland,
         subvessel,

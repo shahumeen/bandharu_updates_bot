@@ -1,0 +1,162 @@
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes
+from telegram.helpers import escape_markdown
+import re
+
+from model_helpers import Port
+from stats_calculator import get_daily_port_stats
+from .common import esc_md
+
+
+async def island_stats(
+    update: Update = None, context: ContextTypes.DEFAULT_TYPE = None
+):
+    def esc(val):
+        return escape_markdown(str(val), version=2)
+
+    # Handle both scheduled and command usage
+    chat_id = update.effective_chat.id if update else context._chat_id
+
+    # If no arguments provided, show usage message
+    if not context.args:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=(
+                "*📊 Island stats*\n"
+                "Use: */islandstats* <island name>\n"
+                "Example: */islandstats* Male"
+            ),
+            parse_mode="MarkdownV2",
+        )
+        return
+
+    if not hasattr(context, "args"):
+        return  # For scheduled calls without arguments
+
+    port_name = context.args[0].upper()
+    # Get matching ports
+    matches = list(Port.select().where(Port.name.contains(port_name)).limit(10))
+
+    if not matches:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=f"😕 No islands found matching ‘{esc_md(port_name)}’\.",
+            parse_mode="MarkdownV2",
+        )
+        return
+
+    # If multiple matches, show selection keyboard
+    if len(matches) > 1:
+        keyboard = []
+        for port in matches:
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        port.name, callback_data=f"get_port_stats:{port.id}"
+                    )
+                ]
+            )
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=f"🔎 Multiple islands found matching ‘{esc_md(port_name)}’\. Please select one:",
+            reply_markup=reply_markup,
+            parse_mode="MarkdownV2",
+        )
+        return
+
+    # Single match found, get stats directly
+    port = matches[0]
+    await send_port_stats(context, chat_id, port.id)
+
+
+async def send_port_stats(context, chat_id, port_id):
+    def esc(val):
+        return escape_markdown(str(val), version=2)
+
+    stats_dict = get_daily_port_stats(port_id)
+    if not stats_dict:
+        await context.bot.send_message(
+            chat_id=chat_id, text="No statistics available for this port."
+        )
+        return
+
+    try:
+        port = Port.get_by_id(port_id)
+        port_name = port.name
+    except Port.DoesNotExist:
+        port_name = "Unknown Port"
+
+    date = esc(stats_dict["date"])
+
+    highlights = (
+        f"📈 *{date} HIGHLIGHTS*\n"
+        f"────────────────────\n\n"
+        + (
+            f"🏆 _*Busiest Hour:*_\n{esc(stats_dict['busiest_hour'])}\n"
+            if stats_dict.get("busiest_hour")
+            else ""
+        )
+        + (
+            f"\n🚀 _*Most Active:*_\n{esc(stats_dict['most_active'])}\n"
+            if stats_dict.get("most_active")
+            else ""
+        )
+        + (
+            f"\n🌊 _*Longest Trip:*_\n{esc(stats_dict['longest_trip']['duration'])} \\- {esc(stats_dict['longest_trip']['vessel'])} \\({esc(stats_dict['longest_trip']['from'])} → {esc(stats_dict['longest_trip']['to'])}\\)\n"
+            if stats_dict.get("longest_trip")
+            else ""
+        )
+        + (
+            f"\n🏝 _*Most Popular Island:*_\n{esc(stats_dict['most_popular_island'])}\n"
+            if stats_dict.get("most_popular_island")
+            else ""
+        )
+        + "\n────────────────────\n"
+    )
+
+    medals = ["🥇", "🥈", "🥉"]
+    vessel_rankings = "🎖 *VESSEL RANKINGS*\n" + "\n".join(
+        f"{i+1}\\. {medals[i]} _*{esc(entry['vessel'])}:*_ _{entry['trips']} {'trip' if entry['trips']==1 else 'trips'}_"
+        for i, entry in enumerate(stats_dict.get("leaderboard", []))
+    )
+
+    max_count = max((h["count"] for h in stats_dict.get("peak_hours", [])), default=1)
+    peak_hours = "\n\n⏱️*PEAK HOURS*\n" + "\n".join(
+        f" {esc(h['hour'])} {'█' * int((h['count']/max_count)*10)} {h['count']} {esc(h['vessel_word'])}{' 🏆' if h.get('is_busiest') else ''}"
+        for h in stats_dict.get("peak_hours", [])
+    )
+
+    daily_totals = (
+        "\n\n📊 *DAILY TOTALS*\n"
+        f"• *Total Trips:* {esc(stats_dict['total_trips'])}\n"
+        f"• *Unique Vessels:* {esc(stats_dict['unique_vessels'])}\n"
+        + "\n".join(
+            f"• *{esc(vtype)}:* {count} {'trip' if count==1 else 'trips'}"
+            for vtype, count in stats_dict.get("vessel_type_trips", {}).items()
+        )
+        + "\n\n────────────────────"
+        + f"\n_\\#dailyreport_ _\\#{date.replace(' ', '')}_ _\\#{re.sub(r'[^0-9a-zA-Z]+', '', port_name)}_"
+    )
+
+    formatted_response = f"{highlights}\n{vessel_rankings}{peak_hours}{daily_totals}"
+    print(formatted_response, flush=True)
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text=formatted_response,
+        parse_mode="MarkdownV2",
+        disable_web_page_preview=True,
+    )
+
+
+async def vessel_stats(
+    update: Update = None, context: ContextTypes.DEFAULT_TYPE = None
+):
+    response = "⏳ Coming soon، إن شاء الله"
+    await context.bot.send_message(
+        chat_id=context._chat_id,
+        text=response,
+        parse_mode="MarkdownV2",
+        disable_web_page_preview=True,
+    )
