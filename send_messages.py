@@ -336,6 +336,7 @@ async def departures_notify(departures, context, user: User):
     """Send departure notifications (departures is a dict keyed by portlog id) to a single user/chat."""
 
     for v in departures:
+        chat_id = getattr(user, "chat_id", user)
         if not user.notify_on_departure:
             update_notified(user, departures[v]["portlog_id"])
             print(
@@ -414,7 +415,6 @@ _\\#{hashtag}_
                 if male_msg:
                     formatted_response = male_msg
 
-        chat_id = getattr(user, "chat_id", user)
         await context.bot.send_message(
             chat_id=chat_id,
             text=formatted_response,
