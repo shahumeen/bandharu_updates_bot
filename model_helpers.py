@@ -14,7 +14,7 @@ PORT_EVENT_HYSTERESIS_SECONDS = 120
 
 # Global cap for PortLogNotification table size (to constrain DB usage)
 # Override with environment variable PLN_MAX_ROWS, e.g. 50000
-PLN_MAX_ROWS = 50
+PLN_MAX_ROWS = 50000
 
 
 # -------------------------

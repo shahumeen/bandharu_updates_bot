@@ -29,6 +29,7 @@ male_ports_lst = [
     "Male Harbour",
     "Male Airport Jetty",
 ]
+MALE_DUPLICATE_NOTIFICATIONS_IGNORE_HOURS = 5
 
 
 def _fmt_time(ts):
@@ -297,24 +298,21 @@ _\\#{hashtag}_
 {port_hashtag}_\\#arrival_
 """
         # Apply Male-specific formatting only if user's main_port is NOT a Male port
-        if (
-            (arrivals[v]["port_name"] in male_ports_lst)
-            and user.main_port
-            and (user.main_port.name not in male_ports_lst)
-        ):
-            # If there's already a Male arrival for this vessel within the last 5 hours, skip notifying.
-            if _has_recent_event(
-                vessel_id,
-                "arrival",
-                arrivals[v].get("timestamp"),
-                within_hours=5,
-                restrict_port_names=male_ports_lst,
-            ):
-                update_notified(user, arrivals[v]["portlog_id"])
-                continue
-            male_msg = _format_male_arrival(arrivals[v], user)
-            if male_msg:
-                formatted_response = male_msg
+        if arrivals[v]["port_name"] in male_ports_lst:
+            if user.main_port and (user.main_port.name not in male_ports_lst):
+                # If there's already a Male arrival for this vessel within the last 5 hours, skip notifying.
+                if _has_recent_event(
+                    vessel_id,
+                    "arrival",
+                    arrivals[v].get("timestamp"),
+                    within_hours=MALE_DUPLICATE_NOTIFICATIONS_IGNORE_HOURS,
+                    restrict_port_names=male_ports_lst,
+                ):
+                    update_notified(user, arrivals[v]["portlog_id"])
+                    continue
+                male_msg = _format_male_arrival(arrivals[v], user)
+                if male_msg:
+                    formatted_response = male_msg
 
         chat_id = getattr(user, "chat_id", user)
         await context.bot.send_message(
@@ -336,10 +334,16 @@ _\\#{hashtag}_
 
 async def departures_notify(departures, context, user: User):
     """Send departure notifications (departures is a dict keyed by portlog id) to a single user/chat."""
-    if not user.notify_on_departure:
-        return
 
     for v in departures:
+        if not user.notify_on_departure:
+            update_notified(user, departures[v]["portlog_id"])
+            print(
+                f"{departures[v]['portlog_id']} | status updated to notified for {chat_id}",
+                flush=True,
+            )
+            continue
+
         contact = departures[v].get("contact", None)
         if contact is None:
             contact = ""
@@ -394,24 +398,21 @@ _\\#{hashtag}_
 {port_hashtag}_\\#departure_
 """
         # Apply Male-specific formatting only if user's main_port is NOT a Male port
-        if (
-            (departures[v]["port_name"] in male_ports_lst)
-            and user.main_port
-            and (user.main_port.name not in male_ports_lst)
-        ):
-            # If there's already a Male departure for this vessel within the last 5 hours, skip notifying.
-            if _has_recent_event(
-                vessel_id,
-                "departure",
-                departures[v].get("timestamp"),
-                within_hours=5,
-                restrict_port_names=male_ports_lst,
-            ):
-                update_notified(user, departures[v]["portlog_id"])
-                continue
-            male_msg = _format_male_departure(departures[v], user)
-            if male_msg:
-                formatted_response = male_msg
+        if departures[v]["port_name"] in male_ports_lst:
+            if user.main_port and (user.main_port.name not in male_ports_lst):
+                # If there's already a Male departure for this vessel within the last 5 hours, skip notifying.
+                if _has_recent_event(
+                    vessel_id,
+                    "departure",
+                    departures[v].get("timestamp"),
+                    within_hours=MALE_DUPLICATE_NOTIFICATIONS_IGNORE_HOURS,
+                    restrict_port_names=male_ports_lst,
+                ):
+                    update_notified(user, departures[v]["portlog_id"])
+                    continue
+                male_msg = _format_male_departure(departures[v], user)
+                if male_msg:
+                    formatted_response = male_msg
 
         chat_id = getattr(user, "chat_id", user)
         await context.bot.send_message(

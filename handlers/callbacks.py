@@ -137,9 +137,9 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if ok:
                 try:
                     v = Vessel.get_by_id(vid)
-                    await cq.edit_message_text(text=f"Unsubscribed from {v.name}.")
+                    await cq.edit_message_text(text=f"🔕 Unsubscribed from {v.name}.")
                 except Exception:
-                    await cq.edit_message_text(text=f"Unsubscribed from vessel.")
+                    await cq.edit_message_text(text=f"🔕 Unsubscribed from vessel.")
             else:
                 try:
                     v = Vessel.get_by_id(vid)
