@@ -22,14 +22,13 @@ from typing import Optional, List, Any
 load_dotenv()
 TOKEN = os.getenv("BOT_API")
 FOLLOWME_API_KEY = os.getenv("FOLLOWME_API")
-male_ports_lst = [
+male_ports_lst = (
     "Male North Harbour",
     "Male South Harbor",
     "Male SW Harbor",
     "Male Harbour",
     "Male Airport Jetty",
-]
-MALE_DUPLICATE_NOTIFICATIONS_IGNORE_HOURS = 5
+)
 
 
 def _fmt_time(ts):
@@ -147,25 +146,28 @@ def _format_male_arrival(event: dict, user: User):
             .first()
         )
 
-        if not last_departure:
-            return None
+        if last_departure:
+            # Calculate transit from user's main port departure to this arrival
+            transit_seconds = _seconds_between(
+                event.get("timestamp"), last_departure.timestamp
+            )
+            transit_fmt = _format_duration(transit_seconds) or "Unknown"
+            departure_time_fmt = _fmt_time(last_departure.timestamp)
+            departure = escape_markdown(departure_time_fmt, version=2)
+            transit = escape_markdown(transit_fmt, version=2)
+        else:
+            departure = 'Unknown'
+            transit = 'Unknown'
 
-        # Calculate transit from user's main port departure to this arrival
-        transit_seconds = _seconds_between(
-            event.get("timestamp"), last_departure.timestamp
-        )
-        transit_fmt = _format_duration(transit_seconds) or "Unknown"
         arrival_time_fmt = _fmt_time(event.get("timestamp"))
-        departure_time_fmt = _fmt_time(last_departure.timestamp)
-
         # Escape for MarkdownV2
         vessel_name = escape_markdown(event.get("name", "Unknown"), version=2)
         port_name = escape_markdown(event.get("port_name", "Unknown"), version=2)
-        vessel_type = escape_markdown(vessel.vessel_type or "Unknown", version=2)
+        vessel_type = escape_markdown(event["vessel_type"] or "Unknown", version=2)
         last_port = escape_markdown(user.main_port.name, version=2)
-        departure = escape_markdown(departure_time_fmt, version=2)
+
         arrival_time = escape_markdown(arrival_time_fmt or "Unknown", version=2)
-        transit = escape_markdown(transit_fmt, version=2)
+
         hashtag = re.sub(r"[^0-9a-zA-Z]+", "", vessel.name).lower()
 
         formatted_response = f"""
@@ -208,18 +210,27 @@ def _format_male_departure(event: dict, user: User):
 
         # Escape special characters for Markdown
         vessel_name = escape_markdown(event.get("name", "Unknown"), version=2)
-        vessel_type = escape_markdown(vessel.vessel_type or "Unknown", version=2)
+        vessel_type = escape_markdown(event["vessel_type"] or "Unknown", version=2)
         last_port = escape_markdown(event.get("port_name"), version=2)
         stay_duration = escape_markdown(
             (event.get("stay_time") or "Unknown"), version=2
+        )
+        departure_time = escape_markdown(
+            (
+                _fmt_time(event.get("timestamp"))
+                if event.get("timestamp")
+                else "Unknown"
+            ),
+            version=2,
         )
         hashtag = re.sub(r"[^0-9a-zA-Z]+", "", vessel.name).lower()
 
         formatted_response = f"""
 🟣⚓*[{vessel_name}](m.followme.mv/public/?id={vessel_id}) DEPARTED MALE*⚓
 ━━━━━━━━━━━━━━━━━━━━━━━
+📍 *Departed from:* {last_port}
+⏱️ *Departure Time:* {departure_time}
 📋 *Type:* {vessel_type}{contact}
-📅 *Departed from:* {last_port}
 ⏳ *Stay Duration:* {stay_duration}
 ━━━━━━━━━━━━━━━━━━━━━━━
 _\\#{hashtag}_
@@ -300,21 +311,11 @@ _\\#{hashtag}_
         # Apply Male-specific formatting only if user's main_port is NOT a Male port
         if arrivals[v]["port_name"] in male_ports_lst:
             if user.main_port and (user.main_port.name not in male_ports_lst):
-                # If there's already a Male arrival for this vessel within the last 5 hours, skip notifying.
-                if _has_recent_event(
-                    vessel_id,
-                    "arrival",
-                    arrivals[v].get("timestamp"),
-                    within_hours=MALE_DUPLICATE_NOTIFICATIONS_IGNORE_HOURS,
-                    restrict_port_names=male_ports_lst,
-                ):
-                    update_notified(user, arrivals[v]["portlog_id"])
-                    continue
                 male_msg = _format_male_arrival(arrivals[v], user)
                 if male_msg:
                     formatted_response = male_msg
 
-        chat_id = getattr(user, "chat_id", user)
+        chat_id = user.chat_id
         await context.bot.send_message(
             chat_id=chat_id,
             text=formatted_response,
@@ -325,7 +326,7 @@ _\\#{hashtag}_
         print(
             f"name:{vessel_name} | type:{vessel_type}\ndepart-time:{arrival_time}\ncontact{contact}\n\n"
         )
-        update_notified(user, arrivals[v]["portlog_id"])
+        update_notified(user, int(arrivals[v]["portlog_id"]))
         print(
             f"{arrivals[v]['portlog_id']} | status updated to notified for {chat_id}",
             flush=True,
@@ -336,9 +337,9 @@ async def departures_notify(departures, context, user: User):
     """Send departure notifications (departures is a dict keyed by portlog id) to a single user/chat."""
 
     for v in departures:
-        chat_id = getattr(user, "chat_id", user)
+        chat_id = user.chat_id
         if not user.notify_on_departure:
-            update_notified(user, departures[v]["portlog_id"])
+            update_notified(user, int(departures[v]["portlog_id"]))
             print(
                 f"{departures[v]['portlog_id']} | status updated to notified for {chat_id}",
                 flush=True,
@@ -357,13 +358,12 @@ async def departures_notify(departures, context, user: User):
             else ""
         )
         island = (
-            f'\n📍 *Location:* {escape_markdown(departures[v]["port_name"], version=2)}'
+            f'📍 *Location:* {escape_markdown(departures[v]["port_name"], version=2)}\n'
             if user.chat_type in ("private", "group")
             else ""
         )
 
         vessel_name = escape_markdown(departures[v]["name"].upper(), version=2)
-        print(vessel_name)
         departure_time = escape_markdown(
             (
                 _fmt_time(departures[v].get("timestamp"))
@@ -387,13 +387,11 @@ async def departures_notify(departures, context, user: User):
         vessel_id = departures[v]["vessel_id"]
 
         formatted_response = f"""
-🔴⚓*[{vessel_name}](m.followme.mv/public/?id={departures[v]["vessel_id"]}) DEPARTED*⚓
+🔴⚓*[{vessel_name}](m.followme.mv/public/?id={vessel_id}) DEPARTED*⚓
 ━━━━━━━━━━━━━━━━━━━━━━━
-{island}
-⏱️ *Departure Time:* {departure_time}
+{island}⏱️ *Departure Time:* {departure_time}
 📋 *Type:* {vessel_type}{contact}
 ⏳ *Stay Duration:* {port_stay}
-
 ━━━━━━━━━━━━━━━━━━━━━━━
 _\\#{hashtag}_
 {port_hashtag}_\\#departure_
@@ -401,16 +399,6 @@ _\\#{hashtag}_
         # Apply Male-specific formatting only if user's main_port is NOT a Male port
         if departures[v]["port_name"] in male_ports_lst:
             if user.main_port and (user.main_port.name not in male_ports_lst):
-                # If there's already a Male departure for this vessel within the last 5 hours, skip notifying.
-                if _has_recent_event(
-                    vessel_id,
-                    "departure",
-                    departures[v].get("timestamp"),
-                    within_hours=MALE_DUPLICATE_NOTIFICATIONS_IGNORE_HOURS,
-                    restrict_port_names=male_ports_lst,
-                ):
-                    update_notified(user, departures[v]["portlog_id"])
-                    continue
                 male_msg = _format_male_departure(departures[v], user)
                 if male_msg:
                     formatted_response = male_msg
@@ -427,7 +415,7 @@ _\\#{hashtag}_
             flush=True,
         )
 
-        update_notified(user, departures[v]["portlog_id"])
+        update_notified(user, int(departures[v]["portlog_id"]))
         print(
             f"{departures[v]['portlog_id']} | status updated to notified for {chat_id}",
             flush=True,

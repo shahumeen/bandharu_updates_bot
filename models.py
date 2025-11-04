@@ -10,6 +10,8 @@ from peewee import (
     IntegerField,
     Check,
 )
+import os
+from playhouse.db_url import connect
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -26,6 +28,29 @@ db = SqliteDatabase(
     "vessels_bot.db",
     pragmas={"journal_mode": "wal", "foreign_keys": 1},
 )
+
+try:
+    from dotenv import load_dotenv  # type: ignore
+
+    load_dotenv()
+except Exception:
+    pass
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if DATABASE_URL:
+    # Ensure SSL on Heroku unless explicitly configured.
+    if os.getenv("DYNO") and "sslmode=" not in DATABASE_URL:
+        sep = "&" if "?" in DATABASE_URL else "?"
+        DATABASE_URL = f"{DATABASE_URL}{sep}sslmode=require"
+    db = connect(DATABASE_URL)
+    print("Postgress connected")
+else:
+    print("Using Sqlite")
+    db = SqliteDatabase(
+        "vessels_bot.db",
+        pragmas={"journal_mode": "wal", "foreign_keys": 1},
+    )
 
 
 class BaseModel(Model):

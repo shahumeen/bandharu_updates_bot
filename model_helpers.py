@@ -12,10 +12,6 @@ def mv_time():
 # If a vessel just arrived, ignore a transient 'departure' for this many seconds
 PORT_EVENT_HYSTERESIS_SECONDS = 120
 
-# Global cap for PortLogNotification table size (to constrain DB usage)
-# Override with environment variable PLN_MAX_ROWS, e.g. 50000
-PLN_MAX_ROWS = 50000
-
 
 # -------------------------
 # Helpers: initialize DB
@@ -88,39 +84,6 @@ def create_vessel(
     return vessel
 
 
-def trim_portlognotification_rows(max_rows: int | None = None) -> int:
-    """
-    Ensure the PortLogNotification table does not exceed `max_rows` rows by
-    deleting the oldest entries (by notified_at, then id) beyond the cap.
-
-    Returns the number of deleted rows.
-    Configure default cap via env var PLN_MAX_ROWS.
-    """
-    try:
-        cap = int(max_rows if max_rows is not None else PLN_MAX_ROWS)
-    except Exception:
-        cap = PLN_MAX_ROWS
-
-    if cap <= 0:
-        return 0
-
-    total = PortLogNotification.select().count()
-    if total <= cap:
-        return 0
-
-    # Keep the newest `cap` rows; delete everything older.
-    # Using notified_at desc, id desc as deterministic tiebreaker.
-    subq = (
-        PortLogNotification.select(PortLogNotification.id)
-        .order_by(PortLogNotification.notified_at.desc(), PortLogNotification.id.desc())
-        .offset(cap)
-    )
-    deleted = (
-        PortLogNotification.delete().where(PortLogNotification.id.in_(subq)).execute()
-    )
-    return deleted
-
-
 def log_port_event(
     vessel: Vessel, port: Port, event: str, is_initial_sync: bool = False
 ) -> PortLog:
@@ -148,14 +111,7 @@ def log_port_event(
             sent=is_initial_sync,
         )
 
-    # # Constrain PortLogNotification table size to limit DB usage
-    # try:
-    #     trim_portlognotification_rows()  # uses default cap from env PLN_MAX_ROWS
-    # except Exception:
-    #     # best-effort: never block core logging due to cleanup failure
-    #     pass
-
-    # return port_log
+    return port_log
 
 
 def get_vessel_location(vessel_id: int) -> tuple[Port, str, datetime] | None:
@@ -177,11 +133,14 @@ def update_notified(
     user_or_chat: User | int | str, log_id: int, notified: bool = True
 ) -> bool:
     """
-    Update the sent status of a PortLogNotification entry.
+    Mark a user's notification for a PortLog as completed.
 
-    user_or_chat can be a User instance or a chat_id (int/str). If a chat_id
-    is provided we'll try to resolve the User record. Returns True if the
-    update was successful, False if the entry wasn't found.
+    By default we delete the PortLogNotification row to keep the table small
+    (sent rows are no longer needed for routing). This also makes the
+    periodic trimming optional. Returns True if a row was found and removed
+    (or updated), False if no matching row exists.
+
+    user_or_chat can be a User instance or a chat_id (int/str).
     """
     # Resolve user object if a raw chat id was provided
     user_obj = None
@@ -196,20 +155,37 @@ def update_notified(
         user_obj = None
 
     if user_obj is None:
-        # nothing to update (no user record) — return False to signal no-op
+        # nothing to update (no user record)
         return False
 
+    # Prefer deleting the row once notified to avoid table growth
     try:
-        notification = PortLogNotification.get(
-            (PortLogNotification.user == user_obj)
-            & (PortLogNotification.port_log == log_id)
+        deleted = (
+            PortLogNotification.delete()
+            .where(
+                (PortLogNotification.user == user_obj)
+                & (PortLogNotification.port_log == log_id)
+            )
+            .execute()
         )
-        notification.sent = bool(notified)
-        notification.notified_at = mv_time()
-        notification.save()
-        return True
-    except PortLogNotification.DoesNotExist:
-        return False
+        if deleted > 0:
+            return True
+    except Exception:
+        # fallback to updating the row if delete fails for any reason
+        try:
+            notification = PortLogNotification.get(
+                (PortLogNotification.user == user_obj)
+                & (PortLogNotification.port_log == log_id)
+            )
+            notification.sent = bool(notified)
+            notification.notified_at = mv_time()
+            notification.save()
+            return True
+        except Exception:
+            return False
+
+    # If no row matched, return False (nothing to update)
+    return False
 
 
 def update_port_logs(api_data: dict, is_initial_sync: bool = False):
