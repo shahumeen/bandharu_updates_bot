@@ -316,21 +316,24 @@ _\\#{hashtag}_
                     formatted_response = male_msg
 
         chat_id = user.chat_id
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text=formatted_response,
-            parse_mode="MarkdownV2",
-            disable_web_page_preview=True,
-        )
+        try:
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=formatted_response,
+                parse_mode="MarkdownV2",
+                disable_web_page_preview=True,
+            )
 
-        print(
-            f"name:{vessel_name} | type:{vessel_type}\ndepart-time:{arrival_time}\ncontact{contact}\n\n"
-        )
-        update_notified(user, int(arrivals[v]["portlog_id"]))
-        print(
-            f"{arrivals[v]['portlog_id']} | status updated to notified for {chat_id}",
-            flush=True,
-        )
+            print(
+                f"name:{vessel_name} | type:{vessel_type}\ndepart-time:{arrival_time}\ncontact{contact}\n\n"
+            )
+            update_notified(user, int(arrivals[v]["portlog_id"]))
+            print(
+                f"{arrivals[v]['portlog_id']} | status updated to notified for {chat_id}",
+                flush=True,
+            )
+        except Exception as e:
+            print(f"unable to notify: {e}")
 
 
 async def departures_notify(departures, context, user: User):
@@ -402,24 +405,26 @@ _\\#{hashtag}_
                 male_msg = _format_male_departure(departures[v], user)
                 if male_msg:
                     formatted_response = male_msg
+        try:
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=formatted_response,
+                parse_mode="MarkdownV2",
+                disable_web_page_preview=True,
+            )
 
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text=formatted_response,
-            parse_mode="MarkdownV2",
-            disable_web_page_preview=True,
-        )
+            print(
+                f"name:{vessel_name} | type:{vessel_type}\ndepart-time:{departure_time} | stayed:{port_stay} | contact{contact}\n\n",
+                flush=True,
+            )
 
-        print(
-            f"name:{vessel_name} | type:{vessel_type}\ndepart-time:{departure_time} | stayed:{port_stay} | contact{contact}\n\n",
-            flush=True,
-        )
-
-        update_notified(user, int(departures[v]["portlog_id"]))
-        print(
-            f"{departures[v]['portlog_id']} | status updated to notified for {chat_id}",
-            flush=True,
-        )
+            update_notified(user, int(departures[v]["portlog_id"]))
+            print(
+                f"{departures[v]['portlog_id']} | status updated to notified for {chat_id}",
+                flush=True,
+            )
+        except Exception as e:
+            print(f"unable to notify: {e}")
 
 
 async def notify_job(context):
