@@ -11,9 +11,6 @@ from .common import esc_md
 async def island_stats(
     update: Update = None, context: ContextTypes.DEFAULT_TYPE = None
 ):
-    def esc(val):
-        return escape_markdown(str(val), version=2)
-
     # Handle both scheduled and command usage
     chat_id = update.effective_chat.id if update else context._chat_id
 
