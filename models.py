@@ -13,11 +13,10 @@ from peewee import (
 import os
 from playhouse.db_url import connect
 from datetime import datetime
-from zoneinfo import ZoneInfo
 
 
-def mv_time():
-    return datetime.now(ZoneInfo("Indian/Maldives"))
+def current_time():
+    return datetime.now()
 
 
 # -------------------------
@@ -77,7 +76,7 @@ class User(BaseModel):
     username = CharField(null=True, max_length=255)
     first_name = CharField(max_length=255)
     last_name = CharField(null=True, max_length=255)
-    date_joined = DateTimeField(default=mv_time)
+    date_joined = DateTimeField(default=current_time)
     main_port = ForeignKeyField(
         Port, null=True, backref="main_port_chats", on_delete="CASCADE"
     )
@@ -127,7 +126,7 @@ class PortLog(BaseModel):
     """
 
     id = AutoField()
-    timestamp = DateTimeField(default=mv_time, index=True)
+    timestamp = DateTimeField(default=current_time, index=True)
     vessel = ForeignKeyField(Vessel, backref="logs", on_delete="CASCADE")
     port = ForeignKeyField(Port, backref="logs", on_delete="CASCADE")
     event = CharField(
@@ -144,7 +143,7 @@ class PortLogNotification(BaseModel):
     port_log = ForeignKeyField(PortLog, backref="notifications", on_delete="CASCADE")
     user = ForeignKeyField(User, backref="notifications", on_delete="CASCADE")
     sent = BooleanField(default=False, index=True)
-    notified_at = DateTimeField(default=mv_time, index=True)
+    notified_at = DateTimeField(default=current_time, index=True)
 
     class Meta:
         indexes = ((("port_log", "user"), True),)

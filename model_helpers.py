@@ -1,12 +1,11 @@
 # models_and_processor.py
 from datetime import datetime
-from zoneinfo import ZoneInfo
 from peewee import JOIN
 from models import *
 
 
-def mv_time():
-    return datetime.now(ZoneInfo("Indian/Maldives"))
+def current_time():
+    return datetime.now()
 
 
 # If a vessel just arrived, ignore a transient 'departure' for this many seconds
@@ -178,7 +177,7 @@ def update_notified(
                 & (PortLogNotification.port_log == log_id)
             )
             notification.sent = bool(notified)
-            notification.notified_at = mv_time()
+            notification.notified_at = current_time()
             notification.save()
             return True
         except Exception:
@@ -233,7 +232,7 @@ def update_port_logs(api_data: dict, is_initial_sync: bool = False):
                 if last_log and last_log.event == "arrival":
                     try:
                         recent_arrival = (
-                            mv_time() - last_log.timestamp
+                            current_time() - last_log.timestamp
                         ).total_seconds() < PORT_EVENT_HYSTERESIS_SECONDS
                     except Exception:
                         recent_arrival = False
@@ -255,7 +254,7 @@ def update_port_logs(api_data: dict, is_initial_sync: bool = False):
                 if last_log and last_log.event == "arrival":
                     try:
                         recent_arrival = (
-                            mv_time() - last_log.timestamp
+                            current_time() - last_log.timestamp
                         ).total_seconds() < PORT_EVENT_HYSTERESIS_SECONDS
                     except Exception:
                         recent_arrival = False
@@ -462,5 +461,5 @@ def get_users_to_notify_for_log(port_log: PortLog):
 
 
 if __name__ == "__main__":
-    print(mv_time(), flush=True)
+    print(current_time(), flush=True)
     initialize_db()

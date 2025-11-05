@@ -15,7 +15,7 @@ from models import (
     PortLogNotification,
     Port,
 )
-from utils import _seconds_between, _format_duration
+from utils import _seconds_between, _format_duration, utc_to_maldives_time
 from models import Vessel
 from typing import Optional, List, Any
 
@@ -152,7 +152,9 @@ def _format_male_arrival(event: dict, user: User):
                 event.get("timestamp"), last_departure.timestamp
             )
             transit_fmt = _format_duration(transit_seconds) or "Unknown"
-            departure_time_fmt = _fmt_time(last_departure.timestamp)
+            departure_time_fmt = _fmt_time(
+                utc_to_maldives_time(last_departure.timestamp)
+            )
             departure = escape_markdown(departure_time_fmt, version=2)
             transit = escape_markdown(transit_fmt, version=2)
         else:
@@ -251,7 +253,7 @@ async def arrival_notify(arrivals, context, user: User):
         )
 
         island = (
-            f'\n📍 *Location:* {escape_markdown(arrivals[v]["port_name"], version=2)}'
+            f'📍 *Location:* {escape_markdown(arrivals[v]["port_name"], version=2)}\n'
             if user.chat_type in ("private", "group")
             else ""
         )
@@ -289,21 +291,16 @@ async def arrival_notify(arrivals, context, user: User):
             version=2,
         )
         vessel_id = arrivals[v]["vessel_id"]
-        header = (
-            f"🟢⚓*[{vessel_name}](m.followme.mv/public/?id={vessel_id}) ARRIVED*⚓"
-        )
 
         formatted_response = f"""
-{header}
+🟢⚓*[{vessel_name}](m.followme.mv/public/?id={vessel_id}) ARRIVED*⚓
 ━━━━━━━━━━━━━━━━━━━━━━━
-{island}
-⏱️ *Arrival Time:* {arrival_time}
+{island}⏱️ *Arrival Time:* {arrival_time}
 📋 *Type:* {vessel_type}{contact}
 
 🗺 *Route:* {route}
 📅 *Departed:* {departure_time}
 ⏳ *Transit Time:* {transit_time}
-
 ━━━━━━━━━━━━━━━━━━━━━━━
 _\\#{hashtag}_
 {port_hashtag}_\\#arrival_

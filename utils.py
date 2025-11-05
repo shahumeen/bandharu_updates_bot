@@ -1,7 +1,23 @@
 import requests
 import json
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+try:
+    from zoneinfo import ZoneInfo  # Python 3.9+
+
+    _HAS_ZONEINFO = True
+except Exception:  # pragma: no cover - fallback path
+    ZoneInfo = None  # type: ignore
+    _HAS_ZONEINFO = False
+
+try:
+    import pytz  # Fallback if zoneinfo is unavailable
+
+    _HAS_PYTZ = True
+except Exception:  # pragma: no cover - optional dependency
+    pytz = None  # type: ignore
+    _HAS_PYTZ = False
 from model_helpers import (
     create_port,
     initialize_db,
@@ -73,6 +89,93 @@ def _format_duration(seconds: float | None) -> str | None:
         return "0m"
 
     return " ".join(parts)
+
+
+# Maldives time zone (IANA): 'Indian/Maldives' (UTC+05:00)
+_MALDIVES_TZNAME = "Indian/Maldives"
+
+
+def _get_maldives_tz():
+    """Return a tzinfo for Maldives, with graceful fallbacks.
+
+    Order of preference:
+      1) zoneinfo.ZoneInfo('Indian/Maldives') if available
+      2) pytz.timezone('Indian/Maldives') if available
+      3) Fixed-offset timezone UTC+05:00 as a last-resort
+    """
+    if _HAS_ZONEINFO:
+        try:
+            return ZoneInfo(_MALDIVES_TZNAME)
+        except Exception:
+            pass
+    if _HAS_PYTZ:
+        try:
+            return pytz.timezone(_MALDIVES_TZNAME)
+        except Exception:
+            pass
+    # Final fallback: fixed offset of +05:00
+    return timezone(timedelta(hours=5))
+
+
+def utc_to_maldives_time(ts, fmt: str | None = None) -> datetime | str | None:
+    """Convert a UTC timestamp to Maldives local time (UTC+05:00).
+
+    - Accepts datetime, ISO-like string (e.g. '2025-11-05T12:34:00Z' or '+00:00'), or epoch seconds.
+    - If input is naive (no tzinfo), it's assumed to be UTC.
+    - If `fmt` is provided, returns a formatted string via strftime; otherwise returns
+      an aware datetime localized to 'Indian/Maldives'.
+
+    Returns None if conversion fails.
+    """
+    if ts is None:
+        return None
+
+    dt: datetime | None = None
+    # Fast-path for datetime
+    if isinstance(ts, datetime):
+        dt = ts
+    # Epoch seconds
+    elif isinstance(ts, (int, float)):
+        try:
+            dt = datetime.fromtimestamp(float(ts), tz=timezone.utc)
+        except Exception:
+            return None
+    # Strings (ISO-ish)
+    elif isinstance(ts, str):
+        s = ts.strip()
+        # Handle trailing 'Z' designator
+        if s.endswith("Z"):
+            s = s[:-1] + "+00:00"
+        try:
+            dt = datetime.fromisoformat(s)
+        except Exception:
+            # Fall back to the module's tolerant parser
+            dt = _to_datetime(s)
+            if dt is None:
+                return None
+    else:
+        # Last resort: try the tolerant helper
+        dt = _to_datetime(ts)
+        if dt is None:
+            return None
+
+    # Ensure timestamp is in UTC for correct conversion
+    try:
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        else:
+            dt = dt.astimezone(timezone.utc)
+    except Exception:
+        # If anything goes wrong, assume UTC
+        dt = dt.replace(tzinfo=timezone.utc)
+
+    local_dt = dt.astimezone(_get_maldives_tz())
+    if fmt:
+        try:
+            return local_dt.strftime(fmt)
+        except Exception:
+            return None
+    return local_dt
 
 
 def api_request(api_key):
@@ -166,7 +269,7 @@ def all_notify() -> dict:
                                 microsecond=0
                             ).isoformat()
                         except Exception:
-                            departed_str = str(prev_log.timestamp)
+                            departed_str = utc_to_maldives_time(prev_log.timestamp)
 
                 arrivals[log.id] = {
                     "portlog_id": log.id,
@@ -177,7 +280,7 @@ def all_notify() -> dict:
                     "port_name": log.port.name,
                     "last_port_name": prev_log.port.name if prev_log else None,
                     "event": log.event,
-                    "timestamp": log.timestamp,
+                    "timestamp": utc_to_maldives_time(log.timestamp),
                     "transit_time": _format_duration(transit_seconds),
                     "departed": departed_str,
                 }
@@ -203,7 +306,7 @@ def all_notify() -> dict:
                     "port_name": log.port.name,
                     "last_port_name": log.port.name,
                     "event": log.event,
-                    "timestamp": log.timestamp,
+                    "timestamp": utc_to_maldives_time(log.timestamp),
                     "stay_time": _format_duration(stay_seconds),
                 }
 

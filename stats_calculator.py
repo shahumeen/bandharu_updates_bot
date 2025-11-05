@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from collections import defaultdict
-from model_helpers import Port, PortLog, Vessel, mv_time
+from model_helpers import Port, PortLog, Vessel, current_time
 
 
 def get_daily_port_stats(port_id: int, peak_limit: int = 5) -> dict:
@@ -10,7 +10,7 @@ def get_daily_port_stats(port_id: int, peak_limit: int = 5) -> dict:
     Returns a dict with all stats for later formatting.
     """
     # Get yesterday's date range in MV time
-    now = mv_time()
+    now = current_time()
     yesterday = now.date() - timedelta(days=1)
     mv_tz = ZoneInfo("Indian/Maldives")
     start_time = datetime.combine(yesterday, datetime.min.time()).replace(tzinfo=mv_tz)
