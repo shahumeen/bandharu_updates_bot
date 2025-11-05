@@ -145,6 +145,7 @@ def _format_male_arrival(event: dict, user: User):
             .order_by(PortLog.timestamp.desc())
             .first()
         )
+        contact = f"\n📞 *Contact:* {event['contact']}" if event['contact'] else ""
 
         if last_departure:
             # Calculate transit from user's main port departure to this arrival
@@ -177,7 +178,7 @@ def _format_male_arrival(event: dict, user: User):
 ━━━━━━━━━━━━━━━━━━━━━━━
 📍 *Location:* {port_name}
 ⏱️ *Arrival Time:* {arrival_time}
-📋 *Type:* {vessel_type}
+📋 *Type:* {vessel_type}{contact}
 
 📅 *Departed {last_port}:* {departure}
 ⏳ *Transit Time:* {transit}
@@ -208,7 +209,7 @@ def _format_male_departure(event: dict, user: User):
     try:
 
         contact_val = event.get("contact")
-        contact = f"\n📞 *Contact:*{contact_val}" if contact_val else ""
+        contact = f"\n📞 *Contact:* {contact_val}" if contact_val else ""
 
         # Escape special characters for Markdown
         vessel_name = escape_markdown(event.get("name", "Unknown"), version=2)
@@ -249,7 +250,9 @@ async def arrival_notify(arrivals, context, user: User):
 
     for v in arrivals:
         contact = (
-            f"\n📞 *Contact:*{arrivals[v]['contact']}" if arrivals[v]['contact'] else ""
+            f"\n📞 *Contact:* {arrivals[v]['contact']}"
+            if arrivals[v]['contact']
+            else ""
         )
 
         island = (
@@ -353,7 +356,7 @@ async def departures_notify(departures, context, user: User):
             contact = f"\n📞 *Contact:* {contact}"
 
         contact = (
-            f"\n📞 *Contact:*{departures[v]['contact']}"
+            f"\n📞 *Contact:* {departures[v]['contact']}"
             if departures[v]['contact']
             else ""
         )

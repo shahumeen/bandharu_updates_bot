@@ -282,7 +282,7 @@ def all_notify() -> dict:
                     "event": log.event,
                     "timestamp": utc_to_maldives_time(log.timestamp),
                     "transit_time": _format_duration(transit_seconds),
-                    "departed": departed_str,
+                    "departed": utc_to_maldives_time(departed_str),
                 }
 
             elif log.event == "departure":
