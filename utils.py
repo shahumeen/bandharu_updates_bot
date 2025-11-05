@@ -257,8 +257,8 @@ def all_notify() -> dict:
 
                     # Format departure time if previous log exists
                     try:
-                        prev_ts = prev_log.timestamp
-                        now = datetime.now()
+                        prev_ts = utc_to_maldives_time(prev_log.timestamp)
+                        now = utc_to_maldives_time(datetime.now())
                         if prev_ts.date() == now.date():
                             departed_str = prev_ts.strftime("%H:%M")
                         else:
