@@ -210,8 +210,6 @@ def get_daily_port_stats(port_id: int, peak_limit: int = 5) -> dict:
         result["most_popular_island"] = (
             f"{most_popular_island[0]} ({most_popular_island[1]} {trip_word})"
         )
-    print("Port stats")
-    print(result)
     return result
 
 
