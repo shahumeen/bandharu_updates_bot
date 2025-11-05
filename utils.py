@@ -265,9 +265,11 @@ def all_notify() -> dict:
                             departed_str = prev_ts.strftime("%d %b %H:%M")
                     except Exception:
                         try:
-                            departed_str = prev_log.timestamp.replace(
-                                microsecond=0
-                            ).isoformat()
+                            departed_str = (
+                                utc_to_maldives_time(prev_log.timestamp)
+                                .replace(microsecond=0)
+                                .isoformat()
+                            )
                         except Exception:
                             departed_str = utc_to_maldives_time(prev_log.timestamp)
 
@@ -282,7 +284,7 @@ def all_notify() -> dict:
                     "event": log.event,
                     "timestamp": utc_to_maldives_time(log.timestamp),
                     "transit_time": _format_duration(transit_seconds),
-                    "departed": utc_to_maldives_time(departed_str),
+                    "departed": departed_str,
                 }
 
             elif log.event == "departure":
