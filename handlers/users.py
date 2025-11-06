@@ -495,7 +495,7 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Hint: if user has island subscriptions but no vessel subscriptions
     if port_list and not vessel_list:
         lines.append(
-            "\nℹ️ Add at least one vessel to start notifications.\n*Usage:*\n`/addvessel <vessel_name_or_id>`\n*Example:*\n`/addvessel Speed Star`\n\n🔔 You'll be notified when a subscribed vessel visits a subscribed island\nOr join your island\'s update channel to get notifications for all vessels — see `\/islandchannels`"
+            "\nℹ️ Add at least one vessel to start notifications\\.\n*Usage:*\n`/addvessel <vessel_name_or_id>`\n*Example:*\n`/addvessel Speed Star`\n\n🔔 You'll be notified when a subscribed vessel visits a subscribed island\nOr join your island\'s update channel to get notifications for all vessels — see `\/islandchannels`"
         )
 
     await context.bot.send_message(
