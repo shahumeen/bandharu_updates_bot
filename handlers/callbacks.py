@@ -62,24 +62,24 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if sub:
                 try:
                     port = Port.get_by_id(pid)
-                    await cq.edit_message_text(text=f"Subscribed to {port.name}.")
+                    await cq.edit_message_text(text=f"✅ Subscribed to {port.name}.")
                 except Exception:
-                    await cq.edit_message_text(text=f"Subscribed to port.")
+                    await cq.edit_message_text(text=f"✅ Subscribed to port.")
             else:
                 if err == "limit_reached":
                     await cq.edit_message_text(
-                        text="You have reached the maximum of 10 port subscriptions."
+                        text="❌ You have reached the maximum of 10 port subscriptions.\nPlease use /unsub to remove an island."
                     )
                 else:
                     try:
                         port = Port.get_by_id(pid)
                         await cq.edit_message_text(
-                            text=f"Failed to subscribe to {port.name}."
+                            text=f"❌ Failed to subscribe to {port.name}."
                         )
                     except Exception:
-                        await cq.edit_message_text(text=f"Failed to subscribe to port.")
+                        await cq.edit_message_text(text=f"❌ Failed to subscribe to port.")
         except Exception:
-            await cq.edit_message_text(text="Invalid selection.")
+            await cq.edit_message_text(text="❌ Invalid selection.")
 
     elif data.startswith("sub_vessel:"):
         try:
@@ -88,26 +88,26 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if sub:
                 try:
                     v = Vessel.get_by_id(vid)
-                    await cq.edit_message_text(text=f"Subscribed to {v.name}.")
+                    await cq.edit_message_text(text=f"✅ Subscribed to {v.name}.")
                 except Exception:
-                    await cq.edit_message_text(text=f"Subscribed to vessel.")
+                    await cq.edit_message_text(text=f"✅ Subscribed to vessel.")
             else:
                 if err == "limit_reached":
                     await cq.edit_message_text(
-                        text="You have reached the maximum of 10 vessel subscriptions."
+                        text="❌ You have reached the maximum of 10 vessel subscriptions.\nPlease use /unsub to remove a vessel."
                     )
                 else:
                     try:
                         v = Vessel.get_by_id(vid)
                         await cq.edit_message_text(
-                            text=f"Failed to subscribe to {v.name}."
+                            text=f"❌ Failed to subscribe to {v.name}."
                         )
                     except Exception:
                         await cq.edit_message_text(
-                            text=f"Failed to subscribe to vessel."
+                            text=f"❌ Failed to subscribe to vessel."
                         )
         except Exception:
-            await cq.edit_message_text(text="Invalid selection.")
+            await cq.edit_message_text(text="❌ Invalid selection.")
 
     elif data.startswith("unsub_port:"):
         try:
@@ -116,19 +116,19 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if ok:
                 try:
                     port = Port.get_by_id(pid)
-                    await cq.edit_message_text(text=f"Unsubscribed from {port.name}.")
+                    await cq.edit_message_text(text=f"🔕 Unsubscribed from {port.name}.")
                 except Exception:
-                    await cq.edit_message_text(text=f"Unsubscribed from port.")
+                    await cq.edit_message_text(text=f"🔕 Unsubscribed from port.")
             else:
                 try:
                     port = Port.get_by_id(pid)
                     await cq.edit_message_text(
-                        text=f"Failed to unsubscribe from {port.name}."
+                        text=f"❌ Failed to unsubscribe from {port.name}."
                     )
                 except Exception:
-                    await cq.edit_message_text(text=f"Failed to unsubscribe from port.")
+                    await cq.edit_message_text(text=f"❌Failed to unsubscribe from port.")
         except Exception:
-            await cq.edit_message_text(text="Invalid selection.")
+            await cq.edit_message_text(text="❌ Invalid selection.")
 
     elif data.startswith("unsub_vessel:"):
         try:
@@ -150,7 +150,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     if ports and not vessels:
                         await cq.message.reply_text(
                             (
-                                "ℹ️ You still have island subscriptions but no vessel subscriptions left\. Without a vessel subscription you won't receive notifications\.\n\n"
+                                "‼️ You still have island subscriptions but no vessel subscriptions left\\. Without a vessel subscription you won't receive notifications\\.\n\n"
                                 "*Usage:*\n`/addvessel <vessel_name_or_id>`\n*Example:*\n`/addvessel Speed Star`"
                             ),
                             parse_mode="MarkdownV2",
@@ -161,14 +161,14 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 try:
                     v = Vessel.get_by_id(vid)
                     await cq.edit_message_text(
-                        text=f"Failed to unsubscribe from {v.name}."
+                        text=f"❌ Failed to unsubscribe from {v.name}."
                     )
                 except Exception:
                     await cq.edit_message_text(
-                        text=f"Failed to unsubscribe from vessel."
+                        text=f"❌ Failed to unsubscribe from vessel."
                     )
         except Exception:
-            await cq.edit_message_text(text="Invalid selection.")
+            await cq.edit_message_text(text="❌ Invalid selection.")
 
     elif data.startswith("add_channel:"):
         try:
@@ -270,7 +270,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Only admin can use these callbacks
             if int(chat_id) != int(ADMIN_CHAT_ID):
-                await cq.edit_message_text(text="Only admin can use this function.")
+                await cq.edit_message_text(text="⛔️ Only admin can use this function.")
                 return
 
             sub, created, err = subscribe_user_to_vessel(channel_id, vid)
