@@ -42,6 +42,7 @@ def _run_bot() -> None:
         MessageHandler,
         filters,
     )
+    from telegram import BotCommand
     from handlers import (
         start,
         help_command,
@@ -67,6 +68,35 @@ def _run_bot() -> None:
     from send_messages import notify_job
 
     print("Starting the bot...", flush=True)
+
+    async def _post_init(application):
+        """Set bot command menu for user-friendly mobile UI.
+
+        Populates the Telegram client-side command shortcuts so users can tap
+        instead of typing. Wrapped in try/except because failure (e.g. network
+        hiccup) is non-fatal: the bot still runs, only the menu is missing.
+        """
+        try:
+            await application.bot.set_my_commands(
+                [
+                    BotCommand("start", "Welcome and overview"),
+                    BotCommand("help", "How to use the bot"),
+                    BotCommand("addisland", "Subscribe to an island"),
+                    BotCommand("addvessel", "Subscribe to a vessel"),
+                    BotCommand("settings", "View your subscriptions"),
+                    BotCommand("unsub", "Remove subscriptions"),
+                    BotCommand("toggledepartures", "Toggle departure alerts"),
+                    BotCommand("islandstats", "Yesterday's island stats"),
+                    BotCommand("vesselstats", "Vessel stats (beta)"),
+                    BotCommand("islandchannels", "Island update channels"),
+                ]
+            )
+        except Exception:
+            # Non-fatal; continue without setting commands
+            pass
+
+    # Register post-init hook so Application calls this after it starts
+    bot_main.app.post_init = _post_init
 
     # Schedule background notifications job
     bot_main.app.job_queue.run_repeating(notify_job, interval=15, first=3.0)

@@ -594,7 +594,7 @@ async def toggledepartures(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    reply = "🔔 Departure notifications are now _*ON*_ for this chat." if new_value else "🔕 Departure notifications are now _*OFF*_ for this chat."
+    reply = "🔔 Departure notifications are now _*ON*_ for this chat\\." if new_value else "🔕 Departure notifications are now _*OFF*_ for this chat\\."
     await context.bot.send_message(
         chat_id=chat_id,
         text=reply,
