@@ -2,11 +2,12 @@ from .common import esc_md
 from .users import (
     start,
     unrecognized_command,
+    help_command,
     subisland,
     subvessel,
     settings,
     unsub,
-    listchannels,
+    islandchannels,
     toggledepartures,
 )
 from .callbacks import callback_handler
@@ -27,11 +28,12 @@ __all__ = [
     # user commands
     "start",
     "unrecognized_command",
+    "help_command",
     "subisland",
     "subvessel",
     "settings",
     "unsub",
-    "listchannels",
+    "islandchannels",
     "toggledepartures",
     # callbacks
     "callback_handler",

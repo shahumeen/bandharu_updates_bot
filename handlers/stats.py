@@ -19,9 +19,10 @@ async def island_stats(
         await context.bot.send_message(
             chat_id=chat_id,
             text=(
-                "*📊 Island stats*\n"
-                "Use: */islandstats* \\<island name\\>\n"
-                "Example: */islandstats* Male"
+                "*Usage:*\n"
+                "`/islandstats <island_name>`\n"
+                "*Example:*\n"
+                "`/islandstats Male`"
             ),
             parse_mode="MarkdownV2",
         )
@@ -150,10 +151,24 @@ async def send_port_stats(context, chat_id, port_id):
 async def vessel_stats(
     update: Update = None, context: ContextTypes.DEFAULT_TYPE = None
 ):
-    response = "⏳ Coming soon، إن شاء الله"
+    if not context.args:
+        await context.bot.send_message(
+            chat_id=context._chat_id,
+            text=(
+                "*Usage:*\n"
+                "`/vesselstats <vessel_name_or_id>`\n"
+                "*Example:*\n"
+                "`/vesselstats Speed Star`\n\n"
+                "⏳ Detailed vessel stats coming soon—إن شاء الله"
+            ),
+            parse_mode="MarkdownV2",
+            disable_web_page_preview=True,
+        )
+        return
+    # Placeholder while feature is in beta
     await context.bot.send_message(
         chat_id=context._chat_id,
-        text=response,
+        text="🧪 Vessel stats beta is not yet implemented for specific queries.",
         parse_mode="MarkdownV2",
         disable_web_page_preview=True,
     )

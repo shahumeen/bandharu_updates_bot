@@ -324,14 +324,14 @@ _\\#{hashtag}_
                 disable_web_page_preview=True,
             )
 
-            print(
-                f"name:{vessel_name} | type:{vessel_type}\ndepart-time:{arrival_time}\ncontact{contact}\n\n"
-            )
+            # print(
+            #     f"name:{vessel_name} | type:{vessel_type}\ndepart-time:{arrival_time}\ncontact{contact}\n\n"
+            # )
             update_notified(user, int(arrivals[v]["portlog_id"]))
-            print(
-                f"{arrivals[v]['portlog_id']} | status updated to notified for {chat_id}",
-                flush=True,
-            )
+            # print(
+            #     f"{arrivals[v]['portlog_id']} | status updated to notified for {chat_id}",
+            #     flush=True,
+            # )
         except Exception as e:
             print(f"unable to notify: {e}")
 
@@ -413,16 +413,16 @@ _\\#{hashtag}_
                 disable_web_page_preview=True,
             )
 
-            print(
-                f"name:{vessel_name} | type:{vessel_type}\ndepart-time:{departure_time} | stayed:{port_stay} | contact{contact}\n\n",
-                flush=True,
-            )
+            # print(
+            #     f"name:{vessel_name} | type:{vessel_type}\ndepart-time:{departure_time} | stayed:{port_stay} | contact{contact}\n\n",
+            #     flush=True,
+            # )
 
             update_notified(user, int(departures[v]["portlog_id"]))
-            print(
-                f"{departures[v]['portlog_id']} | status updated to notified for {chat_id}",
-                flush=True,
-            )
+            # print(
+            #     f"{departures[v]['portlog_id']} | status updated to notified for {chat_id}",
+            #     flush=True,
+            # )
         except Exception as e:
             print(f"unable to notify: {e}")
 

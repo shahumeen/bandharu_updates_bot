@@ -1,6 +1,5 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
-from peewee import JOIN
 
 from .common import esc_md
 from model_helpers import (
@@ -19,7 +18,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     chat_id = chat.id
 
-    # For groups/channels, ensure the chat itself exists as a user record
+    # Ensure user record exists
     if chat.type in ["group", "supergroup", "channel"]:
         try:
             create_user(
@@ -30,9 +29,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 last_name=None,
             )
         except Exception:
-            # ignore DB errors for start
             pass
-    # For private chats, use the actual user info
     elif user:
         try:
             create_user(
@@ -43,28 +40,75 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 last_name=user.last_name,
             )
         except Exception:
-            # ignore DB errors for start
             pass
 
     text = (
         (
             "*👋 Welcome to Bandharu Updates Bot*\n\n"
-            "Stay notified about islands and vessels you care about\\."
+            "I help you track Maldives vessel movements in real–time\."
         )
         + "\n\n"
         + (
-            "🧭 *Quick commands:*\n"
-            "• */addisland* \\<name\\> \\- Subscribe to an island/port 🏝\n"
-            "• */addvessel* \\<name or id\\> \\- Subscribe to a vessel ⛴\n"
-            "• */settings* \\- View your subscriptions ⚙️\n"
-            "• */unsub* \\- Manage and remove subscriptions 🔕\n"
-            "• */islandstats* \\<island\\> \\- Today’s stats 📊\n"
-            "• */vesselstats* \\<vessel\\> \\- Vessel stats \\(beta\\) 🧪\n\n"
-            f"Island update channels: [BandharuUpdates](t.me/addlist/ziV1Htn9OR9iNWI1)"
+            "🧭 *What I can do:*\n"
+            "• `\/addisland <island_name>` – Subscribe to an island 🏝\n"
+            "• `\/addvessel <vessel_name_or_id>` – Subscribe to a vessel ⛴\n"
+            "• `\/settings` – View your subscriptions ⚙️\n"
+            "• `\/unsub` – Manage and remove subscriptions 🔕\n"
+            "• `\/islandstats <island_name>` – See yesterday\'s stats for any island 📊\n"
+            "• `\/vesselstats` – Vessel stats \(beta\) 🧪\n"
+            "• `\/islandchannels` – Island update channels list 📣\n"
+            "• `\/toggledepartures` – Turn departure notifications ON\/OFF 🚦\n\n"
+            f"Island update channels: [BandharuUpdates](t.me/addlist/ziV1Htn9OR9iNWI1)\n"
+            "These channels send notifications for all vessels arriving or departing that island\.\n\n"
+            "Can\'t find your island\'s channel on the list? Request @BUBSupport to add it\."
         )
-        + "\n"
-        + ("👾 Uses FollowMe\\.mv API")
+        + "\n\n"
+        + (
+            "*Examples:*\n"
+            "`\/addisland Male`\n"
+            "`\/addvessel Speed Star`"
+        )
+        + "\n\n"
+        + ("👾 Powered by FollowMe\\.mv API")
     )
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text=text,
+        parse_mode="MarkdownV2",
+        disable_web_page_preview=True,
+    )
+
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show a friendly help with commands and examples."""
+    chat_id = update.effective_chat.id
+
+    text = (
+        "*❓ Help & Commands*\n\n"
+        "I notify you when subscribed ⛴ vessels visit subscribed 🏝 islands\.\n"
+        "Add at least one island and one vessel to start getting alerts\."
+    ) + "\n\n" + (
+        "*Main commands:*\n"
+        "• `\/start` – Welcome and quick overview 👋\n"
+        "• `\/help` – This help menu ❓\n"
+        "• `\/addisland <island_name>` – Subscribe to an island 🏝\n"
+        "• `\/addvessel <vessel_name_or_id>` – Subscribe to a vessel ⛴\n"
+        "• `\/settings` – View your subscriptions ⚙️\n"
+        "• `\/unsub` – Remove subscriptions 🔕\n"
+        "• `\/islandstats <island_name>` – Yesterday’s stats for an island 📊\n"
+        "• `\/vesselstats` – Vessel stats \(beta\) 🧪\n"
+        "• `\/islandchannels` – List of island update channels 📣\n"
+        "• `\/toggledepartures` – Turn departure alerts ON\/OFF 🚦"
+    ) + "\n\n" + (
+        "*Examples:*\n"
+        "`\/addisland Male`\n"
+        "`\/addvessel Speed Star`"
+    ) + "\n\n" + (
+        "Island update channels: [BandharuUpdates](t.me/addlist/ziV1Htn9OR9iNWI1)\n"
+        "Can’t find your island? Ask [@BUBSupport](t.me/BUBSupport) to add it\.\n\n"
+        "👾 Powered by FollowMe\.mv API"
+    )
+
     await context.bot.send_message(
         chat_id=chat_id,
         text=text,
@@ -78,7 +122,7 @@ async def unrecognized_command(
 ) -> None:
     """Handle any messages that are not commands."""
     await update.message.reply_text(
-        "🤖 I couldn’t recognize that\\. Try */start* for a list of commands\\.",
+        "🤖 I couldn’t recognize that\. Try */help* for commands\.",
         parse_mode="MarkdownV2",
     )
 
@@ -118,10 +162,10 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(
             chat_id=chat_id,
             text=(
-                "*🏝 Add an island*\n"
-                "Use: */addisland* \\<island name\\>\n"
-                "Example: */addisland* Male\n\n"
-                "Pro tip: You can type part of the name and I’ll show matches\\. 🔎"
+                "*Usage:*\n"
+                "`/addisland <island_name>`\n"
+                "*Example:*\n"
+                "`/addisland Male`"
             ),
             parse_mode="MarkdownV2",
         )
@@ -167,9 +211,23 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if sub:
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"✅ Subscribed to {esc_md(port.name)}\\! You’ll get updates as they happen\\.",
+                text=f"✅ Subscribed to {esc_md(port.name)}\\!",
                 parse_mode="MarkdownV2",
             )
+            if not subs.get("vessels"):
+                await context.bot.send_message(
+                    chat_id=chat_id,
+                    text=(
+                        "ℹ️ To receive notifications you also need at least one vessel subscription\\.\n\n"
+                        "*Usage:*\n"
+                        "`/addvessel <vessel_name_or_id>`\n"
+                        "*Example:*\n"
+                        "`/addvessel Speed Star`\n\n"
+                        "🔔 You\'ll be notified when a subscribed vessel visits a subscribed island\n"
+                        "Or join your island\'s update channel to get notifications for all vessels — see `\/islandchannels`"
+                    ),
+                    parse_mode="MarkdownV2",
+                )
         else:
             if err == "limit_reached":
                 await context.bot.send_message(
@@ -252,10 +310,10 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(
             chat_id=chat_id,
             text=(
-                "*⛴ Add a vessel*\n"
-                "Use: */addvessel* \\<vessel name or id\\>\n"
-                "Examples: */addvessel* Speed Star  \\|  */addvessel* 123\n\n"
-                "Tip: Try a keyword \\(e\\.g\\., ‘Star’\\) to see a list\\. 🔎"
+                "*Usage:*\n"
+                "`/addvessel <vessel_name_or_id>`\n"
+                "*Example:*\n"
+                "`/addvessel Speed Star`"
             ),
             parse_mode="MarkdownV2",
         )
@@ -290,7 +348,7 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if sub:
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"✅ Subscribed to {esc_md(v.name)} \\({v.id}\\)\\! I’ll keep you posted\\.",
+                text=f"✅ Subscribed to {esc_md(v.name)} \\({v.id}\\)\\!",
                 parse_mode="MarkdownV2",
             )
         else:
@@ -407,7 +465,13 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     def esc(s):
         return escape_markdown(str(s), version=2)
 
+    # Departure notification status
+    user = User.get_or_none(User.chat_id == chat_id)
+    dep_status = "ON 🔔" if (user and user.notify_on_departure) else "OFF 🔕"
+
     lines = ["*🧾 Your subscriptions*:\n"]
+    lines.append(f"🚦 Departure notifications: _*{dep_status}*_")
+    lines.append("")
     if port_list:
         lines.append("*🏝 Ports:*")
         for p in port_list:
@@ -422,6 +486,12 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         lines.append("\n*⛴ Vessels:* \\- None")
 
+    # Hint: if user has island subscriptions but no vessel subscriptions
+    if port_list and not vessel_list:
+        lines.append(
+            "\nℹ️ Add at least one vessel to start notifications.\n*Usage:*\n`/addvessel <vessel_name_or_id>`\n*Example:*\n`/addvessel Speed Star`\n\n🔔 You'll be notified when a subscribed vessel visits a subscribed island\nOr join your island\'s update channel to get notifications for all vessels — see `\/islandchannels`"
+        )
+
     await context.bot.send_message(
         chat_id=chat_id, text="\n".join(lines), parse_mode="MarkdownV2"
     )
@@ -434,8 +504,6 @@ async def unsub(update: Update, context: ContextTypes.DEFAULT_TYPE):
     subs = get_user_subscriptions(chat_id)
     port_list = subs.get("ports", [])
     vessel_list = subs.get("vessels", [])
-
-    from telegram.helpers import escape_markdown
 
     keyboard = []
     for p in port_list:
@@ -458,7 +526,12 @@ async def unsub(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not keyboard:
         await context.bot.send_message(
             chat_id=chat_id,
-            text="🔎 No active subscriptions found\\. Use */addisland* or */addvessel* to get started\\!",
+            text=(
+                "🔎 No active subscriptions found\. Use */addisland* or */addvessel* to get started\!\n\n"
+                "ℹ️ To receive island notifications you also need at least one vessel subscription\.\n"
+                "🔔 You\'ll be notified when a subscribed vessel visits a subscribed island\n"
+                "*Usage:*\n`/addvessel <vessel_name_or_id>`\n*Example:*\n`/addvessel Speed Star`"
+            ),
             parse_mode="MarkdownV2",
         )
         return
@@ -521,90 +594,28 @@ async def toggledepartures(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    status_text = "ON" if new_value else "OFF"
+    reply = "🔔 Departure notifications are now _*ON*_ for this chat." if new_value else "🔕 Departure notifications are now _*OFF*_ for this chat."
     await context.bot.send_message(
         chat_id=chat_id,
-        text=f"🚦 Departure notifications are now {status_text} for this chat.",
+        text=reply,
+        parse_mode="MarkdownV2"
     )
 
 
-async def listchannels(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """List all available channels. Optionally filter by @username or island name."""
+async def islandchannels(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Share the curated Telegram list of island update channels."""
     chat = update.effective_chat
     chat_id = chat.id
 
-    try:
-        # Optional filter: by island name or @username
-        q = " ".join(context.args).strip() if getattr(context, "args", None) else ""
-
-        # Base query: all channel users with optional left join to main port
-        base = (
-            User.select(User, Port)
-            .join(Port, JOIN.LEFT_OUTER, on=(User.main_port == Port.id))
-            .where((User.chat_type == "channel") & (User.username.is_null(False)))
-        )
-
-        if q:
-            if q.startswith("@"):
-                uq = q.lstrip("@")
-                base = base.where(User.username.contains(uq))
-                channel_users = base.order_by(User.username.asc(nulls="LAST"))
-            else:
-                # Search by island name if available
-                base = base.where(Port.name.contains(q))
-                channel_users = base.order_by(
-                    Port.name.asc(), User.username.asc(nulls="LAST")
-                )
-        else:
-            # Default: list ALL channels alphabetically by username
-            channel_users = base.order_by(User.username.asc(nulls="LAST"))
-
-        if not channel_users:
-            await context.bot.send_message(
-                chat_id=chat_id,
-                text=(
-                    (
-                        f"📣 Channels matching {q}\n\n"
-                        if q
-                        else "📣 Available channels\n\n"
-                    )
-                    + (
-                        "🔎 No channels available yet."
-                        if not q
-                        else "🔎 No channels match your search."
-                    )
-                ),
-                disable_web_page_preview=True,
-            )
-            return
-
-        if q:
-            header = (
-                f"📣 Channels matching @{q.lstrip('@')}\n"
-                if q.startswith("@")
-                else f"📣 Channels for islands matching {q}\n"
-            )
-        else:
-            header = "📣 Available channels\n"
-
-        lines = [header]
-        for cu in channel_users:
-            port_name = cu.main_port.name if cu.main_port else "Unknown"
-            username = cu.username or ""
-            username_display = username.lstrip("@")
-            # Show channel list primarily; include island name if available
-            suffix = f" – {port_name}" if cu.main_port else ""
-            lines.append(f"• @{username_display}{suffix}")
-
-        text = "\n".join(lines)
-        # Do NOT set Markdown parse mode to keep @mentions clickable across all characters
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text=text,
-            disable_web_page_preview=True,
-        )
-    except Exception as e:
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text=f"❌ Error fetching channels: {str(e)}",
-        )
+    text = (
+        "📣 *Island update channels*\n\n"
+        "Find them here: [BandharuUpdates](t.me/addlist/ziV1Htn9OR9iNWI1)\n\n"
+        "These channels send notifications for all vessels arriving or departing that island\.\n\n"
+        "Can\'t find your island\'s channel on the list? Request [@BUBSupport](t.me/BUBSupport) to add it\."
+    )
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text=text,
+        parse_mode="MarkdownV2",
+        disable_web_page_preview=True,
+    )

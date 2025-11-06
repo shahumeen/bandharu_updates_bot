@@ -140,6 +140,23 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     await cq.edit_message_text(text=f"🔕 Unsubscribed from {v.name}.")
                 except Exception:
                     await cq.edit_message_text(text=f"🔕 Unsubscribed from vessel.")
+
+                # After unsubscribing a vessel, if user still has island subscriptions but now has zero vessels, send guidance
+                try:
+                    from model_helpers import get_user_subscriptions
+                    subs = get_user_subscriptions(click_id)
+                    ports = subs.get("ports", [])
+                    vessels = subs.get("vessels", [])
+                    if ports and not vessels:
+                        await cq.message.reply_text(
+                            (
+                                "ℹ️ You still have island subscriptions but no vessel subscriptions left\. Without a vessel subscription you won't receive notifications\.\n\n"
+                                "*Usage:*\n`/addvessel <vessel_name_or_id>`\n*Example:*\n`/addvessel Speed Star`"
+                            ),
+                            parse_mode="MarkdownV2",
+                        )
+                except Exception:
+                    pass
             else:
                 try:
                     v = Vessel.get_by_id(vid)

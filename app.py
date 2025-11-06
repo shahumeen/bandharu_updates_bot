@@ -44,12 +44,13 @@ def _run_bot() -> None:
     )
     from handlers import (
         start,
+        help_command,
         subisland,
         subvessel,
         toggledepartures,
         settings,
         unsub,
-        listchannels,
+        islandchannels,
         island_stats,
         vessel_stats,
         # admin
@@ -72,12 +73,13 @@ def _run_bot() -> None:
 
     # Register command handlers (users)
     bot_main.app.add_handler(CommandHandler("start", start))
+    bot_main.app.add_handler(CommandHandler("help", help_command))
     bot_main.app.add_handler(CommandHandler("addisland", subisland))
     bot_main.app.add_handler(CommandHandler("addvessel", subvessel))
     bot_main.app.add_handler(CommandHandler("toggledepartures", toggledepartures))
     bot_main.app.add_handler(CommandHandler("settings", settings))
     bot_main.app.add_handler(CommandHandler("unsub", unsub))
-    bot_main.app.add_handler(CommandHandler("listchannels", listchannels))
+    bot_main.app.add_handler(CommandHandler("islandchannels", islandchannels))
     bot_main.app.add_handler(CommandHandler("islandstats", island_stats))
     bot_main.app.add_handler(CommandHandler("vesselstats", vessel_stats))
 
