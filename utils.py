@@ -282,7 +282,7 @@ def all_notify() -> dict:
                     "port_name": log.port.name,
                     "last_port_name": prev_log.port.name if prev_log else None,
                     "event": log.event,
-                    "timestamp": utc_to_maldives_time(log.timestamp),
+                    "timestamp": log.timestamp,
                     "transit_time": _format_duration(transit_seconds),
                     "departed": departed_str,
                 }

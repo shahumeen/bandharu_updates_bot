@@ -263,7 +263,7 @@ async def arrival_notify(arrivals, context, user: User):
 
         vessel_name = escape_markdown(arrivals[v]["name"].upper(), version=2)
         arrival_time = escape_markdown(
-            _fmt_time(arrivals[v].get("timestamp")), version=2
+            _fmt_time(utc_to_maldives_time(arrivals[v].get("timestamp"))), version=2
         )
         vessel_type = escape_markdown(
             arrivals[v]["vessel_type"] or "Unknown", version=2
