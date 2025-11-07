@@ -242,7 +242,7 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not matches:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"😕 No islands found matching ‘{esc_md(name)}’\\. Try a shorter keyword\\.",
+            text=f"😕 No islands found matching \\‘{esc_md(name)}\\’\\. Try a shorter keyword\\.",
             parse_mode="MarkdownV2",
         )
         return
@@ -281,8 +281,7 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.send_message(
                     chat_id=chat_id,
                     text=(
-                        "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\."
-                        "Use /addvessel to add one\\."
+                        "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\. Use /addvessel to add one\\."
                     ),
                     parse_mode="MarkdownV2",
                     disable_web_page_preview=True,
@@ -404,7 +403,7 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not matches:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"😕 No vessels found matching ‘{esc_md(q)}’\\. Try a shorter keyword\\.",
+            text=f"😕 No vessels found matching \\‘{esc_md(q)}\\’\\. Try a shorter keyword\\.",
             parse_mode="MarkdownV2",
         )
         return
