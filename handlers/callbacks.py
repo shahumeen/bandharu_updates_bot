@@ -13,6 +13,7 @@ from model_helpers import (
 )
 from .admin import ADMIN_CHAT_ID
 from .common import esc_md
+from .users import MAP_QUERY, VESSEL_QUERY
 
 
 async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -64,7 +65,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 try:
                     port = Port.get_by_id(pid)
                     await cq.edit_message_text(
-                        text=f"✅ Subscribed to _*[{esc_md(port.name)}](https://www.google.com/maps?q={port.name})*_",
+                        text=f"✅ Subscribed to _*[{esc_md(port.name)}]({MAP_QUERY}{port.name})*_",
                         parse_mode="MarkdownV2",
                         disable_web_page_preview=True,
                     )
@@ -97,7 +98,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 try:
                     v = Vessel.get_by_id(vid)
                     await cq.edit_message_text(
-                        text=f"✅ Subscribed to _*[{esc_md(v.name)}](https://m.followme.mv/public/?pg=info&id={v.id})*_",
+                        text=f"✅ Subscribed to _*[{esc_md(v.name)}]({VESSEL_QUERY}{v.id})*_",
                         parse_mode="MarkdownV2",
                         disable_web_page_preview=True,
                     )
@@ -130,7 +131,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 try:
                     port = Port.get_by_id(pid)
                     await cq.edit_message_text(
-                        text=f"🔕 Unsubscribed from _*[{esc_md(port.name)}](https://www.google.com/maps?q={port.name})*_",
+                        text=f"🔕 Unsubscribed from _*[{esc_md(port.name)}]({MAP_QUERY}{port.name})*_",
                         parse_mode="MarkdownV2",
                         disable_web_page_preview=True,
                     )
@@ -157,7 +158,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 try:
                     v = Vessel.get_by_id(vid)
                     await cq.edit_message_text(
-                        text=f"🔕 Unsubscribed from  _*[{esc_md(v.name)}](https://m.followme.mv/public/?pg=info&id={v.id})*_",
+                        text=f"🔕 Unsubscribed from  _*[{esc_md(v.name)}]({VESSEL_QUERY}{v.id})*_",
                         parse_mode="MarkdownV2",
                         disable_web_page_preview=True,
                     )
@@ -175,7 +176,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         await cq.message.reply_text(
                             (
                                 "‼️ You still have island subscriptions but no vessel subscriptions left\\. Without a vessel subscription you won't receive notifications\\.\n\n"
-                                "*Usage:*\n`/addvessel <vessel_name_or_id>`\n*Example:*\n`/addvessel Speed Star`"
+                                "*Usage:*\n`/addvessel <vessel_name>`\n*Example:*\n`/addvessel Speed Star`"
                             ),
                             parse_mode="MarkdownV2",
                         )

@@ -12,6 +12,9 @@ from model_helpers import (
     get_user_subscriptions,
 )
 
+MAP_QUERY = "https://www.google.com/maps?q="
+VESSEL_QUERY = "https://m.followme.mv/public/?pg=info&id="
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /start: create user (if needed) and send formatted introduction."""
@@ -257,7 +260,7 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(matches) == 1 and matches[0].id in subbed_ports:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"🔔 You’re already subscribed to _*[{esc_md(matches[0].name)}](https://www.google.com/maps?q={matches[0].name})*_",
+            text=f"🔔 You’re already subscribed to _*[{esc_md(matches[0].name)}]({MAP_QUERY}{matches[0].name})*_",
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )
@@ -270,7 +273,7 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if sub:
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"✅ Subscribed to _*[{esc_md(port.name)}](https://www.google.com/maps?q={port.name})*_",
+                text=f"✅ Subscribed to _*[{esc_md(port.name)}]({MAP_QUERY}{port.name})*_",
                 parse_mode="MarkdownV2",
                 disable_web_page_preview=True,
             )
@@ -308,9 +311,7 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if already_subbed:
         msg_parts.append("*🔔 Already subscribed:*\n")
         for p in already_subbed:
-            msg_parts.append(
-                f"• _*[{esc_md(p.name)}](https://www.google.com/maps?q={p.name})*_"
-            )
+            msg_parts.append(f"• _*[{esc_md(p.name)}]({MAP_QUERY}{p.name})*_")
 
     # Then show keyboard for available ones
     keyboard = []
@@ -416,7 +417,7 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(matches) == 1 and matches[0].id in subbed_vessels:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"🔔 You’re already subscribed to _*[{esc_md(matches[0].name)}](https://m.followme.mv/public/?pg=info&id={matches[0].id})*_",
+            text=f"🔔 You’re already subscribed to _*[{esc_md(matches[0].name)}]({VESSEL_QUERY}{matches[0].id})*_",
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )
@@ -429,7 +430,7 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if sub:
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"✅ Subscribed to _*[{esc_md(v.name)}](https://m.followme.mv/public/?pg=info&id={v.id})*_",
+                text=f"✅ Subscribed to _*[{esc_md(v.name)}]({VESSEL_QUERY}{v.id})*_",
                 parse_mode="MarkdownV2",
                 disable_web_page_preview=True,
             )
@@ -453,9 +454,7 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if already_subbed:
         msg_parts.append("*🔔 Already subscribed:*")
         for v in already_subbed:
-            msg_parts.append(
-                f"• _*[{esc_md(v.name)}](https://m.followme.mv/public/?pg=info&id={v.id})*_"
-            )
+            msg_parts.append(f"• _*[{esc_md(v.name)}]({VESSEL_QUERY}{v.id})*_")
 
     # Then show keyboard for available ones
     keyboard = []
@@ -511,18 +510,14 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if port_list:
         lines.append("*🏝 Ports:*")
         for p in port_list:
-            lines.append(
-                f"• _*[{esc(p.name)}](https://www.google.com/maps?q={p.name})*_"
-            )
+            lines.append(f"• _*[{esc(p.name)}]({MAP_QUERY}{p.name})*_")
     else:
         lines.append("*🏝 Ports:* \\- None")
 
     if vessel_list:
         lines.append("\n*⛴ Vessels:*")
         for v in vessel_list:
-            lines.append(
-                f"• _*[{esc(v.name)}](https://m.followme.mv/public/?pg=info&id={v.id})*_"
-            )
+            lines.append(f"• _*[{esc(v.name)}]({VESSEL_QUERY}{v.id})*_")
     else:
         lines.append("\n*⛴ Vessels:* \\- None")
 
@@ -575,8 +570,7 @@ async def unsub(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(
             chat_id=chat_id,
             text=(
-                "🔎 No active subscriptions found\. Use /addisland or /addvessel to get started\!\n\n"
-                "*Usage:*\n`/addvessel <vessel_name_or_id>`\n*Example:*\n`/addvessel Speed Star`"
+                "🔎 No active subscriptions found\\. Use /addisland or /addvessel to get started\\!\n\n"
             ),
             parse_mode="MarkdownV2",
         )
