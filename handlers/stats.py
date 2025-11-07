@@ -88,24 +88,51 @@ async def send_port_stats(context, chat_id, port_id):
 
     date = esc(stats_dict["date"])
 
+    # Build busiest hour highlight with tie support
+    busiest_highlight = ""
+    if stats_dict.get("busiest_hours") and len(stats_dict.get("busiest_hours", [])) > 1:
+        # Derive the count from any peak hour marked busiest
+        busiest_count = None
+        for h in stats_dict.get("peak_hours", []):
+            if h.get("is_busiest"):
+                busiest_count = h.get("count")
+                break
+        if busiest_count is None and stats_dict.get("busiest_hour"):
+            busiest_count = None  # can't parse safely; omit count
+        hours_str = ", ".join(
+            f"{start}-{end}" for start, end in stats_dict.get("busiest_hours", [])
+        )
+        count_str = (
+            f" ({busiest_count} {'vessel' if busiest_count == 1 else 'vessels'})"
+            if busiest_count is not None
+            else ""
+        )
+        busiest_text = f"Tie: {hours_str}{count_str}"
+        busiest_highlight = f"🏆 _*Busiest Hour:*_\n{esc(busiest_text)}\n"
+    elif stats_dict.get("busiest_hour"):
+        busiest_highlight = f"🏆 _*Busiest Hour:*_\n{esc(stats_dict['busiest_hour'])}\n"
+
+    # Build longest trip with tie support
+    longest_trip_highlight = ""
+    if stats_dict.get("longest_trip"):
+        lt = stats_dict["longest_trip"]
+        if isinstance(lt, dict) and lt.get("tie"):
+            longest_trip_highlight = (
+                f"\n🌊 _*Longest Trip:*_\n{esc(lt.get('description', 'Tie'))}\n"
+            )
+        else:
+            longest_trip_highlight = f"\n🌊 _*Longest Trip:*_\n{esc(lt['duration'])} \\- {esc(lt['vessel'])} \\({esc(lt['from'])} → {esc(lt['to'])}\\)\n"
+
     highlights = (
         f"📈 *{date} HIGHLIGHTS*\n"
         f"────────────────────\n\n"
-        + (
-            f"🏆 _*Busiest Hour:*_\n{esc(stats_dict['busiest_hour'])}\n"
-            if stats_dict.get("busiest_hour")
-            else ""
-        )
+        + busiest_highlight
         + (
             f"\n🚀 _*Most Active:*_\n{esc(stats_dict['most_active'])}\n"
             if stats_dict.get("most_active")
             else ""
         )
-        + (
-            f"\n🌊 _*Longest Trip:*_\n{esc(stats_dict['longest_trip']['duration'])} \\- {esc(stats_dict['longest_trip']['vessel'])} \\({esc(stats_dict['longest_trip']['from'])} → {esc(stats_dict['longest_trip']['to'])}\\)\n"
-            if stats_dict.get("longest_trip")
-            else ""
-        )
+        + longest_trip_highlight
         + (
             f"\n🏝 _*Most Popular Island:*_\n{esc(stats_dict['most_popular_island'])}\n"
             if stats_dict.get("most_popular_island")
@@ -114,11 +141,22 @@ async def send_port_stats(context, chat_id, port_id):
         + "\n────────────────────\n"
     )
 
-    medals = ["🥇", "🥈", "🥉"]
-    vessel_rankings = "🎖 *VESSEL RANKINGS*\n" + "\n".join(
-        f"{i+1}\\. {medals[i]} _*{esc(entry['vessel'])}:*_ _{entry['trips']} {'trip' if entry['trips']==1 else 'trips'}_"
-        for i, entry in enumerate(stats_dict.get("leaderboard", []))
-    )
+    # Vessel rankings with tie-aware ranks and medals
+    medals_by_rank = {1: "🥇", 2: "🥈", 3: "🥉"}
+    lines = []
+    prev_trips = None
+    current_rank = 0
+    for entry in stats_dict.get("leaderboard", []):
+        trips = entry["trips"]
+        if prev_trips is None:
+            current_rank = 1
+        elif trips < prev_trips:
+            current_rank += 1
+        prev_trips = trips
+        medal = medals_by_rank.get(current_rank, "")
+        line = f"{current_rank}\\. {medal} _*{esc(entry['vessel'])}:*_ _{trips} {'trip' if trips==1 else 'trips'}_"
+        lines.append(line)
+    vessel_rankings = "🎖 *VESSEL RANKINGS*\n" + "\n".join(lines)
 
     max_count = max((h["count"] for h in stats_dict.get("peak_hours", [])), default=1)
     peak_hours = "\n\n⏱️*PEAK HOURS*\n" + "\n".join(
@@ -156,7 +194,7 @@ async def vessel_stats(
             chat_id=context._chat_id,
             text=(
                 "*Usage:*\n"
-                "`/vesselstats <vessel_name_or_id>`\n"
+                "`/vesselstats <vessel_name>`\n"
                 "*Example:*\n"
                 "`/vesselstats Speed Star`\n\n"
                 "⏳ Detailed vessel stats coming soon—إن شاء الله"

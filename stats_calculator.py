@@ -123,21 +123,66 @@ def get_daily_port_stats(port_id: int, peak_limit: int = 5) -> dict:
                     vessel_longest_trip[log.vessel.name] = trip
 
     # Calculate statistics
+    # --- Busiest hour(s) ---
     busiest_hour = (
         max(hourly_counts.items(), key=lambda x: x[1]) if hourly_counts else None
     )
+    max_hour_count = max(hourly_counts.values()) if hourly_counts else None
+    busiest_hours_list = (
+        [dt for dt, c in hourly_counts.items() if c == max_hour_count]
+        if max_hour_count is not None
+        else []
+    )
+
+    # --- Most active vessel(s) ---
     most_active_vessel = (
         max(vessel_trips.items(), key=lambda x: x[1]) if vessel_trips else None
     )
+    max_vessel_trips = max(vessel_trips.values()) if vessel_trips else None
+    most_active_vessels_list = (
+        [v for v, t in vessel_trips.items() if t == max_vessel_trips]
+        if max_vessel_trips is not None
+        else []
+    )
+
+    # --- Longest trip (ties possible) ---
     longest_trip = (
         max(vessel_longest_trip.values(), key=lambda x: x["duration"])
         if vessel_longest_trip
         else None
     )
+    max_trip_duration = (
+        max((trip["duration"] for trip in vessel_longest_trip.values()))
+        if vessel_longest_trip
+        else None
+    )
+    longest_trip_ties = (
+        [
+            trip
+            for trip in vessel_longest_trip.values()
+            if trip["duration"] == max_trip_duration
+        ]
+        if max_trip_duration is not None
+        else []
+    )
+
+    # --- Most popular island(s) ---
     most_popular_island = (
         max(destination_counts.items(), key=lambda x: x[1])
         if destination_counts
         else None
+    )
+    max_destination_count = (
+        max(destination_counts.values()) if destination_counts else None
+    )
+    most_popular_islands_list = (
+        [
+            name
+            for name, cnt in destination_counts.items()
+            if cnt == max_destination_count
+        ]
+        if max_destination_count is not None
+        else []
     )
 
     # Create leaderboard
@@ -159,11 +204,12 @@ def get_daily_port_stats(port_id: int, peak_limit: int = 5) -> dict:
             "hour": hour_dt.strftime("%H:%M"),
             "count": count,
             "vessel_word": "vessel" if count == 1 else "vessels",
-            "is_busiest": (hour_dt, count) == busiest_hour,
+            # mark busiest for ALL ties, not just one
+            "is_busiest": count == max_hour_count,
         }
         for hour_dt, count in sorted(top_hours, key=lambda x: x[0])
     ]
-    max_vessels = max(hourly_counts.values()) if hourly_counts else 0
+    max_vessels = max_hour_count if max_hour_count is not None else 0
 
     def format_duration(seconds: float) -> str:
         minutes = int((seconds % 3600) // 60)
@@ -193,10 +239,17 @@ def get_daily_port_stats(port_id: int, peak_limit: int = 5) -> dict:
 
     result = {
         "date": yesterday.strftime("%d %b %Y"),
-        "busiest_hour": None,
-        "most_active": None,
+        "busiest_hour": None,  # kept for backward compatibility (single formatted string)
+        "busiest_hours": [
+            (dt.strftime("%H:%M"), (dt + timedelta(hours=1)).strftime("%H:%M"))
+            for dt in sorted(busiest_hours_list)
+        ],  # list of tuples (start,end) for ties
+        "most_active": None,  # legacy single string
+        "most_active_vessels": sorted(most_active_vessels_list),  # list for ties
         "longest_trip": None,
+        "longest_trip_ties": longest_trip_ties,  # list of raw trip dicts (duration seconds)
         "most_popular_island": None,
+        "most_popular_islands": sorted(most_popular_islands_list),  # list for ties
         "leaderboard": leaderboard,
         "peak_hours": peak_hours,
         "total_trips": total_trips,
@@ -204,6 +257,12 @@ def get_daily_port_stats(port_id: int, peak_limit: int = 5) -> dict:
         "vessel_type_trips": dict(
             sorted(vessel_type_trips.items(), key=lambda x: (-x[1], x[0]))
         ),
+        # raw structures useful for downstream tie logic / future analytics
+        "hourly_counts": {dt.isoformat(): c for dt, c in hourly_counts.items()},
+        "destination_counts": dict(
+            sorted(destination_counts.items(), key=lambda x: (-x[1], x[0]))
+        ),
+        "vessel_trips": dict(sorted(vessel_trips.items(), key=lambda x: (-x[1], x[0]))),
     }
 
     if busiest_hour:
@@ -214,23 +273,49 @@ def get_daily_port_stats(port_id: int, peak_limit: int = 5) -> dict:
 
     if most_active_vessel:
         trip_word = "trip" if most_active_vessel[1] == 1 else "trips"
-        result["most_active"] = (
-            f"{most_active_vessel[0]} ({most_active_vessel[1]} {trip_word})"
-        )
+        if len(most_active_vessels_list) > 1:
+            vessels_joined = ", ".join(sorted(most_active_vessels_list))
+            result["most_active"] = (
+                f"Tie: {vessels_joined} ({most_active_vessel[1]} {trip_word})"
+            )
+        else:
+            result["most_active"] = (
+                f"{most_active_vessel[0]} ({most_active_vessel[1]} {trip_word})"
+            )
 
     if longest_trip:
-        result["longest_trip"] = {
-            "vessel": longest_trip["vessel"],
-            "from": longest_trip["from"],
-            "to": longest_trip["to"],
-            "duration": format_duration(longest_trip["duration"]),
-        }
+        if len(longest_trip_ties) > 1:
+            # Format a combined tie description
+            tie_parts = []
+            for trip in sorted(longest_trip_ties, key=lambda x: x["vessel"]):
+                tie_parts.append(
+                    f"{trip['vessel']} ({trip['from']} → {trip['to']}, {format_duration(trip['duration'])})"
+                )
+            result["longest_trip"] = {
+                "tie": True,
+                "description": "Tie: " + "; ".join(tie_parts),
+                "duration": format_duration(longest_trip["duration"]),
+            }
+        else:
+            result["longest_trip"] = {
+                "vessel": longest_trip["vessel"],
+                "from": longest_trip["from"],
+                "to": longest_trip["to"],
+                "duration": format_duration(longest_trip["duration"]),
+                "tie": False,
+            }
 
     if most_popular_island:
         trip_word = "trip" if most_popular_island[1] == 1 else "trips"
-        result["most_popular_island"] = (
-            f"{most_popular_island[0]} ({most_popular_island[1]} {trip_word})"
-        )
+        if len(most_popular_islands_list) > 1:
+            islands_joined = ", ".join(sorted(most_popular_islands_list))
+            result["most_popular_island"] = (
+                f"Tie: {islands_joined} ({most_popular_island[1]} {trip_word})"
+            )
+        else:
+            result["most_popular_island"] = (
+                f"{most_popular_island[0]} ({most_popular_island[1]} {trip_word})"
+            )
     return result
 
 
