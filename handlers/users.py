@@ -519,12 +519,7 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Hint: if user has island subscriptions but no vessel subscriptions
     if port_list and not vessel_list:
         lines.append(
-            "\n━━━━━━━━━━━━━━━━━━━━━━━"
-            "\nℹ️ To receive notifications you also need at least *ONE* vessel subscription\\.\n\n"
-            "*Usage:*\n"
-            "`/addvessel <vessel_name_or_id>`\n"
-            "*Example:*\n"
-            "`/addvessel Speed Star`\n\n"
+            "\n━━━━━━━━━━━━━━━━━━━━━━━\n\n⚠️ To receive notifications you also need at least *ONE* vessel subscription\\. Use /addvessel to add one\\."
         ),
 
     await context.bot.send_message(
