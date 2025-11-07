@@ -44,15 +44,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             pass
 
     welcome_message = r"""
-⛴️🏝️ Welcome to Bandharu Updates Bot\!
+🏝️ Welcome to Bandharu Updates Bot\!
 ━━━━━━━━━━━━━━━━━━━━━━━
 
 _Track Maldives vessel movements in real\-time and get notified when your subscribed vessels reach your favorite islands\!_
 
 ✨ *How It Works:*
-1️⃣ Subscribe to islands 🏝️ and vessels ⛴️
-2️⃣ Get instant alerts when they match
-3️⃣ Stay updated with arrivals \& departures
+*1* • Subscribe to islands 🏝️ and vessels ⛴️
+*2* • Get instant alerts when they match
+*3* • Stay updated with arrivals \& departures
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -65,7 +65,7 @@ _Track Maldives vessel movements in real\-time and get notified when your subscr
 ⚙️ _*Manage Settings:*_
 • /settings \- _View your subscriptions 🔍_
 • /unsub \- _Remove subscriptions 🗑️_
-• /toggledepartures \- _Toggle departure notifications 🔄_
+• /toggledepartures \- _Toggle departure notifications 🚦_
 
 📊 _*Get Statistics:*_
 • /islandstats \- _Island statistics 📈_
@@ -82,14 +82,6 @@ Join our dedicated [Bandharu update channels](http://t.me/addlist/ziV1Htn9OR9iNW
 
 _Can't find your island's channel\?_  
 Ask @BUBSupport to add it\! 💬
-
-━━━━━━━━━━━━━━━━━━━━━━━
-
-💡 *Examples to Get Started:*
-`/addisland Milandhoo`
-`/addvessel Speed Star`
-
-🔔 *Pro Tip:* You can subscribe up to 10 islands and 10 vessels\!
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -147,13 +139,6 @@ _*You need at least ONE island and ONE vessel to start receiving alerts*_
 • /help \- _This help menu_
 • /islandchannels \- _Island update channels_
 
-━━━━━━━━━━━━━━━━━━━━━━━
-💡 *Examples:*
-`/addisland Milandhoo`
-`/addvessel Speed Star`
-`/islandstats Funadhoo`
-
-━━━━━━━━━━━━━━━━━━━━━━━
 💡 *Usage Tips*
 
 *• Subscription Limits:*  
@@ -180,11 +165,6 @@ Ask @BUBSupport to add it\! 💬
 🎯*Need More Help?*
 
 contact @BUBSupport for assistance 🤝
-
-━━━━━━━━━━━━━━━━━━━━━━━
-👾 _Uses FollowMe\.mv API_
-
-`</> Made with ❤️ by` @shahumeen
 """
 
     await context.bot.send_message(
@@ -685,12 +665,13 @@ async def islandchannels(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat = update.effective_chat
     chat_id = chat.id
 
-    text = (
-        "📣 *Island update channels*\n\n"
-        "Find them here: [BandharuUpdates](t.me/addlist/ziV1Htn9OR9iNWI1)\n\n"
-        "These channels send notifications for all vessels arriving or departing that island\.\n\n"
-        "Can\'t find your island\'s channel on the list? Request [@BUBSupport](t.me/BUBSupport) to add it\."
-    )
+    text = r"""📣 *Island Channels*
+
+Want _*all activity*_ for specific islands\?  
+Join our dedicated [Bandharu update channels](http://t.me/addlist/ziV1Htn9OR9iNWI1):
+
+_Can't find your island's channel\?_  
+Ask @BUBSupport to add it\! 💬"""
     await context.bot.send_message(
         chat_id=chat_id,
         text=text,
