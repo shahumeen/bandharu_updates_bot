@@ -66,6 +66,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     await cq.edit_message_text(
                         text=f"✅ Subscribed to _*[{esc_md(port.name)}](https://www.google.com/maps?q={port.name})*_",
                         parse_mode="MarkdownV2",
+                        disable_web_page_preview=True,
                     )
                 except Exception:
                     await cq.edit_message_text(text=f"✅ Subscribed to port.")
@@ -97,6 +98,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     await cq.edit_message_text(
                         text=f"✅ Subscribed to _*[{esc_md(v.name)}](https://m.followme.mv/public/?pg=info&id={v.id})*_",
                         parse_mode="MarkdownV2",
+                        disable_web_page_preview=True,
                     )
                 except Exception:
                     await cq.edit_message_text(text=f"✅ Subscribed to vessel.")
@@ -128,6 +130,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     await cq.edit_message_text(
                         text=f"🔕 Unsubscribed from _*[{esc_md(port.name)}](https://www.google.com/maps?q={port.name})*_",
                         parse_mode="MarkdownV2",
+                        disable_web_page_preview=True,
                     )
                 except Exception:
                     await cq.edit_message_text(text=f"🔕 Unsubscribed from port.")
@@ -154,6 +157,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     await cq.edit_message_text(
                         text=f"🔕 Unsubscribed from  _*[{esc_md(v.name)}](https://m.followme.mv/public/?pg=info&id={v.id})*_",
                         parse_mode="MarkdownV2",
+                        disable_web_page_preview=True,
                     )
                 except Exception:
                     await cq.edit_message_text(text=f"🔕 Unsubscribed from vessel.")

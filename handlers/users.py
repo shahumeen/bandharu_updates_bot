@@ -259,6 +259,7 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=chat_id,
             text=f"🔔 You’re already subscribed to _*[{esc_md(matches[0].name)}](https://www.google.com/maps?q={matches[0].name})*_",
             parse_mode="MarkdownV2",
+            disable_web_page_preview=True,
         )
         return
 
@@ -271,6 +272,7 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 chat_id=chat_id,
                 text=f"✅ Subscribed to _*[{esc_md(port.name)}](https://www.google.com/maps?q={port.name})*_",
                 parse_mode="MarkdownV2",
+                disable_web_page_preview=True,
             )
             if not subs.get("vessels"):
                 await context.bot.send_message(
@@ -284,6 +286,7 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         "Join your island\\'s update channel to get notifications for all vessels — [join](http://t.me/addlist/ziV1Htn9OR9iNWI1)"
                     ),
                     parse_mode="MarkdownV2",
+                    disable_web_page_preview=True,
                 )
         else:
             if err == "limit_reached":
@@ -319,7 +322,10 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not keyboard:
         # All matches are already subscribed
         await context.bot.send_message(
-            chat_id=chat_id, text="\n".join(msg_parts), parse_mode="MarkdownV2"
+            chat_id=chat_id,
+            text="\n".join(msg_parts),
+            parse_mode="MarkdownV2",
+            disable_web_page_preview=True,
         )
         return
 
@@ -449,6 +455,7 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=chat_id,
             text=f"🔔 You’re already subscribed to _*[{esc_md(matches[0].name)}](https://m.followme.mv/public/?pg=info&id={v[0].id})*_",
             parse_mode="MarkdownV2",
+            disable_web_page_preview=True,
         )
         return
 
@@ -461,6 +468,7 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 chat_id=chat_id,
                 text=f"✅ Subscribed to _*[{esc_md(v.name)}](https://m.followme.mv/public/?pg=info&id={v.id})*_",
                 parse_mode="MarkdownV2",
+                disable_web_page_preview=True,
             )
         else:
             if err == "limit_reached":
@@ -496,7 +504,10 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not keyboard:
         # All matches are already subscribed
         await context.bot.send_message(
-            chat_id=chat_id, text="\n".join(msg_parts), parse_mode="MarkdownV2"
+            chat_id=chat_id,
+            text="\n".join(msg_parts),
+            parse_mode="MarkdownV2",
+            disable_web_page_preview=True,
         )
         return
 
