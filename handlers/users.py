@@ -43,45 +43,45 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception:
             pass
 
-    welcome_message = f"""
-⛴️🏝️ Welcome to Bandharu Updates Bot\\!
+    welcome_message = r"""
+⛴️🏝️ Welcome to Bandharu Updates Bot\!
 ━━━━━━━━━━━━━━━━━━━━━━━
 
-_Track Maldives vessel movements in real\\-time and get notified when your subscribed vessels reach your favorite islands\\!_
+_Track Maldives vessel movements in real\-time and get notified when your subscribed vessels reach your favorite islands\!_
 
 ✨ *How It Works:*
 1️⃣ Subscribe to islands 🏝️ and vessels ⛴️
 2️⃣ Get instant alerts when they match
-3️⃣ Stay updated with arrivals \\& departures
+3️⃣ Stay updated with arrivals \& departures
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 
 ⚡ *Quick Start Guide:*
 
 🎯 _*Add Subscriptions:*_
-• /addisland \\- _Subscribe to an island 🏝️_
-• /addvessel \\- _Subscribe to a vessel ⛴️_
+• /addisland \- _Subscribe to an island 🏝️_
+• /addvessel \- _Subscribe to a vessel ⛴️_
 
 ⚙️ _*Manage Settings:*_
-• /settings \\- _View your subscriptions 🔍_
-• /unsub \\- _Remove subscriptions 🗑️_
-• /toggledepartures \\- _Toggle departure notifications 🔄_
+• /settings \- _View your subscriptions 🔍_
+• /unsub \- _Remove subscriptions 🗑️_
+• /toggledepartures \- _Toggle departure notifications 🔄_
 
 📊 _*Get Statistics:*_
-• /islandstats \\- _Island statistics 📈_
-• /vesselstats \\- _Vessel statistics \\(beta\\) 🧪_
+• /islandstats \- _Island statistics 📈_
+• /vesselstats \- _Vessel statistics \(beta\) 🧪_
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 
 📣 *Island-Wide Updates:*
 
-Want _*all activity*_ for specific islands\\?  
+Want _*all activity*_ for specific islands\?  
 Join our dedicated [Bandharu update channels](http://t.me/addlist/ziV1Htn9OR9iNWI1)
 
 • Browse: /islandchannels  
 
-_Can't find your island's channel\\?_  
-Ask @BUBSupport to add it\\! 💬
+_Can't find your island's channel\?_  
+Ask @BUBSupport to add it\! 💬
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -89,11 +89,11 @@ Ask @BUBSupport to add it\\! 💬
 `/addisland Milandhoo`
 `/addvessel Speed Star`
 
-🔔 *Pro Tip:* You can subscribe up to 10 islands and 10 vessels\\!
+🔔 *Pro Tip:* You can subscribe up to 10 islands and 10 vessels\!
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 
-👾 _Uses FollowMe\\.mv API_
+👾 _Uses FollowMe\.mv API_
 
 `</> Made with ❤️ by` @shahumeen
 """
