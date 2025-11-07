@@ -12,6 +12,7 @@ from model_helpers import (
     set_main_port,
 )
 from .admin import ADMIN_CHAT_ID
+from .common import esc_md
 
 
 async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -62,13 +63,16 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if sub:
                 try:
                     port = Port.get_by_id(pid)
-                    await cq.edit_message_text(text=f"✅ Subscribed to {port.name}.")
+                    await cq.edit_message_text(
+                        text=f"✅ Subscribed to _*[{esc_md(port.name)}](https://www.google.com/maps?q={port.name})*_",
+                        parse_mode="MarkdownV2",
+                    )
                 except Exception:
                     await cq.edit_message_text(text=f"✅ Subscribed to port.")
             else:
                 if err == "limit_reached":
                     await cq.edit_message_text(
-                        text="❌ You have reached the maximum of 10 port subscriptions.\nPlease use /unsub to remove an island."
+                        text="❌ You have reached the maximum of *10* port subscriptions.\nPlease use /unsub to remove an island."
                     )
                 else:
                     try:
@@ -77,7 +81,9 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                             text=f"❌ Failed to subscribe to {port.name}."
                         )
                     except Exception:
-                        await cq.edit_message_text(text=f"❌ Failed to subscribe to port.")
+                        await cq.edit_message_text(
+                            text=f"❌ Failed to subscribe to port."
+                        )
         except Exception:
             await cq.edit_message_text(text="❌ Invalid selection.")
 
@@ -88,13 +94,16 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if sub:
                 try:
                     v = Vessel.get_by_id(vid)
-                    await cq.edit_message_text(text=f"✅ Subscribed to {v.name}.")
+                    await cq.edit_message_text(
+                        text=f"✅ Subscribed to _*[{esc_md(v.name)}](https://m.followme.mv/public/?pg=info&id={v.id})*_",
+                        parse_mode="MarkdownV2",
+                    )
                 except Exception:
                     await cq.edit_message_text(text=f"✅ Subscribed to vessel.")
             else:
                 if err == "limit_reached":
                     await cq.edit_message_text(
-                        text="❌ You have reached the maximum of 10 vessel subscriptions.\nPlease use /unsub to remove a vessel."
+                        text="❌ You have reached the maximum of *10* vessel subscriptions.\nPlease use /unsub to remove a vessel."
                     )
                 else:
                     try:
@@ -116,7 +125,10 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if ok:
                 try:
                     port = Port.get_by_id(pid)
-                    await cq.edit_message_text(text=f"🔕 Unsubscribed from {port.name}.")
+                    await cq.edit_message_text(
+                        text=f"🔕 Unsubscribed from _*[{esc_md(port.name)}](https://www.google.com/maps?q={port.name})*_",
+                        parse_mode="MarkdownV2",
+                    )
                 except Exception:
                     await cq.edit_message_text(text=f"🔕 Unsubscribed from port.")
             else:
@@ -126,7 +138,9 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         text=f"❌ Failed to unsubscribe from {port.name}."
                     )
                 except Exception:
-                    await cq.edit_message_text(text=f"❌Failed to unsubscribe from port.")
+                    await cq.edit_message_text(
+                        text=f"❌Failed to unsubscribe from port."
+                    )
         except Exception:
             await cq.edit_message_text(text="❌ Invalid selection.")
 
@@ -137,13 +151,17 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if ok:
                 try:
                     v = Vessel.get_by_id(vid)
-                    await cq.edit_message_text(text=f"🔕 Unsubscribed from {v.name}.")
+                    await cq.edit_message_text(
+                        text=f"🔕 Unsubscribed from  _*[{esc_md(v.name)}](https://m.followme.mv/public/?pg=info&id={v.id})*_",
+                        parse_mode="MarkdownV2",
+                    )
                 except Exception:
                     await cq.edit_message_text(text=f"🔕 Unsubscribed from vessel.")
 
                 # After unsubscribing a vessel, if user still has island subscriptions but now has zero vessels, send guidance
                 try:
                     from model_helpers import get_user_subscriptions
+
                     subs = get_user_subscriptions(click_id)
                     ports = subs.get("ports", [])
                     vessels = subs.get("vessels", [])

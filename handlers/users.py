@@ -76,7 +76,7 @@ _Track Maldives vessel movements in real\-time and get notified when your subscr
 📣 *Island\-Wide Updates:*
 
 Want _*all activity*_ for specific islands\?  
-Join our dedicated [Bandharu update channels](http://t.me/addlist/ziV1Htn9OR9iNWI1)
+Join our dedicated Bandharu update channels: [Join](http://t.me/addlist/ziV1Htn9OR9iNWI1)
 
 • Browse: /islandchannels  
 
@@ -154,7 +154,7 @@ _*You need at least ONE island and ONE vessel to start receiving alerts*_
 📣 *Island Channels*
 
 Want _*all activity*_ for specific islands\?  
-Join our dedicated [Bandharu update channels](http://t.me/addlist/ziV1Htn9OR9iNWI1):
+Join our dedicated Bandharu update channels: [Join](http://t.me/addlist/ziV1Htn9OR9iNWI1)
 
 • Browse: /islandchannels  
 
@@ -180,7 +180,7 @@ async def unrecognized_command(
 ) -> None:
     """Handle any messages that are not commands."""
     await update.message.reply_text(
-        "🤖 I couldn’t recognize that\\. Try */help* for commands\\.",
+        "🤖 I couldn’t recognize that\\. Try /help for commands\\.",
         parse_mode="MarkdownV2",
     )
 
@@ -239,7 +239,7 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not matches:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"😕 No islands found matching ‘{esc_md(name)}’\\. Try a shorter part of the name\\.",
+            text=f"😕 No islands found matching ‘{esc_md(name)}’\\. Try a shorter keyword\\.",
             parse_mode="MarkdownV2",
         )
         return
@@ -257,7 +257,7 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(matches) == 1 and matches[0].id in subbed_ports:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"🔔 You’re already subscribed to {esc_md(matches[0].name)}\\.",
+            text=f"🔔 You’re already subscribed to _*[{esc_md(matches[0].name)}](https://www.google.com/maps?q={matches[0].name})*_",
             parse_mode="MarkdownV2",
         )
         return
@@ -269,20 +269,19 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if sub:
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"✅ Subscribed to {esc_md(port.name)}\\!",
+                text=f"✅ Subscribed to _*[{esc_md(port.name)}](https://www.google.com/maps?q={port.name})*_",
                 parse_mode="MarkdownV2",
             )
             if not subs.get("vessels"):
                 await context.bot.send_message(
                     chat_id=chat_id,
                     text=(
-                        "ℹ️ To receive notifications you also need at least one vessel subscription\\.\n\n"
+                        "ℹ️ To receive notifications you also need at least *ONE* vessel subscription\\.\n\n"
                         "*Usage:*\n"
                         "`/addvessel <vessel_name_or_id>`\n"
                         "*Example:*\n"
                         "`/addvessel Speed Star`\n\n"
-                        "🔔 You\\'ll be notified when a subscribed vessel visits a subscribed island\n"
-                        "Or join your island\\'s update channel to get notifications for all vessels — see \\/islandchannels"
+                        "Join your island\\'s update channel to get notifications for all vessels — [join](http://t.me/addlist/ziV1Htn9OR9iNWI1)"
                     ),
                     parse_mode="MarkdownV2",
                 )
@@ -290,13 +289,13 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if err == "limit_reached":
                 await context.bot.send_message(
                     chat_id=chat_id,
-                    text="⚠️ You’ve reached the maximum of 10 island subscriptions\\. Remove one with */unsub* to add more\\.",
+                    text="⚠️ You’ve reached the maximum of *10* island subscriptions\\. Remove one with /unsub to add more\\.",
                     parse_mode="MarkdownV2",
                 )
             else:
                 await context.bot.send_message(
                     chat_id=chat_id,
-                    text=f"❌ Failed to subscribe to {esc_md(port.name)}\\. Please try again shortly\\.",
+                    text=f"❌ Failed to subscribe to _*{esc_md(port.name)}*_\\. Please try again shortly\\.",
                     parse_mode="MarkdownV2",
                 )
         return
@@ -304,9 +303,11 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Show already subscribed ports first
     msg_parts = []
     if already_subbed:
-        msg_parts.append("*🔔 Already subscribed:*")
+        msg_parts.append("*🔔 Already subscribed:*\n")
         for p in already_subbed:
-            msg_parts.append(f"• {esc_md(p.name)}")
+            msg_parts.append(
+                f"• _*[{esc_md(port.name)}](https://www.google.com/maps?q={port.name})*_"
+            )
 
     # Then show keyboard for available ones
     keyboard = []
@@ -383,46 +384,46 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     subs = get_user_subscriptions(chat_id)
     subbed_vessels = {v.id: v for v in subs.get("vessels", [])}
 
-    # if numeric, try id exact
-    if q.isdigit():
-        v = Vessel.get_or_none(Vessel.id == int(q))
-        if not v:
-            await context.bot.send_message(
-                chat_id=chat_id,
-                text=f"😕 No vessel found with id {esc_md(q)}\\.",
-                parse_mode="MarkdownV2",
-            )
-            return
+    # # if numeric, try id exact
+    # if q.isdigit():
+    #     v = Vessel.get_or_none(Vessel.id == int(q))
+    #     if not v:
+    #         await context.bot.send_message(
+    #             chat_id=chat_id,
+    #             text=f"😕 No vessel found with id {esc_md(q)}\\.",
+    #             parse_mode="MarkdownV2",
+    #         )
+    #         return
 
-        if v.id in subbed_vessels:
-            await context.bot.send_message(
-                chat_id=chat_id,
-                text=f"🔔 You’re already subscribed to {esc_md(v.name)} \\({v.id}\\)\\.",
-                parse_mode="MarkdownV2",
-            )
-            return
+    #     if v.id in subbed_vessels:
+    #         await context.bot.send_message(
+    #             chat_id=chat_id,
+    #             text=f"🔔 You’re already subscribed to {esc_md(v.name)} \\({v.id}\\)\\.",
+    #             parse_mode="MarkdownV2",
+    #         )
+    #         return
 
-        sub, created, err = subscribe_user_to_vessel(chat_id, v.id)
-        if sub:
-            await context.bot.send_message(
-                chat_id=chat_id,
-                text=f"✅ Subscribed to {esc_md(v.name)} \\({v.id}\\)\\!",
-                parse_mode="MarkdownV2",
-            )
-        else:
-            if err == "limit_reached":
-                await context.bot.send_message(
-                    chat_id=chat_id,
-                    text="⚠️ You’ve reached the maximum of 10 vessel subscriptions\\. Use */unsub* to free a slot\\.",
-                    parse_mode="MarkdownV2",
-                )
-            else:
-                await context.bot.send_message(
-                    chat_id=chat_id,
-                    text="❌ Failed to subscribe to this vessel\\. Please try again\\.",
-                    parse_mode="MarkdownV2",
-                )
-        return
+    #     sub, created, err = subscribe_user_to_vessel(chat_id, v.id)
+    #     if sub:
+    #         await context.bot.send_message(
+    #             chat_id=chat_id,
+    #             text=f"✅ Subscribed to _*{esc_md(v.name)}*_",
+    #             parse_mode="MarkdownV2",
+    #         )
+    #     else:
+    #         if err == "limit_reached":
+    #             await context.bot.send_message(
+    #                 chat_id=chat_id,
+    #                 text="⚠️ You’ve reached the maximum of 10 vessel subscriptions\\. Use /unsub to free a slot\\.",
+    #                 parse_mode="MarkdownV2",
+    #             )
+    #         else:
+    #             await context.bot.send_message(
+    #                 chat_id=chat_id,
+    #                 text="❌ Failed to subscribe to this vessel\\. Please try again\\.",
+    #                 parse_mode="MarkdownV2",
+    #             )
+    #     return
 
     # Get matches and split into already subscribed and available
     matches = list(Vessel.select().where(Vessel.name.contains(q)).limit(10))
@@ -446,7 +447,7 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(matches) == 1 and matches[0].id in subbed_vessels:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"🔔 You’re already subscribed to {esc_md(matches[0].name)} \\({matches[0].id}\\)\\.",
+            text=f"🔔 You’re already subscribed to _*[{esc_md(matches[0].name)}](https://m.followme.mv/public/?pg=info&id={v[0].id})*_",
             parse_mode="MarkdownV2",
         )
         return
@@ -458,14 +459,14 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if sub:
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"✅ Subscribed to {esc_md(v.name)} \\({v.id}\\)\\!",
+                text=f"✅ Subscribed to _*[{esc_md(v.name)}](https://m.followme.mv/public/?pg=info&id={v.id})*_",
                 parse_mode="MarkdownV2",
             )
         else:
             if err == "limit_reached":
                 await context.bot.send_message(
                     chat_id=chat_id,
-                    text="⚠️ You’ve reached the maximum of 10 vessel subscriptions\\. Use */unsub* to remove one\\.",
+                    text="⚠️ You’ve reached the maximum of 10 vessel subscriptions\\. Use /unsub to remove one\\.",
                     parse_mode="MarkdownV2",
                 )
             else:
@@ -481,7 +482,9 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if already_subbed:
         msg_parts.append("*🔔 Already subscribed:*")
         for v in already_subbed:
-            msg_parts.append(f"• {esc_md(v.name)} \({v.id}\)")
+            msg_parts.append(
+                f"• _*[{esc_md(v.name)}](https://m.followme.mv/public/?pg=info&id={v.id})*_"
+            )
 
     # Then show keyboard for available ones
     keyboard = []
@@ -547,8 +550,14 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Hint: if user has island subscriptions but no vessel subscriptions
     if port_list and not vessel_list:
         lines.append(
-            "\nℹ️ Add at least one vessel to start notifications\\.\n*Usage:*\n`/addvessel <vessel_name_or_id>`\n*Example:*\n`/addvessel Speed Star`\n\n🔔 You'll be notified when a subscribed vessel visits a subscribed island\nOr join your island\'s update channel to get notifications for all vessels — see `\/islandchannels`"
-        )
+            "\n━━━━━━━━━━━━━━━━━━━━━━━"
+            "\nℹ️ To receive notifications you also need at least *ONE* vessel subscription\\.\n\n"
+            "*Usage:*\n"
+            "`/addvessel <vessel_name_or_id>`\n"
+            "*Example:*\n"
+            "`/addvessel Speed Star`\n\n"
+            "Join your island\\'s update channel to get notifications for all vessels — [join](http://t.me/addlist/ziV1Htn9OR9iNWI1)"
+        ),
 
     await context.bot.send_message(
         chat_id=chat_id, text="\n".join(lines), parse_mode="MarkdownV2"
@@ -585,9 +594,7 @@ async def unsub(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(
             chat_id=chat_id,
             text=(
-                "🔎 No active subscriptions found\. Use */addisland* or */addvessel* to get started\!\n\n"
-                "ℹ️ To receive island notifications you also need at least one vessel subscription\.\n"
-                "🔔 You\'ll be notified when a subscribed vessel visits a subscribed island\n"
+                "🔎 No active subscriptions found\. Use /addisland or /addvessel to get started\!\n\n"
                 "*Usage:*\n`/addvessel <vessel_name_or_id>`\n*Example:*\n`/addvessel Speed Star`"
             ),
             parse_mode="MarkdownV2",
@@ -668,7 +675,7 @@ async def islandchannels(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = r"""📣 *Island Channels*
 
 Want _*all activity*_ for specific islands\?  
-Join our dedicated [Bandharu update channels](http://t.me/addlist/ziV1Htn9OR9iNWI1):
+Join our dedicated Bandharu update channels: [Join](http://t.me/addlist/ziV1Htn9OR9iNWI1)
 
 _Can't find your island's channel\?_  
 Ask @BUBSupport to add it\! 💬"""
