@@ -309,7 +309,7 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
         msg_parts.append("*🔔 Already subscribed:*\n")
         for p in already_subbed:
             msg_parts.append(
-                f"• _*[{esc_md(port.name)}](https://www.google.com/maps?q={port.name})*_"
+                f"• _*[{esc_md(p.name)}](https://www.google.com/maps?q={p.name})*_"
             )
 
     # Then show keyboard for available ones
@@ -376,7 +376,7 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=chat_id,
             text=(
                 "*Usage:*\n"
-                "`/addvessel <vessel_name_or_id>`\n"
+                "`/addvessel <vessel_name>`\n"
                 "*Example:*\n"
                 "`/addvessel Speed Star`"
             ),
@@ -453,7 +453,7 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(matches) == 1 and matches[0].id in subbed_vessels:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"🔔 You’re already subscribed to _*[{esc_md(matches[0].name)}](https://m.followme.mv/public/?pg=info&id={v[0].id})*_",
+            text=f"🔔 You’re already subscribed to _*[{esc_md(matches[0].name)}](https://m.followme.mv/public/?pg=info&id={matches[0].id})*_",
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )
