@@ -281,12 +281,8 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.send_message(
                     chat_id=chat_id,
                     text=(
-                        "ℹ️ To receive notifications you also need at least *ONE* vessel subscription\\.\n\n"
-                        "*Usage:*\n"
-                        "`/addvessel <vessel_name_or_id>`\n"
-                        "*Example:*\n"
-                        "`/addvessel Speed Star`\n\n"
-                        "Join your island\\'s update channel to get notifications for all vessels — [join](http://t.me/addlist/ziV1Htn9OR9iNWI1)"
+                        "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\."
+                        "Use /addvessel to add one\\."
                     ),
                     parse_mode="MarkdownV2",
                     disable_web_page_preview=True,
