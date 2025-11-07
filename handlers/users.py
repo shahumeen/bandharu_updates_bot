@@ -46,7 +46,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_message = f"""
 👋🌊 Welcome to Bandharu Updates Bot\\!
 ━━━━━━━━━━━━━━━━━━━━━━━
-Track Maldives vessel movements in real-time and get notified when your subscribed vessels reach your favorite islands\\!
+Track Maldives vessel movements in real\\-time and get notified when your subscribed vessels reach your favorite islands\\!
 
 ✨ **How It Works:**
 1️⃣ Subscribe to islands 🏝️ and vessels ⛴️
@@ -57,27 +57,27 @@ Track Maldives vessel movements in real-time and get notified when your subscrib
 ⚡ **Quick Start Guide:**
 
 🎯 **Add Subscriptions:**
-• /addisland `<island_name>` - Subscribe to an island 🏝️
-• /addvessel `<vessel_name>` - Subscribe to a vessel ⛴️
+• /addisland `<island_name>` \\- Subscribe to an island 🏝️
+• /addvessel `<vessel_name>` \\- Subscribe to a vessel ⛴️
 
 ⚙️ **Manage Settings:**
-• /settings - View your subscriptions 🔍
-• /unsub - Remove subscriptions 🗑️
-• /toggledepartures - Toggle departure notifications 🔄
+• /settings \\- View your subscriptions 🔍
+• /unsub \\- Remove subscriptions 🗑️
+• /toggledepartures \\- Toggle departure notifications 🔄
 
 📊 **Get Statistics:**
-• /islandstats `<island_name>` - Island statistics 📈
-• /vesselstats - Vessel statistics \\(beta\\) 🧪
+• /islandstats `<island_name>` \\- Island statistics 📈
+• /vesselstats \\- Vessel statistics \\(beta\\) 🧪
 
 ━━━━━━━━━━━━━━━━━━━━━━━
-📣 *Island Channels*
+📣 **Island Channels**
 
 Want *all activity* for specific islands\\?  
 Join our dedicated [Bandharu update channels](http://t.me/addlist/ziV1Htn9OR9iNWI1):
 
 • Browse: /islandchannels  
 
-_Can't find your island's channel?_  
+_Can't find your island's channel\\?_  
 Ask @BUBSupport to add it\\! 💬
 
 ━━━━━━━━━━━━━━━━━━━━━━━
@@ -117,7 +117,7 @@ I monitor vessel movements and notify you when your subscribed ⛴ *vessels* vis
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 🎯 **How It Works:**
-• Subscribe to islands & vessels
+• Subscribe to islands \\& vessels
 • Get instant alerts when they match
 • Receive arrival \\& departure notifications
 
@@ -125,22 +125,22 @@ I monitor vessel movements and notify you when your subscribed ⛴ *vessels* vis
 ⚡ **Quick Commands:**
 
 🏝️ **Island Actions:**
-• /addisland `<island_name>` - Subscribe to an island
-• /islandstats `<island_name>` - Get island statistics
+• /addisland `<island_name>` \\- Subscribe to an island
+• /islandstats `<island_name>` \\- Get island statistics
 
 ⛴️ **Vessel Actions:**
-• /addvessel `<vessel_name>` - Subscribe to a vessel
-• /vesselstats - Vessel statistics \\(beta\\)
+• /addvessel `<vessel_name>` \\- Subscribe to a vessel
+• /vesselstats \\- Vessel statistics \\(beta\\)
 
 ⚙️ **Manage Settings:**
-• /settings - View your subscriptions
-• /unsub - Remove subscriptions
-• /toggledepartures - Toggle departure alerts
+• /settings \\- View your subscriptions
+• /unsub \\- Remove subscriptions
+• /toggledepartures \\- Toggle departure alerts
 
 📱 **General:**
-• /start - Welcome overview
-• /help - This help menu
-• /islandchannels - Island update channels
+• /start \\- Welcome overview
+• /help \\- This help menu
+• /islandchannels \\- Island update channels
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 🚀 **Getting Started:**
@@ -176,7 +176,7 @@ Join our dedicated [Bandharu update channels](http://t.me/addlist/ziV1Htn9OR9iNW
 
 • Browse: /islandchannels  
 
-_Can't find your island's channel?_  
+_Can't find your island's channel\\?_  
 Ask @BUBSupport to add it\\! 💬
 
 ━━━━━━━━━━━━━━━━━━━━━━━
