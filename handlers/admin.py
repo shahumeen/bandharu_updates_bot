@@ -775,7 +775,7 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception:
             failures += 1
         # Basic throttle to avoid hitting flood limits (adjust if needed)
-        await asyncio.sleep(0.05)
+        await asyncio.sleep(0.04)
 
     await context.bot.send_message(
         chat_id=chat_id,

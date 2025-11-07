@@ -44,8 +44,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             pass
 
     welcome_message = f"""
-👋🌊 Welcome to Bandharu Updates Bot\\!
+⛴️🏝️ Welcome to Bandharu Updates Bot\\!
 ━━━━━━━━━━━━━━━━━━━━━━━
+
 _Track Maldives vessel movements in real\\-time and get notified when your subscribed vessels reach your favorite islands\\!_
 
 ✨ *How It Works:*
@@ -54,22 +55,24 @@ _Track Maldives vessel movements in real\\-time and get notified when your subsc
 3️⃣ Stay updated with arrivals \\& departures
 
 ━━━━━━━━━━━━━━━━━━━━━━━
+
 ⚡ *Quick Start Guide:*
 
 🎯 _*Add Subscriptions:*_
-• /addisland `<island_name>` \\- `Subscribe to an island 🏝️`
-• /addvessel `<vessel_name>` \\- `Subscribe to a vessel ⛴️`
+• /addisland \\- _Subscribe to an island 🏝️_
+• /addvessel \\- _Subscribe to a vessel ⛴️_
 
 ⚙️ _*Manage Settings:*_
-• /settings \\- `View your subscriptions 🔍`
-• /unsub \\- `Remove subscriptions 🗑️`
-• /toggledepartures \\- `Toggle departure notifications 🔄`
+• /settings \\- _View your subscriptions 🔍_
+• /unsub \\- _Remove subscriptions 🗑️_
+• /toggledepartures \\- _Toggle departure notifications 🔄_
 
 📊 _*Get Statistics:*_
-• /islandstats `<island_name>` \\- `Island statistics 📈`
-• /vesselstats \\- `Vessel statistics \\(beta\\) 🧪`
+• /islandstats \\- _Island statistics 📈_
+• /vesselstats \\- _Vessel statistics \\(beta\\) 🧪_
 
 ━━━━━━━━━━━━━━━━━━━━━━━
+
 📣 *Island-Wide Updates:*
 
 Want _*all activity*_ for specific islands\\?  
@@ -81,14 +84,16 @@ _Can't find your island's channel\\?_
 Ask @BUBSupport to add it\\! 💬
 
 ━━━━━━━━━━━━━━━━━━━━━━━
+
 💡 *Examples to Get Started:*
-`/addisland Male`
+`/addisland Milandhoo`
 `/addvessel Speed Star`
 
 🔔 *Pro Tip:* You can subscribe up to 10 islands and 10 vessels\\!
 
 ━━━━━━━━━━━━━━━━━━━━━━━
-👾 _Powered by FollowMe\\.mv API_
+
+👾 _Uses FollowMe\\.mv API_
 
 `</> Made with ❤️ by` @shahumeen
 """
@@ -113,7 +118,7 @@ _Your friendly vessel tracking assistant for the Maldives_ 🌊
 *How I Work:* 🤖
 I monitor vessel movements and notify you when your subscribed ⛴ _*vessels*_ visit your subscribed 🏝 _*islands*_\\.
 
-_*You need at least 1 island and 1 vessel to start receiving alerts*_
+_*You need at least ONE island and ONE vessel to start receiving alerts*_
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 🎯 *How It Works:*
@@ -125,28 +130,22 @@ _*You need at least 1 island and 1 vessel to start receiving alerts*_
 ⚡ *Quick Commands:*
 
 🏝️ *Island Actions:*
-• /addisland `<island_name>` \\- `Subscribe to an island`
-• /islandstats `<island_name>` \\- `Get island statistics`
+• /addisland \\- _Subscribe to an island_
+• /islandstats \\- _Get island statistics_
 
 ⛴️ *Vessel Actions:*
-• /addvessel `<vessel_name>` \\- `Subscribe to a vessel`
-• /vesselstats \\- `Vessel statistics \\(beta\\)`
+• /addvessel \\- _Subscribe to a vessel_
+• /vesselstats \\- _Vessel statistics \\(beta\\)_
 
 ⚙️ *Manage Settings:*
-• /settings \\- `View your subscriptions`
-• /unsub \\- R`emove subscriptions`
-• /toggledepartures \\- `Toggle departure alerts`
+• /settings \\- _View your subscriptions_
+• /unsub \\- _Remove subscriptions_
+• /toggledepartures \\- _Toggle departure alerts_
 
 📱 *General:*
-• /start \\- `Welcome overview`
-• /help \\- `This help menu`
-• /islandchannels \\- `Island update channels`
-
-━━━━━━━━━━━━━━━━━━━━━━━
-🚀 *Getting Started:*
-1️⃣  Add an island: `/addisland Milandhoo`
-2️⃣  Add a vessel: `/addvessel Speed Star`
-3️⃣  Receive alerts when they match\\!
+• /start \\- _Welcome overview_
+• /help \\- _This help menu_
+• /islandchannels \\- _Island update channels_
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 💡 *Examples:*
@@ -155,7 +154,6 @@ _*You need at least 1 island and 1 vessel to start receiving alerts*_
 `/islandstats Funadhoo`
 
 ━━━━━━━━━━━━━━━━━━━━━━━
-
 💡 *Usage Tips*
 
 *• Subscription Limits:*  
@@ -168,7 +166,6 @@ _*You need at least 1 island and 1 vessel to start receiving alerts*_
    Use /toggledepartures to control departure notifications
 
 ━━━━━━━━━━━━━━━━━━━━━━━
-
 📣 *Island Channels*
 
 Want _*all activity*_ for specific islands\\?  
@@ -185,7 +182,7 @@ Ask @BUBSupport to add it\\! 💬
 contact @BUBSupport for assistance 🤝
 
 ━━━━━━━━━━━━━━━━━━━━━━━
-👾 _Powered by FollowMe\\.mv API_
+👾 _Uses FollowMe\\.mv API_
 
 `</> Made with ❤️ by` @shahumeen
 """

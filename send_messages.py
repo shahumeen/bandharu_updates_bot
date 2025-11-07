@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import re
 import os
+import asyncio
 from dotenv import load_dotenv
 from utils import all_notify
 from model_helpers import (
@@ -362,6 +363,9 @@ _\\#maledeparture_
         return None
 
 
+RATE_LIMIT_DELAY = 0.04  # seconds -> 25 messages / second max
+
+
 async def arrival_notify(arrivals, context, user: User):
     """Send arrival notifications (arrivals is a dict keyed by portlog id) to a single user/chat."""
 
@@ -440,10 +444,11 @@ _\\#{hashtag}_
                 parse_mode="MarkdownV2",
                 disable_web_page_preview=True,
             )
-
             update_notified(user, int(arrivals[v]["portlog_id"]))
         except Exception as e:
             await _handle_send_failure(chat_id, e, context)
+        # Throttle to respect global rate limits (similar to /broadcast admin command)
+        await asyncio.sleep(RATE_LIMIT_DELAY)
 
 
 async def departures_notify(departures, context, user: User):
@@ -522,10 +527,11 @@ _\\#{hashtag}_
                 parse_mode="MarkdownV2",
                 disable_web_page_preview=True,
             )
-
             update_notified(user, int(departures[v]["portlog_id"]))
         except Exception as e:
             await _handle_send_failure(chat_id, e, context)
+        # Throttle send rate
+        await asyncio.sleep(RATE_LIMIT_DELAY)
 
 
 async def notify_job(context):
