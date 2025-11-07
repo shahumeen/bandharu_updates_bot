@@ -87,7 +87,7 @@ def _run_bot() -> None:
                     BotCommand("settings", "View your subscriptions"),
                     BotCommand("unsub", "Remove subscriptions"),
                     BotCommand("toggledepartures", "Toggle departure alerts"),
-                    BotCommand("islandstats", "Yesterday's island stats"),
+                    BotCommand("islandstats", "Island stats"),
                     BotCommand("vesselstats", "Vessel stats (beta)"),
                     BotCommand("islandchannels", "Island update channels"),
                     BotCommand("help", "How to use the bot"),

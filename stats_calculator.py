@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from collections import defaultdict
 from model_helpers import Port, PortLog, Vessel, current_time
@@ -16,13 +16,31 @@ def get_daily_port_stats(port_id: int, peak_limit: int = 5) -> dict:
     start_time = datetime.combine(yesterday, datetime.min.time()).replace(tzinfo=mv_tz)
     end_time = datetime.combine(yesterday, datetime.max.time()).replace(tzinfo=mv_tz)
 
+    # Convert MV-local window to UTC for DB filtering (if DB stores timestamps in UTC)
+    utc = ZoneInfo("UTC")
+    start_time_utc = start_time.astimezone(utc)
+    end_time_utc = end_time.astimezone(utc)
+
     # Helper function to ensure datetime objects
     def ensure_datetime(ts) -> datetime:
+        """Return an aware datetime without forcing Maldives tz.
+
+        - If ts is a string, parse ISO (supporting trailing 'Z').
+        - If naive, assume UTC (common DB convention) to avoid shifting.
+        - Do NOT set Maldives tz here; we'll convert with .astimezone(mv_tz) at use sites.
+        """
         if isinstance(ts, str):
-            return datetime.fromisoformat(ts).replace(tzinfo=mv_tz)
+            s = ts.replace("Z", "+00:00")
+            dt = datetime.fromisoformat(s)
         elif isinstance(ts, datetime):
-            return ts.replace(tzinfo=mv_tz) if ts.tzinfo is None else ts
-        raise ValueError(f"Cannot convert {type(ts)} to datetime")
+            dt = ts
+        else:
+            raise ValueError(f"Cannot convert {type(ts)} to datetime")
+
+        if dt.tzinfo is None:
+            # Assume UTC for naive timestamps
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
 
     # Get all logs for yesterday
     logs = list(
@@ -32,8 +50,8 @@ def get_daily_port_stats(port_id: int, peak_limit: int = 5) -> dict:
         .join(Port)
         .where(
             (PortLog.port_id == port_id)
-            & (PortLog.timestamp >= start_time)
-            & (PortLog.timestamp <= end_time)
+            & (PortLog.timestamp >= start_time_utc)
+            & (PortLog.timestamp <= end_time_utc)
         )
         .order_by(PortLog.timestamp)
         .execute()
@@ -53,7 +71,8 @@ def get_daily_port_stats(port_id: int, peak_limit: int = 5) -> dict:
     # Process logs
     for log in logs:
         # Convert timestamp to proper datetime and get hour
-        log_time = ensure_datetime(log.timestamp)
+        # Always convert to Maldives timezone for bucketing and display
+        log_time = ensure_datetime(log.timestamp).astimezone(mv_tz)
         hour_dt = log_time.replace(minute=0, second=0, microsecond=0)
         hourly_counts[hour_dt] += 1
 
@@ -82,7 +101,9 @@ def get_daily_port_stats(port_id: int, peak_limit: int = 5) -> dict:
 
             if prev_departure:
                 # Convert timestamps to proper datetime objects
-                prev_departure_time = ensure_datetime(prev_departure.timestamp)
+                prev_departure_time = ensure_datetime(
+                    prev_departure.timestamp
+                ).astimezone(mv_tz)
                 duration = (log_time - prev_departure_time).total_seconds()
                 trip = {
                     "from": prev_departure.port.name,
