@@ -38,7 +38,7 @@ async def island_stats(
     if not matches:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"😕 No islands found matching ‘{esc_md(port_name)}’\.",
+            text=f"😕 No islands found matching ‘{esc_md(port_name)}’\\.",
             parse_mode="MarkdownV2",
         )
         return
