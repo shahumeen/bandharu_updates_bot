@@ -336,7 +336,11 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     reply_markup = InlineKeyboardMarkup(keyboard)
     await context.bot.send_message(
-        chat_id=chat_id, text=msg, reply_markup=reply_markup, parse_mode="MarkdownV2"
+        chat_id=chat_id,
+        text=msg,
+        reply_markup=reply_markup,
+        parse_mode="MarkdownV2",
+        disable_web_page_preview=True,
     )
 
 
@@ -522,6 +526,7 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text=msg,
         reply_markup=reply_markup,
         parse_mode="MarkdownV2",
+        disable_web_page_preview=True,
     )
 
 
