@@ -512,7 +512,7 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
         lines.append("*🏝 Ports:*")
         for p in port_list:
             lines.append(
-                f"• _*[{esc(p.name)}(https://www.google.com/maps?q={p.name})*_"
+                f"• _*[{esc(p.name)}](https://www.google.com/maps?q={p.name})*_"
             )
     else:
         lines.append("*🏝 Ports:* \\- None")
