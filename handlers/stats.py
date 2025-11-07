@@ -173,7 +173,7 @@ async def send_port_stats(context, chat_id, port_id):
             for vtype, count in stats_dict.get("vessel_type_trips", {}).items()
         )
         + "\n\n────────────────────"
-        + f"\n_\\#dailyreport_ _\\#{date.replace(' ', '')}_ _\\#{re.sub(r'[^0-9a-zA-Z]+', '', port_name)}_\n_[how it works](https://telegra.ph/Island-Stats-11-07)_"
+        + f"\n_\\#dailyreport_ _\\#{date.replace(' ', '')}_ _\\#{re.sub(r'[^0-9a-zA-Z]+', '', port_name)}_ _[How it works](https://telegra.ph/Island-Stats-11-07)_"
     )
 
     formatted_response = f"{highlights}\n{vessel_rankings}{peak_hours}{daily_totals}"
