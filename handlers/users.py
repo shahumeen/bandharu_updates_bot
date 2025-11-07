@@ -73,7 +73,7 @@ _Track Maldives vessel movements in real\-time and get notified when your subscr
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 
-📣 *Island-Wide Updates:*
+📣 *Island\-Wide Updates:*
 
 Want _*all activity*_ for specific islands\?  
 Join our dedicated [Bandharu update channels](http://t.me/addlist/ziV1Htn9OR9iNWI1)
@@ -110,42 +110,42 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show a friendly help with commands and examples."""
     chat_id = update.effective_chat.id
 
-    help_message = f"""
+    help_message = r"""
 ❓🌊 *Help & Commands Guide*
 
 _Your friendly vessel tracking assistant for the Maldives_ 🌊
 
 *How I Work:* 🤖
-I monitor vessel movements and notify you when your subscribed ⛴ _*vessels*_ visit your subscribed 🏝 _*islands*_\\.
+I monitor vessel movements and notify you when your subscribed ⛴ _*vessels*_ visit your subscribed 🏝 _*islands*_\.
 
 _*You need at least ONE island and ONE vessel to start receiving alerts*_
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 🎯 *How It Works:*
-• Subscribe to islands \\& vessels
+• Subscribe to islands \& vessels
 • Get instant alerts when they match
-• Receive arrival \\& departure notifications
+• Receive arrival \& departure notifications
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 ⚡ *Quick Commands:*
 
 🏝️ *Island Actions:*
-• /addisland \\- _Subscribe to an island_
-• /islandstats \\- _Get island statistics_
+• /addisland \- _Subscribe to an island_
+• /islandstats \- _Get island statistics_
 
 ⛴️ *Vessel Actions:*
-• /addvessel \\- _Subscribe to a vessel_
-• /vesselstats \\- _Vessel statistics \\(beta\\)_
+• /addvessel \- _Subscribe to a vessel_
+• /vesselstats \- _Vessel statistics \(beta\)_
 
 ⚙️ *Manage Settings:*
-• /settings \\- _View your subscriptions_
-• /unsub \\- _Remove subscriptions_
-• /toggledepartures \\- _Toggle departure alerts_
+• /settings \- _View your subscriptions_
+• /unsub \- _Remove subscriptions_
+• /toggledepartures \- _Toggle departure alerts_
 
 📱 *General:*
-• /start \\- _Welcome overview_
-• /help \\- _This help menu_
-• /islandchannels \\- _Island update channels_
+• /start \- _Welcome overview_
+• /help \- _This help menu_
+• /islandchannels \- _Island update channels_
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 💡 *Examples:*
@@ -168,13 +168,13 @@ _*You need at least ONE island and ONE vessel to start receiving alerts*_
 ━━━━━━━━━━━━━━━━━━━━━━━
 📣 *Island Channels*
 
-Want _*all activity*_ for specific islands\\?  
+Want _*all activity*_ for specific islands\?  
 Join our dedicated [Bandharu update channels](http://t.me/addlist/ziV1Htn9OR9iNWI1):
 
 • Browse: /islandchannels  
 
-_Can't find your island's channel\\?_  
-Ask @BUBSupport to add it\\! 💬
+_Can't find your island's channel\?_  
+Ask @BUBSupport to add it\! 💬
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 🎯*Need More Help?*
@@ -182,7 +182,7 @@ Ask @BUBSupport to add it\\! 💬
 contact @BUBSupport for assistance 🤝
 
 ━━━━━━━━━━━━━━━━━━━━━━━
-👾 _Uses FollowMe\\.mv API_
+👾 _Uses FollowMe\.mv API_
 
 `</> Made with ❤️ by` @shahumeen
 """

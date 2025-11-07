@@ -82,8 +82,6 @@ def _run_bot() -> None:
         try:
             await application.bot.set_my_commands(
                 [
-                    BotCommand("start", "Welcome and overview"),
-                    BotCommand("help", "How to use the bot"),
                     BotCommand("addisland", "Subscribe to an island"),
                     BotCommand("addvessel", "Subscribe to a vessel"),
                     BotCommand("settings", "View your subscriptions"),
@@ -92,6 +90,8 @@ def _run_bot() -> None:
                     BotCommand("islandstats", "Yesterday's island stats"),
                     BotCommand("vesselstats", "Vessel stats (beta)"),
                     BotCommand("islandchannels", "Island update channels"),
+                    BotCommand("help", "How to use the bot"),
+                    BotCommand("start", "Welcome and overview"),
                 ]
             )
         except Exception:
