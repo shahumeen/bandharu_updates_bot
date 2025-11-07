@@ -43,38 +43,59 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception:
             pass
 
-    text = (
-        "*👋 Welcome to Bandharu Updates Bot*\n"
-        "━━━━━━━━━━━━━━━━\n"
-        "_Track Maldives vessel movements in real–time\\._\n\n"
-        "🧭 *What I can do*\n"
-        "• `\\/addisland <island_name>` – Subscribe to an island 🏝\n"
-        "• `\\/addvessel <vessel_name_or_id>` – Subscribe to a vessel ⛴\n"
-        "• `\\/settings` – View your subscriptions ⚙️\n"
-        "• `\\/unsub` – Manage and remove subscriptions 🔕\n"
-        "• `\\/islandstats <island_name>` – Yesterday\'s stats for an island 📊\n"
-        "• `\\/vesselstats` – Vessel stats \(beta\) 🧪\n"
-        "• `\\/islandchannels` – Island update channels list 📣\n"
-        "• `\\/toggledepartures` – Turn departure notifications ON\\/OFF 🚦\n"
-        "━━━━━━━━━━━━━━━━\n"
-        "✨ _Getting started_\n"
-        "1\\. Add an island: `\\/addisland <island_name>`\n"
-        "2\\. Add a vessel: `\\/addvessel <vessel_name_or_id>`\n"
-        "3\\. Get alerts when they match\n"
-        "━━━━━━━━━━━━━━━━\n"
-        "📣 *Island update channels*\n"
-        "[BandharuUpdates](t.me/addlist/ziV1Htn9OR9iNWI1) — notifications for all vessels at an island\n"
-        "Can\\'t find your island\\'s channel? Ask @BUBSupport to add it\\.\n"
-        "━━━━━━━━━━━━━━━━\n"
-        "*Examples:*\n"
-        "`\\/addisland Male`\n"
-        "`\\/addvessel Speed Star`\n\n"
-        "👾 Powered by FollowMe\\.mv API"
-    )
+    welcome_message = f"""
+👋🌊 Welcome to Bandharu Updates Bot\\!
+━━━━━━━━━━━━━━━━━━━━━━━
+Track Maldives vessel movements in real-time and get notified when your subscribed vessels reach your favorite islands\\!
+
+✨ **How It Works:**
+1️⃣ Subscribe to islands 🏝️ and vessels ⛴️
+2️⃣ Get instant alerts when they match
+3️⃣ Stay updated with arrivals \\& departures
+
+━━━━━━━━━━━━━━━━━━━━━━━
+⚡ **Quick Start Guide:**
+
+🎯 **Add Subscriptions:**
+• /addisland `<island_name>` - Subscribe to an island 🏝️
+• /addvessel `<vessel_name>` - Subscribe to a vessel ⛴️
+
+⚙️ **Manage Settings:**
+• /settings - View your subscriptions 🔍
+• /unsub - Remove subscriptions 🗑️
+• /toggledepartures - Toggle departure notifications 🔄
+
+📊 **Get Statistics:**
+• /islandstats `<island_name>` - Island statistics 📈
+• /vesselstats - Vessel statistics \\(beta\\) 🧪
+
+━━━━━━━━━━━━━━━━━━━━━━━
+📣 *Island Channels*
+
+Want *all activity* for specific islands\\?  
+Join our dedicated [Bandharu update channels](http://t.me/addlist/ziV1Htn9OR9iNWI1):
+
+• Browse: /islandchannels  
+
+_Can't find your island's channel?_  
+Ask @BUBSupport to add it\\! 💬
+
+━━━━━━━━━━━━━━━━━━━━━━━
+💡 **Examples to Get Started:**
+`/addisland Male`
+`/addvessel Speed Star`
+
+🔔 **Pro Tip:** You can subscribe up to 10 islands and 10 vessels\\!
+
+━━━━━━━━━━━━━━━━━━━━━━━
+👾 _Powered by FollowMe\\.mv API_
+
+`</> Made with ❤️ by` @shahumeen
+"""
 
     await context.bot.send_message(
         chat_id=chat_id,
-        text=text,
+        text=welcome_message,
         parse_mode="MarkdownV2",
         disable_web_page_preview=True,
     )
@@ -84,40 +105,94 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show a friendly help with commands and examples."""
     chat_id = update.effective_chat.id
 
-    text = (
-        "*❓ Help & Commands*\n\n"
-        "_How it works:_ I notify you when subscribed ⛴ vessels visit subscribed 🏝 islands\\.\n"
-        "Add at least one island and one vessel to start getting alerts\\.\n"
-        "━━━━━━━━━━━━━━━━\n"
-        "🧭 *Main commands*\n"
-        "• \\/start – Welcome and quick overview 👋\n"
-        "• \\/help – This help menu ❓\n"
-        "• \\/addisland `<island_name>` – Subscribe to an island 🏝\n"
-        "• \\/addvessel `<vessel_name_or_id>` – Subscribe to a vessel ⛴\n"
-        "• \\/settings – View your subscriptions ⚙️\n"
-        "• \\/unsub – Remove subscriptions 🔕\n"
-        "• \\/islandstats `<island_name>` – Yesterday\\’s stats for an island 📊\n"
-        "• \\/vesselstats – Vessel stats \\(beta\\) 🧪\n"
-        "• \\/islandchannels – Island update channels list 📣\n"
-        "• \\/toggledepartures – Turn departure alerts ON\\/OFF 🚦\n"
-        "━━━━━━━━━━━━━━━━\n"
-        "✨ _Getting started_\n"
-        "1\\. Add an island: \\/addisland `<island_name>`\n"
-        "2\\. Add a vessel: \\/addvessel `<vessel_name_or_id>`\n"
-        "3\\. Receive alerts when they match\n"
-        "━━━━━━━━━━━━━━━━\n"
-        "*Examples:*\n"
-        "`\\/addisland Male`\n"
-        "`\\/addvessel Speed Star`\n"
-        "━━━━━━━━━━━━━━━━\n"
-        "📣 [BandharuUpdates](t.me/addlist/ziV1Htn9OR9iNWI1) — island update channels list\n"
-        "Can\\’t find your island? Ask [@BUBSupport](t.me/BUBSupport) to add it\\.\n\n"
-        "👾 Powered by FollowMe\\.mv API"
-    )
+    help_message = f"""
+🆘 *Bandharu Updates Help Guide* 🆘
+
+_Your friendly vessel tracking assistant for the Maldives_ 🌊
+
+*How I Work:* 🤖
+I monitor vessel movements and notify you when your subscribed ⛴ *vessels* visit your subscribed 🏝 *islands*\\.
+
+*You need at least 1 island and 1 vessel to start receiving alerts*
+
+━━━━━━━━━━━━━━━━━━━━━━━
+🎯 **How It Works:**
+• Subscribe to islands & vessels
+• Get instant alerts when they match
+• Receive arrival \\& departure notifications
+
+━━━━━━━━━━━━━━━━━━━━━━━
+⚡ **Quick Commands:**
+
+🏝️ **Island Actions:**
+• /addisland `<island_name>` - Subscribe to an island
+• /islandstats `<island_name>` - Get island statistics
+
+⛴️ **Vessel Actions:**
+• /addvessel `<vessel_name>` - Subscribe to a vessel
+• /vesselstats - Vessel statistics \\(beta\\)
+
+⚙️ **Manage Settings:**
+• /settings - View your subscriptions
+• /unsub - Remove subscriptions
+• /toggledepartures - Toggle departure alerts
+
+📱 **General:**
+• /start - Welcome overview
+• /help - This help menu
+• /islandchannels - Island update channels
+
+━━━━━━━━━━━━━━━━━━━━━━━
+🚀 **Getting Started:**
+1️⃣  Add an island: `/addisland Milandhoo`
+2️⃣  Add a vessel: `/addvessel Speed Star`
+3️⃣  Receive alerts when they match\\!
+
+━━━━━━━━━━━━━━━━━━━━━━━
+💡 **Examples:**
+`/addisland Male`
+`/addvessel Speed Star`
+`/islandstats Hulhumale`
+
+━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 **Usage Tips**
+
+*• Subscription Limits:*  
+   You can subscribe to *10 islands* and *10 vessels*
+
+*• Matching Logic:*  
+   We notify when _*any*_ of your vessels visit _*any*_ of your islands
+
+*• Departure Alerts:*  
+   Use /toggledepartures to control departure notifications
+
+━━━━━━━━━━━━━━━━━━━━━━━
+
+📣 **Island Channels**
+
+Want *all activity* for specific islands\\?  
+Join our dedicated [Bandharu update channels](http://t.me/addlist/ziV1Htn9OR9iNWI1):
+
+• Browse: /islandchannels  
+
+_Can't find your island's channel?_  
+Ask @BUBSupport to add it\\! 💬
+
+━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯**Need More Help?**
+
+contact @BUBSupport for assistance 🤝
+
+👾 _Powered by FollowMe\\.mv API_
+
+`</> Made with ❤️ by` @shahumeen
+"""
 
     await context.bot.send_message(
         chat_id=chat_id,
-        text=text,
+        text=help_message,
         parse_mode="MarkdownV2",
         disable_web_page_preview=True,
     )
@@ -229,8 +304,8 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         "`/addvessel <vessel_name_or_id>`\n"
                         "*Example:*\n"
                         "`/addvessel Speed Star`\n\n"
-                        "🔔 You\'ll be notified when a subscribed vessel visits a subscribed island\n"
-                        "Or join your island\'s update channel to get notifications for all vessels — see `\/islandchannels`"
+                        "🔔 You\\'ll be notified when a subscribed vessel visits a subscribed island\n"
+                        "Or join your island\\'s update channel to get notifications for all vessels — see \\/islandchannels"
                     ),
                     parse_mode="MarkdownV2",
                 )
@@ -600,12 +675,12 @@ async def toggledepartures(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    reply = "🔔 Departure notifications are now _*ON*_ for this chat\\." if new_value else "🔕 Departure notifications are now _*OFF*_ for this chat\\."
-    await context.bot.send_message(
-        chat_id=chat_id,
-        text=reply,
-        parse_mode="MarkdownV2"
+    reply = (
+        "🔔 Departure notifications are now _*ON*_ for this chat\\."
+        if new_value
+        else "🔕 Departure notifications are now _*OFF*_ for this chat\\."
     )
+    await context.bot.send_message(chat_id=chat_id, text=reply, parse_mode="MarkdownV2")
 
 
 async def islandchannels(update: Update, context: ContextTypes.DEFAULT_TYPE):
