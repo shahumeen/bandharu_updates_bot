@@ -189,24 +189,10 @@ async def send_port_stats(context, chat_id, port_id):
 async def vessel_stats(
     update: Update = None, context: ContextTypes.DEFAULT_TYPE = None
 ):
-    if not context.args:
-        await context.bot.send_message(
-            chat_id=context._chat_id,
-            text=(
-                "*Usage:*\n"
-                "`/vesselstats <vessel_name>`\n"
-                "*Example:*\n"
-                "`/vesselstats Speed Star`\n\n"
-                "⏳ Detailed vessel stats coming soon—إن شاء الله"
-            ),
-            parse_mode="MarkdownV2",
-            disable_web_page_preview=True,
-        )
-        return
     # Placeholder while feature is in beta
     await context.bot.send_message(
         chat_id=context._chat_id,
-        text="🧪 Vessel stats beta is not yet implemented for specific queries.",
+        text="🧪 Vessel stats coming soon إن شاء الله",
         parse_mode="MarkdownV2",
         disable_web_page_preview=True,
     )
