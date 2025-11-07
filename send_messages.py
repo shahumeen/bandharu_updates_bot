@@ -134,7 +134,40 @@ def _format_male_arrival(event: dict, user: User):
         return None
 
     try:
-        # Last departure from the user's main port
+        # Parse current event timestamp
+        current_ts = _ensure_datetime(event.get("timestamp"))
+
+        # Last ARRIVAL to the user's main port before current Male arrival
+        last_user_arrival = (
+            PortLog.select()
+            .where(
+                (PortLog.vessel == vessel_id)
+                & (PortLog.port == user.main_port)
+                & (PortLog.event == "arrival")
+                & (PortLog.timestamp < current_ts)
+            )
+            .order_by(PortLog.timestamp.desc())
+            .first()
+        )
+
+        # Check if there was a previous Male ARRIVAL after the last user.main_port arrival
+        # and before this current Male arrival. If yes, suppress the "from_island" details.
+        suppress_from_island = False
+        if last_user_arrival and current_ts:
+            suppress_from_island = (
+                PortLog.select()
+                .join(Port)
+                .where(
+                    (PortLog.vessel == vessel_id)
+                    & (PortLog.event == "arrival")
+                    & (Port.name.in_(male_ports_lst))
+                    & (PortLog.timestamp > last_user_arrival.timestamp)
+                    & (PortLog.timestamp < current_ts)
+                )
+                .exists()
+            )
+
+        # Last DEPARTURE from the user's main port (used for transit calc)
         last_departure = (
             PortLog.select()
             .where(
@@ -147,7 +180,7 @@ def _format_male_arrival(event: dict, user: User):
         )
         contact = f"\n📞 *Contact:* {event['contact']}" if event['contact'] else ""
 
-        if last_departure:
+        if not suppress_from_island and last_departure:
             # Calculate transit from user's main port departure to this arrival
             transit_seconds = _seconds_between(
                 event.get("timestamp"), last_departure.timestamp
@@ -159,8 +192,8 @@ def _format_male_arrival(event: dict, user: User):
             departure = escape_markdown(departure_time_fmt, version=2)
             transit = escape_markdown(transit_fmt, version=2)
         else:
-            departure = 'Unknown'
-            transit = 'Unknown'
+            departure = None
+            transit = None
 
         arrival_time_fmt = _fmt_time(event.get("timestamp"))
         # Escape for MarkdownV2
@@ -172,16 +205,20 @@ def _format_male_arrival(event: dict, user: User):
         arrival_time = escape_markdown(arrival_time_fmt or "Unknown", version=2)
 
         hashtag = re.sub(r"[^0-9a-zA-Z]+", "", vessel.name).lower()
+        # Only include the from_island block if we didn't suppress it and we have values
+        if not suppress_from_island and departure is not None and transit is not None:
+            from_island = (
+                f"\n📅 *Departed {last_port}:* {departure}\n⏳ *Transit Time:* {transit}"
+            )
+        else:
+            from_island = ""
 
         formatted_response = f"""
 🔵⚓*[{vessel_name}](m.followme.mv/public/?id={vessel_id}) ARRIVED MALE*⚓
 ━━━━━━━━━━━━━━━━━━━━━━━
 📍 *Location:* {port_name}
 ⏱️ *Arrival Time:* {arrival_time}
-📋 *Type:* {vessel_type}{contact}
-
-📅 *Departed {last_port}:* {departure}
-⏳ *Transit Time:* {transit}
+📋 *Type:* {vessel_type}{contact}{from_island}
 ━━━━━━━━━━━━━━━━━━━━━━━
 _\\#{hashtag}_
 _\\#malearrival_

@@ -64,6 +64,7 @@ def _run_bot() -> None:
         channelunsub,
         togglechanneldepartures,
         removechannel,
+        broadcast,
     )
     from send_messages import notify_job
 
@@ -123,6 +124,7 @@ def _run_bot() -> None:
         CommandHandler("togglechanneldepartures", togglechanneldepartures)
     )
     bot_main.app.add_handler(CommandHandler("removechannel", removechannel))
+    bot_main.app.add_handler(CommandHandler("broadcast", broadcast))
 
     # Callback queries and non-command text
     bot_main.app.add_handler(CallbackQueryHandler(callback_handler))

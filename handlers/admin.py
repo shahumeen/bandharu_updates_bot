@@ -667,3 +667,120 @@ async def addchannel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     except Exception as e:
         await context.bot.send_message(chat_id=chat_id, text=f"❌ Error: {str(e)}")
+
+
+async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Admin command to broadcast (forward/copy) a replied message to selected users.
+
+    Usage (must reply to a message):
+        /broadcast <scope>
+
+    Scopes:
+        private  -> all private chats (individual users)
+        group    -> all group & supergroup chats
+        channel  -> all channel chats
+        all      -> all chats
+
+    The admin should reply with /broadcast <scope> to the message they want
+    delivered. We copy the original message to preserve formatting without
+    linking back to the admin chat.
+    """
+    chat = update.effective_chat
+    chat_id = chat.id
+
+    # Admin check
+    if not ADMIN_CHAT_ID or int(chat_id) != int(ADMIN_CHAT_ID):
+        await context.bot.send_message(chat_id=chat_id, text="⛔️ This command can only be used by admin")
+        return
+
+    # Ensure scope arg provided
+    if not context.args or len(context.args) != 1:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=(
+                "*Usage:*\n"
+                "`/broadcast <scope>` (reply to the message to send)\n\n"
+                "*Scopes:*\n"
+                "`private` – send to all private chats\n"
+                "`group` – send to all groups & supergroups\n"
+                "`channel` – send to all channels\n"
+                "`all` – send to everyone\n\n"
+                "*Example:* Reply to a message with `\/broadcast all`"
+            ),
+            parse_mode="MarkdownV2",
+        )
+        return
+
+    scope = context.args[0].lower().strip()
+    valid_scopes = {"private", "group", "channel", "all"}
+    if scope not in valid_scopes:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="❗️ Invalid scope. Use one of: private, group, channel, all",
+        )
+        return
+
+    # Must be a reply
+    if not update.message or not update.message.reply_to_message:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="ℹ️ Please reply to the message you want to broadcast and include the scope. Example: reply then /broadcast private",
+        )
+        return
+
+    original = update.message.reply_to_message
+
+    # Build query for targets
+    from model_helpers import User  # local import to avoid circulars at module load
+
+    if scope == "private":
+        query = User.select().where(User.chat_type == "private")
+    elif scope == "group":
+        query = User.select().where(User.chat_type.in_(["group", "supergroup"]))
+    elif scope == "channel":
+        query = User.select().where(User.chat_type == "channel")
+    else:  # all
+        query = User.select()
+
+    targets = list(query)
+
+    if not targets:
+        await context.bot.send_message(chat_id=chat_id, text="ℹ️ No recipients found for this scope.")
+        return
+
+    # Send a quick preflight summary
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text=f"📣 Broadcasting to {len(targets)} chats ({scope}). Starting...",
+    )
+
+    # Forward/copy loop with simple rate limiting
+    import asyncio
+
+    success = 0
+    failures = 0
+    for user in targets:
+        try:
+            # copy_message preserves formatting but detaches from original chat
+            await context.bot.copy_message(
+                chat_id=user.chat_id,
+                from_chat_id=original.chat.id,
+                message_id=original.message_id,
+            )
+            success += 1
+        except Exception:
+            failures += 1
+        # Basic throttle to avoid hitting flood limits (adjust if needed)
+        await asyncio.sleep(0.05)
+
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text=f"✅ Broadcast finished. Sent: {success}, Failed: {failures}.",
+    )
+
+    # Optional: brief failure alert if many failed
+    if failures > 0:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="⚠️ Some messages failed to send (chat inaccessible or bot removed).",
+        )

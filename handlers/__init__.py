@@ -19,6 +19,7 @@ from .admin import (
     channelunsub,
     togglechanneldepartures,
     removechannel,
+    broadcast,
 )
 from .stats import island_stats, vessel_stats
 
@@ -45,6 +46,7 @@ __all__ = [
     "channelunsub",
     "togglechanneldepartures",
     "removechannel",
+    "broadcast",
     # stats
     "island_stats",
     "vessel_stats",
