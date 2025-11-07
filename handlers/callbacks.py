@@ -73,7 +73,8 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 if err == "limit_reached":
                     await cq.edit_message_text(
-                        text="❌ You have reached the maximum of *10* port subscriptions.\nPlease use /unsub to remove an island."
+                        text="⚠️ You’ve reached the maximum of *10* island subscriptions\\. Remove one with /unsub to add more\\.",
+                        parse_mode="MarkdownV2",
                     )
                 else:
                     try:
@@ -105,7 +106,8 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 if err == "limit_reached":
                     await cq.edit_message_text(
-                        text="❌ You have reached the maximum of *10* vessel subscriptions.\nPlease use /unsub to remove a vessel."
+                        text="⚠️ You’ve reached the maximum of 10 vessel subscriptions\\. Use /unsub to remove one\\.",
+                        parse_mode="MarkdownV2",
                     )
                 else:
                     try:
