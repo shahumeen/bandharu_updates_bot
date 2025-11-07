@@ -22,6 +22,7 @@ from .admin import (
     broadcast,
 )
 from .stats import island_stats, vessel_stats
+from .chat_members import my_chat_member_update
 
 __all__ = [
     # common
@@ -50,4 +51,6 @@ __all__ = [
     # stats
     "island_stats",
     "vessel_stats",
+    # chat member updates
+    "my_chat_member_update",
 ]

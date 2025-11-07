@@ -1,4 +1,5 @@
 from telegram.helpers import escape_markdown
+from telegram.error import Forbidden, BadRequest
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import re
@@ -22,6 +23,7 @@ from typing import Optional, List, Any
 load_dotenv()
 TOKEN = os.getenv("BOT_API")
 FOLLOWME_API_KEY = os.getenv("FOLLOWME_API")
+ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
 male_ports_lst = (
     "Male North Harbour",
     "Male South Harbor",
@@ -29,6 +31,125 @@ male_ports_lst = (
     "Male Harbour",
     "Male Airport Jetty",
 )
+
+
+async def _notify_admin_of_block(chat_id: int, reason: str, context) -> None:
+    """Notify admin when a user blocks the bot or the bot is removed from a chat."""
+    admin_id = ADMIN_CHAT_ID
+    if not admin_id:
+        return
+    try:
+        # Collect some context for admin
+        u = User.get_or_none(User.chat_id == chat_id)
+        u_name = None
+        u_type = None
+        if u:
+            u_name = u.username or "-"
+            u_first_name = u.first_name or "-"
+            u_last_name = u.last_name or ""
+            u_type = u.chat_type
+        msg = (
+            f"Notice: cleanup user due to block/kick.\n"
+            f"chat_id: {chat_id}\n"
+            f"chat_type: {u_type or '-'}\n"
+            f"name: {u_first_name} {u_last_name}\n"
+            f"username: @{u_name or '-'}\n"
+            f"reason: {reason}"
+        )
+        await context.bot.send_message(chat_id=admin_id, text=msg)
+    except Exception:
+        # Admin notification is best-effort
+        pass
+
+
+async def _handle_send_failure(chat_id: int, e: Exception, context) -> None:
+    """Common handler for send_message failures: detect block/kick, purge user, and notify admin."""
+    reason = str(e)
+    # Normalize reason string to lowercase for safer matching across locales/wording variants
+    reason_l = reason.lower()
+
+    # Explicit block indications (irreversible user-level cases)
+    blocked_signals = [
+        "bot was blocked by the user",
+        "user is deactivated",
+    ]
+
+    # Bot removed/kicked/banned or not a member anymore (group/supergroup/channel)
+    removed_signals = [
+        "bot was kicked from the group chat",
+        "bot was kicked from the supergroup chat",
+        "bot was kicked from the channel chat",
+        "bot was banned from the supergroup chat",
+        "bot was banned from the channel chat",
+        "bot is not a member of the supergroup chat",
+        "bot is not a member of the channel chat",
+    ]
+
+    # Ambiguous or permission-related indicators; do NOT auto-delete users/chats
+    ambiguous_signals = [
+        "chat not found",
+        "have no rights",
+        "not enough rights",
+        "cannot send messages to this chat",
+    ]
+
+    should_remove = False
+    is_blocked = False
+    is_ambiguous = False
+    if isinstance(e, Forbidden) or isinstance(e, BadRequest):
+        if any(sig in reason_l for sig in blocked_signals):
+            should_remove = True
+            is_blocked = True
+        elif any(sig in reason_l for sig in removed_signals):
+            should_remove = True
+        elif any(sig in reason_l for sig in ambiguous_signals):
+            is_ambiguous = True
+
+    # If we couldn't confidently classify as block/kick/removal, do not delete user.
+    # This avoids wiping users on transient permission issues or network errors.
+    if not should_remove:
+        if is_ambiguous:
+            print(
+                f"notify skipped for {chat_id}: permission/ambiguous issue detected: {e}",
+                flush=True,
+            )
+        else:
+            print(f"unable to notify {chat_id}: {e}")
+        return
+
+    # Try to notify user when we believe it's a block/kick. In case of false positives,
+    # the user will receive guidance to /start again. If truly blocked, this will fail silently.
+    if is_blocked or should_remove:
+        try:
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=(
+                    "It seems you have blocked me. If this is wrong please send /start to begin."
+                ),
+            )
+        except Exception:
+            pass
+
+    # Capture details before deletion for admin message
+    try:
+        await _notify_admin_of_block(chat_id, reason, context)
+    except Exception:
+        pass
+
+    # Remove user from database ONLY when we confidently detect block/kick/removal
+    try:
+        u = User.get_or_none(User.chat_id == chat_id)
+        if u:
+            u.delete_instance(recursive=True)
+            print(
+                f"[cleanup] Removed user {chat_id} due to block/kick: {reason}",
+                flush=True,
+            )
+    except Exception as purge_err:
+        print(
+            f"[cleanup] Failed to remove user {chat_id}: {purge_err}",
+            flush=True,
+        )
 
 
 def _fmt_time(ts):
@@ -73,45 +194,6 @@ def _ensure_datetime(ts: Any) -> Optional[datetime]:
         return datetime.fromisoformat(str(ts))
     except Exception:
         return None
-
-
-def _has_recent_event(
-    vessel_id: int,
-    event: str,
-    current_ts: Any,
-    within_hours: int = 5,
-    restrict_port_names: Optional[List[str]] = None,
-) -> bool:
-    """Return True if the vessel has an event of type `event` within the last `within_hours` hours
-    before `current_ts`. If `restrict_port_names` is provided, only consider logs whose Port.name is in
-    that list (case-sensitive match to stored names).
-    """
-    ts = _ensure_datetime(current_ts)
-    if not ts:
-        return False
-
-    window_start = ts - timedelta(hours=within_hours)
-
-    base_condition = (
-        (PortLog.vessel == vessel_id)
-        & (PortLog.event == event)
-        & (PortLog.timestamp >= window_start)
-        & (PortLog.timestamp < ts)
-    )
-
-    try:
-        if restrict_port_names:
-            q = (
-                PortLog.select()
-                .join(Port)
-                .where(base_condition & (Port.name.in_(restrict_port_names)))
-            )
-        else:
-            q = PortLog.select().where(base_condition)
-
-        return q.exists()
-    except Exception:
-        return False
 
 
 def _format_male_arrival(event: dict, user: User):
@@ -207,9 +289,7 @@ def _format_male_arrival(event: dict, user: User):
         hashtag = re.sub(r"[^0-9a-zA-Z]+", "", vessel.name).lower()
         # Only include the from_island block if we didn't suppress it and we have values
         if not suppress_from_island and departure is not None and transit is not None:
-            from_island = (
-                f"\n📅 *Departed {last_port}:* {departure}\n⏳ *Transit Time:* {transit}"
-            )
+            from_island = f"\n📅 *Departed {last_port}:* {departure}\n⏳ *Transit Time:* {transit}"
         else:
             from_island = ""
 
@@ -361,16 +441,9 @@ _\\#{hashtag}_
                 disable_web_page_preview=True,
             )
 
-            # print(
-            #     f"name:{vessel_name} | type:{vessel_type}\ndepart-time:{arrival_time}\ncontact{contact}\n\n"
-            # )
             update_notified(user, int(arrivals[v]["portlog_id"]))
-            # print(
-            #     f"{arrivals[v]['portlog_id']} | status updated to notified for {chat_id}",
-            #     flush=True,
-            # )
         except Exception as e:
-            print(f"unable to notify: {e}")
+            await _handle_send_failure(chat_id, e, context)
 
 
 async def departures_notify(departures, context, user: User):
@@ -450,18 +523,9 @@ _\\#{hashtag}_
                 disable_web_page_preview=True,
             )
 
-            # print(
-            #     f"name:{vessel_name} | type:{vessel_type}\ndepart-time:{departure_time} | stayed:{port_stay} | contact{contact}\n\n",
-            #     flush=True,
-            # )
-
             update_notified(user, int(departures[v]["portlog_id"]))
-            # print(
-            #     f"{departures[v]['portlog_id']} | status updated to notified for {chat_id}",
-            #     flush=True,
-            # )
         except Exception as e:
-            print(f"unable to notify: {e}")
+            await _handle_send_failure(chat_id, e, context)
 
 
 async def notify_job(context):

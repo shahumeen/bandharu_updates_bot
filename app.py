@@ -40,6 +40,7 @@ def _run_bot() -> None:
         CommandHandler,
         CallbackQueryHandler,
         MessageHandler,
+        ChatMemberHandler,
         filters,
     )
     from telegram import BotCommand
@@ -54,6 +55,7 @@ def _run_bot() -> None:
         islandchannels,
         island_stats,
         vessel_stats,
+        my_chat_member_update,
         # admin
         addchannel,
         channelsubvessel,
@@ -129,6 +131,13 @@ def _run_bot() -> None:
     # Callback queries and non-command text
     bot_main.app.add_handler(CallbackQueryHandler(callback_handler))
     bot_main.app.add_handler(MessageHandler(filters.COMMAND, unrecognized_command))
+
+    # React to changes in the bot's own member status (blocked/unblocked, added/removed)
+    bot_main.app.add_handler(
+        ChatMemberHandler(
+            my_chat_member_update, chat_member_types=ChatMemberHandler.MY_CHAT_MEMBER
+        )
+    )
 
     # Blocking call; handles SIGTERM/SIGINT on Heroku for graceful shutdown
     bot_main.app.run_polling()
