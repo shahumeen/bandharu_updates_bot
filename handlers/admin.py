@@ -690,7 +690,9 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Admin check
     if not ADMIN_CHAT_ID or int(chat_id) != int(ADMIN_CHAT_ID):
-        await context.bot.send_message(chat_id=chat_id, text="⛔️ This command can only be used by admin")
+        await context.bot.send_message(
+            chat_id=chat_id, text="⛔️ This command can only be used by admin"
+        )
         return
 
     # Ensure scope arg provided
@@ -716,7 +718,7 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if scope not in valid_scopes:
         await context.bot.send_message(
             chat_id=chat_id,
-            text="❗️ Invalid scope\\. Use one of: private, group, channel, all",
+            text="❗️ Invalid scope. Use one of: private, group, channel, all",
         )
         return
 
@@ -724,7 +726,7 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.reply_to_message:
         await context.bot.send_message(
             chat_id=chat_id,
-            text="ℹ️ Please reply to the message you want to broadcast and include the scope\\. Example: reply then /broadcast private",
+            text="ℹ️ Please reply to the message you want to broadcast and include the scope. Example: reply then /broadcast private",
         )
         return
 
@@ -745,13 +747,15 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     targets = list(query)
 
     if not targets:
-        await context.bot.send_message(chat_id=chat_id, text="ℹ️ No recipients found for this scope\\")
+        await context.bot.send_message(
+            chat_id=chat_id, text="ℹ️ No recipients found for this scope"
+        )
         return
 
     # Send a quick preflight summary
     await context.bot.send_message(
         chat_id=chat_id,
-        text=f"📣 Broadcasting to {len(targets)} chats \\({scope}\\)\\. Starting\\.\\.\\.",
+        text=f"📣 Broadcasting to {len(targets)} chats ({scope}). Starting...",
     )
 
     # Forward/copy loop with simple rate limiting
@@ -775,12 +779,12 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await context.bot.send_message(
         chat_id=chat_id,
-        text=f"✅ Broadcast finished\\. Sent: {success}, Failed: {failures}\\.",
+        text=f"✅ Broadcast finished. Sent: {success}, Failed: {failures}.",
     )
 
     # Optional: brief failure alert if many failed
     if failures > 0:
         await context.bot.send_message(
             chat_id=chat_id,
-            text="⚠️ Some messages failed to send \\(chat inaccessible or bot removed\\)\\.",
+            text="⚠️ Some messages failed to send (chat inaccessible or bot removed).",
         )
