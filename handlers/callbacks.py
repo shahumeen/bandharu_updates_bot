@@ -69,6 +69,21 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         parse_mode="MarkdownV2",
                         disable_web_page_preview=True,
                     )
+                    # If user now has zero vessel subscriptions, warn them
+                    try:
+                        from model_helpers import get_user_subscriptions
+
+                        subs = get_user_subscriptions(click_id)
+                        vessels = subs.get("vessels", [])
+                        if not vessels:
+                            await cq.message.reply_text(
+                                text=(
+                                    "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\. Use /addvessel to add one\\."
+                                ),
+                                parse_mode="MarkdownV2",
+                            )
+                    except Exception:
+                        pass
                 except Exception:
                     await cq.edit_message_text(text=f"✅ Subscribed to port.")
             else:
