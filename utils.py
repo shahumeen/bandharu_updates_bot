@@ -179,7 +179,7 @@ def utc_to_maldives_time(ts, fmt: str | None = None) -> datetime | str | None:
 
 
 def api_request(api_key):
-    url = f"https://followme.mv/api/v4/public/{api_key}"
+    url = f"https://followme.mv/api/v5/public/{api_key}"
     api_req = requests.get(url).text
 
     # converts api data to python dictionary
