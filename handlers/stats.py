@@ -71,7 +71,6 @@ async def island_stats(
 
 async def send_port_stats(context, chat_id, port_id):
     try:
-
         def esc(val):
             return escape_markdown(str(val), version=2)
 
@@ -92,10 +91,7 @@ async def send_port_stats(context, chat_id, port_id):
 
         # Build busiest hour highlight with tie support
         busiest_highlight = ""
-        if (
-            stats_dict.get("busiest_hours")
-            and len(stats_dict.get("busiest_hours", [])) > 1
-        ):
+        if stats_dict.get("busiest_hours") and len(stats_dict.get("busiest_hours", [])) > 1:
             # Derive the count from any peak hour marked busiest
             busiest_count = None
             for h in stats_dict.get("peak_hours", []):
@@ -115,9 +111,7 @@ async def send_port_stats(context, chat_id, port_id):
             busiest_text = f"Tie: {hours_str}{count_str}"
             busiest_highlight = f"🏆 _*Busiest Hour:*_\n{esc(busiest_text)}\n"
         elif stats_dict.get("busiest_hour"):
-            busiest_highlight = (
-                f"🏆 _*Busiest Hour:*_\n{esc(stats_dict['busiest_hour'])}\n"
-            )
+            busiest_highlight = f"🏆 _*Busiest Hour:*_\n{esc(stats_dict['busiest_hour'])}\n"
 
         # Build longest trip with tie support
         longest_trip_highlight = ""
@@ -165,9 +159,7 @@ async def send_port_stats(context, chat_id, port_id):
             lines.append(line)
         vessel_rankings = "🎖 *VESSEL RANKINGS*\n" + "\n".join(lines)
 
-        max_count = max(
-            (h["count"] for h in stats_dict.get("peak_hours", [])), default=1
-        )
+        max_count = max((h["count"] for h in stats_dict.get("peak_hours", [])), default=1)
         peak_hours = "\n\n⏱️*PEAK HOURS*\n" + "\n".join(
             f" {esc(h['hour'])} {'█' * int((h['count']/max_count)*10)} {h['count']} {esc(h['vessel_word'])}{' 🏆' if h.get('is_busiest') else ''}"
             for h in stats_dict.get("peak_hours", [])
@@ -185,9 +177,7 @@ async def send_port_stats(context, chat_id, port_id):
             + f"\n_\\#dailyreport_ _\\#{date.replace(' ', '')}_ _\\#{re.sub(r'[^0-9a-zA-Z]+', '', port_name)}_ _[How it works](https://telegra.ph/Island-Stats-11-07)_"
         )
 
-        formatted_response = (
-            f"{highlights}\n{vessel_rankings}{peak_hours}{daily_totals}"
-        )
+        formatted_response = f"{highlights}\n{vessel_rankings}{peak_hours}{daily_totals}"
         await context.bot.send_message(
             chat_id=chat_id,
             text=formatted_response,
@@ -197,7 +187,7 @@ async def send_port_stats(context, chat_id, port_id):
     except:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"Unable to get stats for _*{port_name}*_\\. Try again later\\.",
+            text=f"Unable to get stats for _*{esc_md(port_name)}*_\\. Try again later\\.",
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )

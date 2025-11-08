@@ -63,7 +63,7 @@ _Your friendly vessel tracking assistant for the Maldives_ 🌊
 ⚡ *Quick Start Guide:*
 
 🎯 _*Add Subscriptions:*_
-• /addport \- _Subscribe to an island 🏝️_
+• /addport \- _Subscribe to an island or port 🏝️_
 • /addvessel \- _Subscribe to a vessel ⛴️_
 
 ⚙️ _*Manage Settings:*_
@@ -170,7 +170,7 @@ _*You need at least ONE island and ONE vessel to start receiving alerts*_
 ⚡ *Quick Commands:*
 
 🏝️ *Island Actions:*
-• /addport \- _Subscribe to an island_
+• /addport \- _Subscribe to an island or port_
 • /islandstats \- _Get island statistics_
 
 ⛴️ *Vessel Actions:*
