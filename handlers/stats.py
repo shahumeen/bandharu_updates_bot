@@ -70,114 +70,124 @@ async def island_stats(
 
 
 async def send_port_stats(context, chat_id, port_id):
-    def esc(val):
-        return escape_markdown(str(val), version=2)
-
-    stats_dict = get_daily_port_stats(port_id)
-    if not stats_dict:
-        await context.bot.send_message(
-            chat_id=chat_id, text="No statistics available for this port."
-        )
-        return
-
     try:
-        port = Port.get_by_id(port_id)
-        port_name = port.name
-    except Port.DoesNotExist:
-        port_name = "Unknown Port"
 
-    date = esc(stats_dict["date"])
+        def esc(val):
+            return escape_markdown(str(val), version=2)
 
-    # Build busiest hour highlight with tie support
-    busiest_highlight = ""
-    if stats_dict.get("busiest_hours") and len(stats_dict.get("busiest_hours", [])) > 1:
-        # Derive the count from any peak hour marked busiest
-        busiest_count = None
-        for h in stats_dict.get("peak_hours", []):
-            if h.get("is_busiest"):
-                busiest_count = h.get("count")
-                break
-        if busiest_count is None and stats_dict.get("busiest_hour"):
-            busiest_count = None  # can't parse safely; omit count
-        hours_str = ", ".join(
-            f"{start}-{end}" for start, end in stats_dict.get("busiest_hours", [])
-        )
-        count_str = (
-            f" ({busiest_count} {'vessel' if busiest_count == 1 else 'vessels'})"
-            if busiest_count is not None
-            else ""
-        )
-        busiest_text = f"Tie: {hours_str}{count_str}"
-        busiest_highlight = f"🏆 _*Busiest Hour:*_\n{esc(busiest_text)}\n"
-    elif stats_dict.get("busiest_hour"):
-        busiest_highlight = f"🏆 _*Busiest Hour:*_\n{esc(stats_dict['busiest_hour'])}\n"
-
-    # Build longest trip with tie support
-    longest_trip_highlight = ""
-    if stats_dict.get("longest_trip"):
-        lt = stats_dict["longest_trip"]
-        if isinstance(lt, dict) and lt.get("tie"):
-            longest_trip_highlight = (
-                f"\n🌊 _*Longest Trip:*_\n{esc(lt.get('description', 'Tie'))}\n"
+        stats_dict = get_daily_port_stats(port_id)
+        if not stats_dict:
+            await context.bot.send_message(
+                chat_id=chat_id, text="No statistics available for this port."
             )
-        else:
-            longest_trip_highlight = f"\n🌊 _*Longest Trip:*_\n{esc(lt['duration'])} \\- {esc(lt['vessel'])} \\({esc(lt['from'])} → {esc(lt['to'])}\\)\n"
+            return
 
-    highlights = (
-        f"📈 *{date} HIGHLIGHTS*\n"
-        f"────────────────────\n\n"
-        + busiest_highlight
-        + (
-            f"\n🚀 _*Most Active:*_\n{esc(stats_dict['most_active'])}\n"
-            if stats_dict.get("most_active")
-            else ""
+        try:
+            port = Port.get_by_id(port_id)
+            port_name = port.name
+        except Port.DoesNotExist:
+            port_name = "Unknown Port"
+
+        date = esc(stats_dict["date"])
+
+        # Build busiest hour highlight with tie support
+        busiest_highlight = ""
+        if (
+            stats_dict.get("busiest_hours")
+            and len(stats_dict.get("busiest_hours", [])) > 1
+        ):
+            # Derive the count from any peak hour marked busiest
+            busiest_count = None
+            for h in stats_dict.get("peak_hours", []):
+                if h.get("is_busiest"):
+                    busiest_count = h.get("count")
+                    break
+            if busiest_count is None and stats_dict.get("busiest_hour"):
+                busiest_count = None  # can't parse safely; omit count
+            hours_str = ", ".join(
+                f"{start}-{end}" for start, end in stats_dict.get("busiest_hours", [])
+            )
+            count_str = (
+                f" ({busiest_count} {'vessel' if busiest_count == 1 else 'vessels'})"
+                if busiest_count is not None
+                else ""
+            )
+            busiest_text = f"Tie: {hours_str}{count_str}"
+            busiest_highlight = f"🏆 _*Busiest Hour:*_\n{esc(busiest_text)}\n"
+        elif stats_dict.get("busiest_hour"):
+            busiest_highlight = (
+                f"🏆 _*Busiest Hour:*_\n{esc(stats_dict['busiest_hour'])}\n"
+            )
+
+        # Build longest trip with tie support
+        longest_trip_highlight = ""
+        if stats_dict.get("longest_trip"):
+            lt = stats_dict["longest_trip"]
+            if isinstance(lt, dict) and lt.get("tie"):
+                longest_trip_highlight = (
+                    f"\n🌊 _*Longest Trip:*_\n{esc(lt.get('description', 'Tie'))}\n"
+                )
+            else:
+                longest_trip_highlight = f"\n🌊 _*Longest Trip:*_\n{esc(lt['duration'])} \\- {esc(lt['vessel'])} \\({esc(lt['from'])} → {esc(lt['to'])}\\)\n"
+
+        highlights = (
+            f"📈 *{date} HIGHLIGHTS*\n"
+            f"────────────────────\n\n"
+            + busiest_highlight
+            + (
+                f"\n🚀 _*Most Active:*_\n{esc(stats_dict['most_active'])}\n"
+                if stats_dict.get("most_active")
+                else ""
+            )
+            + longest_trip_highlight
+            + (
+                f"\n🏝 _*Most Popular Island:*_\n{esc(stats_dict['most_popular_island'])}\n"
+                if stats_dict.get("most_popular_island")
+                else ""
+            )
+            + "\n────────────────────\n"
         )
-        + longest_trip_highlight
-        + (
-            f"\n🏝 _*Most Popular Island:*_\n{esc(stats_dict['most_popular_island'])}\n"
-            if stats_dict.get("most_popular_island")
-            else ""
+
+        # Vessel rankings with tie-aware ranks and medals
+        medals_by_rank = {1: "🥇", 2: "🥈", 3: "🥉"}
+        lines = []
+        prev_trips = None
+        current_rank = 0
+        for entry in stats_dict.get("leaderboard", []):
+            trips = entry["trips"]
+            if prev_trips is None:
+                current_rank = 1
+            elif trips < prev_trips:
+                current_rank += 1
+            prev_trips = trips
+            medal = medals_by_rank.get(current_rank, "")
+            line = f"{current_rank}\\. {medal} _*{esc(entry['vessel'])}:*_ _{trips} {'trip' if trips==1 else 'trips'}_"
+            lines.append(line)
+        vessel_rankings = "🎖 *VESSEL RANKINGS*\n" + "\n".join(lines)
+
+        max_count = max(
+            (h["count"] for h in stats_dict.get("peak_hours", [])), default=1
         )
-        + "\n────────────────────\n"
-    )
-
-    # Vessel rankings with tie-aware ranks and medals
-    medals_by_rank = {1: "🥇", 2: "🥈", 3: "🥉"}
-    lines = []
-    prev_trips = None
-    current_rank = 0
-    for entry in stats_dict.get("leaderboard", []):
-        trips = entry["trips"]
-        if prev_trips is None:
-            current_rank = 1
-        elif trips < prev_trips:
-            current_rank += 1
-        prev_trips = trips
-        medal = medals_by_rank.get(current_rank, "")
-        line = f"{current_rank}\\. {medal} _*{esc(entry['vessel'])}:*_ _{trips} {'trip' if trips==1 else 'trips'}_"
-        lines.append(line)
-    vessel_rankings = "🎖 *VESSEL RANKINGS*\n" + "\n".join(lines)
-
-    max_count = max((h["count"] for h in stats_dict.get("peak_hours", [])), default=1)
-    peak_hours = "\n\n⏱️*PEAK HOURS*\n" + "\n".join(
-        f" {esc(h['hour'])} {'█' * int((h['count']/max_count)*10)} {h['count']} {esc(h['vessel_word'])}{' 🏆' if h.get('is_busiest') else ''}"
-        for h in stats_dict.get("peak_hours", [])
-    )
-
-    daily_totals = (
-        "\n\n📊 *DAILY TOTALS*\n"
-        f"• *Total Trips:* {esc(stats_dict['total_trips'])}\n"
-        f"• *Unique Vessels:* {esc(stats_dict['unique_vessels'])}\n"
-        + "\n".join(
-            f"• *{esc(vtype)}:* {count} {'trip' if count==1 else 'trips'}"
-            for vtype, count in stats_dict.get("vessel_type_trips", {}).items()
+        peak_hours = "\n\n⏱️*PEAK HOURS*\n" + "\n".join(
+            f" {esc(h['hour'])} {'█' * int((h['count']/max_count)*10)} {h['count']} {esc(h['vessel_word'])}{' 🏆' if h.get('is_busiest') else ''}"
+            for h in stats_dict.get("peak_hours", [])
         )
-        + "\n\n────────────────────"
-        + f"\n_\\#dailyreport_ _\\#{date.replace(' ', '')}_ _\\#{re.sub(r'[^0-9a-zA-Z]+', '', port_name)}_ _[How it works](https://telegra.ph/Island-Stats-11-07)_"
-    )
 
-    formatted_response = f"{highlights}\n{vessel_rankings}{peak_hours}{daily_totals}"
-    try:
+        daily_totals = (
+            "\n\n📊 *DAILY TOTALS*\n"
+            f"• *Total Trips:* {esc(stats_dict['total_trips'])}\n"
+            f"• *Unique Vessels:* {esc(stats_dict['unique_vessels'])}\n"
+            + "\n".join(
+                f"• *{esc(vtype)}:* {count} {'trip' if count==1 else 'trips'}"
+                for vtype, count in stats_dict.get("vessel_type_trips", {}).items()
+            )
+            + "\n\n────────────────────"
+            + f"\n_\\#dailyreport_ _\\#{date.replace(' ', '')}_ _\\#{re.sub(r'[^0-9a-zA-Z]+', '', port_name)}_ _[How it works](https://telegra.ph/Island-Stats-11-07)_"
+        )
+
+        formatted_response = (
+            f"{highlights}\n{vessel_rankings}{peak_hours}{daily_totals}"
+        )
         await context.bot.send_message(
             chat_id=chat_id,
             text=formatted_response,
