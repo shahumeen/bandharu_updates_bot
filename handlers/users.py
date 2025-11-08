@@ -82,8 +82,6 @@ _Track Maldives vessel movements in real\-time and get notified when your subscr
 Want _*all activity*_ for specific islands\?  
 Join our dedicated [Bandharu update channels](https://telegra.ph/Island-update-Channels-11-08)
 
-• Browse: /islandchannels  
-
 _Can't find your island's channel\?_  
 Ask @BUBSupport to add it\! 💬
 
