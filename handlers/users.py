@@ -47,7 +47,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception:
             pass
 
-    welcome_message = r"""
+    # Compute total number of private users to show usage stats
+    try:
+        total_private = User.select().where(User.chat_type == "private").count()
+    except Exception:
+        total_private = None
+
+    people_line = (
+        f"\n📊 _User Count: *{total_private}*_\n" if total_private is not None else ""
+    )
+
+    welcome_message = fr"""
 🏝️ Welcome to Bandharu Updates Bot\!
 ━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -86,7 +96,7 @@ _Can't find your island's channel\?_
 Ask @BUBSupport to add it\! 💬
 
 ━━━━━━━━━━━━━━━━━━━━━━━
-
+{people_line}
 🧑‍💻 _Are you a developer? contribute on [GitHub](https://github.com/shahumeen/bandharu_updates_bot)_
 
 👾 _Uses FollowMe\.mv API_
