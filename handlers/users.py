@@ -147,7 +147,7 @@ _*You need at least ONE island and ONE vessel to start receiving alerts*_
    You can subscribe to _*10 islands*_ and _*10 vessels*_
 
 *• Matching Logic:*  
-   We notify when _*any*_ of your vessels visit _*any*_ of your islands or for all island your vessels visit if you don't have an island subscription.
+   We notify when _*any*_ of your vessels visit _*any*_ of your islands or for all island your vessels visit if you don't have an island subscription\.
 
 *• Departure Alerts:*  
    Use /toggledepartures to control departure notifications

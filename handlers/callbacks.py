@@ -170,16 +170,13 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     from model_helpers import get_user_subscriptions
 
                     subs = get_user_subscriptions(click_id)
-                    ports = subs.get("ports", [])
                     vessels = subs.get("vessels", [])
-                    if ports and not vessels:
-                        text = (
-                            (
+                    # Send warning whenever user now has zero vessel subscriptions (regardless of islands)
+                    if not vessels:
+                        await cq.message.reply_text(
+                            text=(
                                 "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\. Use /addvessel to add one\\."
                             ),
-                        )
-                        await cq.message.reply_text(
-                            text=text,
                             parse_mode="MarkdownV2",
                         )
                 except Exception:
