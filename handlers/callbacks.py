@@ -173,11 +173,13 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     ports = subs.get("ports", [])
                     vessels = subs.get("vessels", [])
                     if ports and not vessels:
-                        await cq.message.reply_text(
+                        text = (
                             (
-                                "‼️ You still have island subscriptions but no vessel subscriptions left\\. Without a vessel subscription you won't receive notifications\\.\n\n"
-                                "*Usage:*\n`/addvessel <vessel_name>`\n*Example:*\n`/addvessel Speed Star`"
+                                "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\. Use /addvessel to add one\\."
                             ),
+                        )
+                        await cq.message.reply_text(
+                            text=text,
                             parse_mode="MarkdownV2",
                         )
                 except Exception:

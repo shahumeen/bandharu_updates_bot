@@ -14,6 +14,7 @@ from model_helpers import (
 
 MAP_QUERY = "https://www.google.com/maps?q="
 VESSEL_QUERY = "https://m.followme.mv/public/?pg=info&id="
+ISLAND_CHANNELS_LINK = ""
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -79,7 +80,7 @@ _Track Maldives vessel movements in real\-time and get notified when your subscr
 📣 *Island\-Wide Updates:*
 
 Want _*all activity*_ for specific islands\?  
-Join our dedicated [Bandharu update channels](http://t.me/addlist/ziV1Htn9OR9iNWI1)
+Join our dedicated [Bandharu update channels](https://telegra.ph/Island-update-Channels-11-08)
 
 • Browse: /islandchannels  
 
@@ -148,7 +149,7 @@ _*You need at least ONE island and ONE vessel to start receiving alerts*_
    You can subscribe to _*10 islands*_ and _*10 vessels*_
 
 *• Matching Logic:*  
-   We notify when _*any*_ of your vessels visit _*any*_ of your islands
+   We notify when _*any*_ of your vessels visit _*any*_ of your islands or for all island your vessels visit if you don't have an island subscription.
 
 *• Departure Alerts:*  
    Use /toggledepartures to control departure notifications
@@ -157,7 +158,7 @@ _*You need at least ONE island and ONE vessel to start receiving alerts*_
 📣 *Island Channels*
 
 Want _*all activity*_ for specific islands\?  
-Join our dedicated [Bandharu update channels](http://t.me/addlist/ziV1Htn9OR9iNWI1)
+Join our dedicated [Bandharu update channels](https://telegra.ph/Island-update-Channels-11-08)
 
 • Browse: /islandchannels  
 
@@ -640,7 +641,7 @@ async def islandchannels(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = r"""📣 *Island Channels*
 
 Want _*all activity*_ for specific islands\?  
-Join our dedicated [Bandharu update channels](http://t.me/addlist/ziV1Htn9OR9iNWI1)
+Join our dedicated [Bandharu update channels](https://telegra.ph/Island-update-Channels-11-08)
 
 _Can't find your island's channel\?_  
 Ask @BUBSupport to add it\! 💬"""

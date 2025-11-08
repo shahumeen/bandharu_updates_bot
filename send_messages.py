@@ -1,6 +1,6 @@
 from telegram.helpers import escape_markdown
 from telegram.error import Forbidden, BadRequest
-from datetime import datetime, timedelta
+from datetime import datetime
 from zoneinfo import ZoneInfo
 import re
 import os
@@ -19,7 +19,7 @@ from models import (
 )
 from utils import _seconds_between, _format_duration, utc_to_maldives_time
 from models import Vessel
-from typing import Optional, List, Any
+from typing import Optional, Any
 
 load_dotenv()
 TOKEN = os.getenv("BOT_API")
@@ -278,14 +278,15 @@ def _format_male_arrival(event: dict, user: User):
             departure = None
             transit = None
 
-        arrival_time_fmt = _fmt_time(event.get("timestamp"))
         # Escape for MarkdownV2
         vessel_name = escape_markdown(event.get("name", "Unknown"), version=2)
         port_name = escape_markdown(event.get("port_name", "Unknown"), version=2)
         vessel_type = escape_markdown(event["vessel_type"] or "Unknown", version=2)
         last_port = escape_markdown(user.main_port.name, version=2)
 
-        arrival_time = escape_markdown(arrival_time_fmt or "Unknown", version=2)
+        arrival_time = escape_markdown(
+            _fmt_time(utc_to_maldives_time(event.get("timestamp"))), version=2
+        )
 
         hashtag = re.sub(r"[^0-9a-zA-Z]+", "", vessel.name).lower()
         # Only include the from_island block if we didn't suppress it and we have values
