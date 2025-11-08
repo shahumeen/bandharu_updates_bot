@@ -431,7 +431,7 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if err == "limit_reached":
                 await context.bot.send_message(
                     chat_id=chat_id,
-                    text="⚠️ You’ve reached the maximum of 10 vessel subscriptions\\. Use /unsub to remove one\\.",
+                    text="⚠️ You’ve reached the maximum of *10* vessel subscriptions\\. Use /unsub to remove one\\.",
                     parse_mode="MarkdownV2",
                 )
             else:
