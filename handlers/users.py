@@ -85,6 +85,7 @@ _Can't find your island's channel\?_
 Ask @BUBSupport to add it\! 💬
 
 ━━━━━━━━━━━━━━━━━━━━━━━
+🧑‍💻 _Are you a developer? contribute on [GitHub](https://github.com/shahumeen/bandharu_updates_bot)_
 
 👾 _Uses FollowMe\.mv API_
 
