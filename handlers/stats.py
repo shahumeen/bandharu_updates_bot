@@ -177,12 +177,20 @@ async def send_port_stats(context, chat_id, port_id):
     )
 
     formatted_response = f"{highlights}\n{vessel_rankings}{peak_hours}{daily_totals}"
-    await context.bot.send_message(
-        chat_id=chat_id,
-        text=formatted_response,
-        parse_mode="MarkdownV2",
-        disable_web_page_preview=True,
-    )
+    try:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=formatted_response,
+            parse_mode="MarkdownV2",
+            disable_web_page_preview=True,
+        )
+    except:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=f"Unable to get stats for _*{port_name}*_\\. Try again later\\.",
+            parse_mode="MarkdownV2",
+            disable_web_page_preview=True,
+        )
 
 
 async def vessel_stats(
