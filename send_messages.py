@@ -447,6 +447,7 @@ _\\#{hashtag}_
             )
             update_notified(user, int(arrivals[v]["portlog_id"]))
         except Exception as e:
+            update_notified(user, int(arrivals[v]["portlog_id"]))
             await _handle_send_failure(chat_id, e, context)
         # Throttle to respect global rate limits (similar to /broadcast admin command)
         await asyncio.sleep(RATE_LIMIT_DELAY)
@@ -530,6 +531,7 @@ _\\#{hashtag}_
             )
             update_notified(user, int(departures[v]["portlog_id"]))
         except Exception as e:
+            update_notified(user, int(departures[v]["portlog_id"]))
             await _handle_send_failure(chat_id, e, context)
         # Throttle send rate
         await asyncio.sleep(RATE_LIMIT_DELAY)
