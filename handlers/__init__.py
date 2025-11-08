@@ -2,6 +2,7 @@ from .common import esc_md
 from .users import (
     start,
     unrecognized_command,
+    unknown_command,
     help_command,
     subisland,
     subvessel,
@@ -30,6 +31,7 @@ __all__ = [
     # user commands
     "start",
     "unrecognized_command",
+    "unknown_command",
     "help_command",
     "subisland",
     "subvessel",

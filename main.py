@@ -48,6 +48,7 @@ async def _post_init(application):
         # Non-fatal; continue without setting commands
         pass
 
+
 app.post_init = _post_init
 
 print("initial call initiated", flush=True)
@@ -86,7 +87,12 @@ if __name__ == "__main__":
 
     app.add_handler(CallbackQueryHandler(callback_handler))
 
-    # Handle all non-command messages
-    app.add_handler(MessageHandler(~filters.COMMAND, unrecognized_command))
+    # Unknown commands (must come after all specific CommandHandlers)
+    app.add_handler(MessageHandler(filters.COMMAND, unknown_command))
+
+    # Handle only non-command TEXT messages (ignore service updates like pins)
+    app.add_handler(
+        MessageHandler(filters.TEXT & ~filters.COMMAND, unrecognized_command)
+    )
 
     app.run_polling()

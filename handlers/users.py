@@ -1,4 +1,5 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.error import Forbidden, BadRequest
 from telegram.ext import ContextTypes
 
 from .common import esc_md
@@ -92,6 +93,50 @@ Ask @BUBSupport to add it\! 💬
 
 `</> Made with ❤️ by` @shahumeen
 """
+    # Send and attempt to pin the branding image every /start
+    try:
+        sent_photo = await context.bot.send_photo(
+            chat_id=chat_id,
+            photo="https://followme.mv/api/images/icon_50.png",
+            caption="FollowMe",
+        )
+        # Prefer checking permissions before attempting to pin in groups
+        try:
+            can_pin = True
+            if chat.type in ["group", "supergroup"]:
+                # Check the bot's permissions in this chat
+                me = await context.bot.get_chat_member(chat_id, context.bot.id)
+                status = getattr(me, "status", None)
+                can_pin = status in ("administrator", "creator")
+                # If administrator, ensure the specific permission is granted
+                if can_pin and hasattr(me, "can_pin_messages"):
+                    can_pin = bool(getattr(me, "can_pin_messages", False))
+
+            if can_pin:
+                await context.bot.pin_chat_message(
+                    chat_id=chat_id,
+                    message_id=sent_photo.message_id,
+                    disable_notification=True,
+                )
+            else:
+                # Gently inform in groups if we cannot pin
+                if chat.type in ["group", "supergroup"]:
+                    await context.bot.send_message(
+                        chat_id=chat_id,
+                        text=(
+                            "I don't have permission to pin messages here. "
+                            "Please pin the above image to abide by FollowMe.mv API rules."
+                        ),
+                    )
+        except (Forbidden, BadRequest):
+            # Lacking rights or other pin restrictions; continue without failing
+            pass
+        except Exception:
+            # Any other unexpected error; ignore to avoid breaking /start
+            pass
+    except Exception:
+        # If image fetch fails, continue with text
+        pass
 
     await context.bot.send_message(
         chat_id=chat_id,
@@ -182,9 +227,27 @@ async def unrecognized_command(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     """Handle any messages that are not commands."""
+    # Ignore non-text or service messages (e.g., pin events)
+    if not update.message or not update.message.text:
+        return
     await update.message.reply_text(
         "🤖 I couldn’t recognize that\\. Try /help for commands\\.",
         parse_mode="MarkdownV2",
+    )
+
+
+async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle unknown /commands that are not registered."""
+    if not update.message or not update.message.text:
+        return
+    cmd = update.message.text.split()[0]
+    # Escape markdown special chars
+    from telegram.helpers import escape_markdown
+
+    esc_cmd = escape_markdown(cmd, version=2)
+    await update.message.reply_text(
+        f"❓ Unknown command. Use /help to see available commands.",
+        disable_web_page_preview=True,
     )
 
 

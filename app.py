@@ -56,6 +56,7 @@ def _run_bot() -> None:
         island_stats,
         vessel_stats,
         my_chat_member_update,
+        unknown_command,
         # admin
         addchannel,
         channelsubvessel,
@@ -128,9 +129,15 @@ def _run_bot() -> None:
     bot_main.app.add_handler(CommandHandler("removechannel", removechannel))
     bot_main.app.add_handler(CommandHandler("broadcast", broadcast))
 
-    # Callback queries and non-command text
+    # Callback queries and command fallbacks
     bot_main.app.add_handler(CallbackQueryHandler(callback_handler))
-    bot_main.app.add_handler(MessageHandler(filters.COMMAND, unrecognized_command))
+    # Unknown commands should receive a friendly reply
+    bot_main.app.add_handler(MessageHandler(filters.COMMAND, unknown_command))
+
+    # Non-command text fallback (ignore service updates like pins)
+    bot_main.app.add_handler(
+        MessageHandler(filters.TEXT & ~filters.COMMAND, unrecognized_command)
+    )
 
     # React to changes in the bot's own member status (blocked/unblocked, added/removed)
     bot_main.app.add_handler(
