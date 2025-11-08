@@ -10,7 +10,6 @@ Heroku Procfile should point to this file, e.g.:
 from threading import Thread
 import sys
 import traceback
-from utils import update_db_with_api
 import os
 from dotenv import load_dotenv
 
@@ -70,6 +69,8 @@ def _run_bot() -> None:
         broadcast,
     )
     from send_messages import notify_job
+    from telegram.error import NetworkError
+    import logging
 
     print("Starting the bot...", flush=True)
 
@@ -146,8 +147,21 @@ def _run_bot() -> None:
         )
     )
 
+    # Register a global error handler so PTB doesn't emit the default warning and we get clearer logs
+    async def log_error(update, context):
+        err = context.error
+        if isinstance(err, NetworkError):
+            logging.getLogger(__name__).warning("NetworkError: %s", err)
+        else:
+            logging.getLogger(__name__).exception(
+                "Unhandled error in handler", exc_info=err
+            )
+
+    bot_main.app.add_error_handler(log_error)
+
     # Blocking call; handles SIGTERM/SIGINT on Heroku for graceful shutdown
-    bot_main.app.run_polling()
+    # Use an explicit long-poll timeout lower than read_timeout to reduce ReadError likelihood
+    bot_main.app.run_polling(timeout=30)
 
 
 def main() -> None:
@@ -163,11 +177,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    print("initial call initiated", flush=True)
-    update_db_with_api(
-        api_key=FOLLOWME_API_KEY, bot_start=True
-    )  # to ensure no notifiactions at bot start
-    print("initial call finished", flush=True)
     try:
         main()
     except KeyboardInterrupt:

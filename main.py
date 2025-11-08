@@ -9,12 +9,9 @@ from telegram import BotCommand
 from datetime import time as dtime
 from zoneinfo import ZoneInfo
 import os
-from dotenv import load_dotenv
-from utils import update_db_with_api
 from handlers import *
 from send_messages import notify_job
 
-load_dotenv()
 TOKEN = os.getenv("BOT_API")
 FOLLOWME_API_KEY = os.getenv("FOLLOWME_API")
 app = (
@@ -50,12 +47,6 @@ async def _post_init(application):
 
 
 app.post_init = _post_init
-
-print("initial call initiated", flush=True)
-update_db_with_api(
-    api_key=FOLLOWME_API_KEY, bot_start=True
-)  # to ensure no notifiactions at bot start
-print("initial call finished", flush=True)
 
 
 if __name__ == "__main__":
@@ -95,4 +86,20 @@ if __name__ == "__main__":
         MessageHandler(filters.TEXT & ~filters.COMMAND, unrecognized_command)
     )
 
-    app.run_polling()
+    # Add a basic error handler to avoid scary default log and capture details
+    from telegram.error import NetworkError
+    import logging
+
+    async def log_error(update, context):
+        err = context.error
+        if isinstance(err, NetworkError):
+            logging.getLogger(__name__).warning("NetworkError: %s", err)
+        else:
+            logging.getLogger(__name__).exception(
+                "Unhandled error in handler", exc_info=err
+            )
+
+    app.add_error_handler(log_error)
+
+    # Use an explicit long-poll timeout lower than read_timeout to reduce ReadError likelihood
+    app.run_polling(timeout=30)
