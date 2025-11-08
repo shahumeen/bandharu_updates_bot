@@ -63,7 +63,7 @@ _Your friendly vessel tracking assistant for the Maldives_ 🌊
 ⚡ *Quick Start Guide:*
 
 🎯 _*Add Subscriptions:*_
-• /addisland \- _Subscribe to an island 🏝️_
+• /addport \- _Subscribe to an island 🏝️_
 • /addvessel \- _Subscribe to a vessel ⛴️_
 
 ⚙️ _*Manage Settings:*_
@@ -170,7 +170,7 @@ _*You need at least ONE island and ONE vessel to start receiving alerts*_
 ⚡ *Quick Commands:*
 
 🏝️ *Island Actions:*
-• /addisland \- _Subscribe to an island_
+• /addport \- _Subscribe to an island_
 • /islandstats \- _Get island statistics_
 
 ⛴️ *Vessel Actions:*
@@ -287,9 +287,9 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=chat_id,
             text=(
                 "*Usage:*\n"
-                "`/addisland <island_name>`\n"
+                "`/addport <island_name>`\n"
                 "*Example:*\n"
-                "`/addisland Male`"
+                "`/addport Male`"
             ),
             parse_mode="MarkdownV2",
         )
@@ -623,7 +623,7 @@ async def unsub(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(
             chat_id=chat_id,
             text=(
-                "🔎 No active subscriptions found\\. Use /addisland or /addvessel to get started\\!\n\n"
+                "🔎 No active subscriptions found\\. Use /addport or /addvessel to get started\\!\n\n"
             ),
             parse_mode="MarkdownV2",
         )

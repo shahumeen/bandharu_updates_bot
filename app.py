@@ -83,7 +83,7 @@ def _run_bot() -> None:
         try:
             await application.bot.set_my_commands(
                 [
-                    BotCommand("addisland", "Subscribe to an island"),
+                    BotCommand("addport", "Subscribe to an island"),
                     BotCommand("addvessel", "Subscribe to a vessel"),
                     BotCommand("settings", "View your subscriptions"),
                     BotCommand("unsub", "Remove subscriptions"),
@@ -108,7 +108,7 @@ def _run_bot() -> None:
     # Register command handlers (users)
     bot_main.app.add_handler(CommandHandler("start", start))
     bot_main.app.add_handler(CommandHandler("help", help_command))
-    bot_main.app.add_handler(CommandHandler("addisland", subisland))
+    bot_main.app.add_handler(CommandHandler("addport", subisland))
     bot_main.app.add_handler(CommandHandler("addvessel", subvessel))
     bot_main.app.add_handler(CommandHandler("toggledepartures", toggledepartures))
     bot_main.app.add_handler(CommandHandler("settings", settings))

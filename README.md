@@ -22,7 +22,7 @@ All commands work in private chats and also works in groups where the bot is pre
 
 - /start — Welcome, onboarding, and quick tips
 - /help — How the bot works and the full command list
-- /addisland <island_name> — Subscribe to an island (aka port). If multiple matches, you get inline buttons to choose
+- /addport <island_name> — Subscribe to an island (aka port). If multiple matches, you get inline buttons to choose
 - /addvessel <vessel_name> — Subscribe to a vessel by its name. Also supports partial matches with an inline picker
 - /settings — View your current subscriptions and whether departure alerts are enabled
 - /unsub — Inline menu to remove island or vessel subscriptions

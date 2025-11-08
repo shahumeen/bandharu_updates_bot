@@ -34,7 +34,7 @@ async def _post_init(application):
             [
                 BotCommand("start", "Welcome and overview"),
                 BotCommand("help", "How to use the bot"),
-                BotCommand("addisland", "Subscribe to an island"),
+                BotCommand("addport", "Subscribe to an island"),
                 BotCommand("addvessel", "Subscribe to a vessel"),
                 BotCommand("settings", "View your subscriptions"),
                 BotCommand("unsub", "Remove subscriptions"),
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     # users
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("addisland", subisland))
+    app.add_handler(CommandHandler("addport", subisland))
     app.add_handler(CommandHandler("addvessel", subvessel))
     app.add_handler(CommandHandler("settings", settings))
     app.add_handler(CommandHandler("toggledepartures", toggledepartures))
