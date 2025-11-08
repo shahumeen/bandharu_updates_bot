@@ -14,7 +14,6 @@ from model_helpers import (
 
 MAP_QUERY = "https://www.google.com/maps?q="
 VESSEL_QUERY = "https://m.followme.mv/public/?pg=info&id="
-ISLAND_CHANNELS_LINK = ""
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -51,7 +50,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 🏝️ Welcome to Bandharu Updates Bot\!
 ━━━━━━━━━━━━━━━━━━━━━━━
 
-_Track Maldives vessel movements in real\-time and get notified when your subscribed vessels reach your favorite islands\!_
+_Your friendly vessel tracking assistant for the Maldives_ 🌊
 
 ✨ *How It Works:*
 *1* • Subscribe to islands 🏝️ and vessels ⛴️
@@ -107,7 +106,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     help_message = r"""
 ❓🌊 *Help & Commands Guide*
 
-_Your friendly vessel tracking assistant for the Maldives_ 🌊
+_Track Maldives vessel movements in real\-time and get notified when your subscribed vessels reach your favorite islands\!_
 
 *How I Work:* 🤖
 I monitor vessel movements and notify you when your subscribed ⛴ _*vessels*_ visit your subscribed 🏝 _*islands*_\.
@@ -147,7 +146,7 @@ _*You need at least ONE island and ONE vessel to start receiving alerts*_
    You can subscribe to _*10 islands*_ and _*10 vessels*_
 
 *• Matching Logic:*  
-   We notify when _*any*_ of your vessels visit _*any*_ of your islands or for all island your vessels visit if you don't have an island subscription\.
+   We notify when _*any*_ of your vessels visit _*any*_ of your islands _*or*_ for all island your vessels visit if you _*don't have*_ an island subscription\.
 
 *• Departure Alerts:*  
    Use /toggledepartures to control departure notifications
