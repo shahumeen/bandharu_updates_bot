@@ -279,7 +279,7 @@ def _format_male_arrival(event: dict, user: User):
             transit = None
 
         # Escape for MarkdownV2
-        vessel_name = escape_markdown(event.get("name", "Unknown"), version=2)
+        vessel_name = escape_markdown(event["name"].upper(), version=2)
         port_name = escape_markdown(event.get("port_name", "Unknown"), version=2)
         vessel_type = escape_markdown(event["vessel_type"] or "Unknown", version=2)
         last_port = escape_markdown(user.main_port.name, version=2)
@@ -331,7 +331,7 @@ def _format_male_departure(event: dict, user: User):
         contact = f"\n📞 *Contact:* {contact_val}" if contact_val else ""
 
         # Escape special characters for Markdown
-        vessel_name = escape_markdown(event.get("name", "Unknown"), version=2)
+        vessel_name = escape_markdown(event["name"].upper(), version=2)
         vessel_type = escape_markdown(event["vessel_type"] or "Unknown", version=2)
         last_port = escape_markdown(event.get("port_name"), version=2)
         stay_duration = escape_markdown(
