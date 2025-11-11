@@ -25,6 +25,12 @@ load_dotenv()
 TOKEN = os.getenv("BOT_API")
 FOLLOWME_API_KEY = os.getenv("FOLLOWME_API")
 ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
+# Main updates channel (where all notifications should be sent)
+_MAIN_CHANNEL_RAW = os.getenv("MAIN_UPDATES_CHANNEL")
+try:
+    MAIN_UPDATES_CHANNEL = int(_MAIN_CHANNEL_RAW) if _MAIN_CHANNEL_RAW else None
+except Exception:
+    MAIN_UPDATES_CHANNEL = _MAIN_CHANNEL_RAW  # fall back to string
 male_ports_lst = (
     "Male North Harbour",
     "Male South Harbor",
@@ -32,6 +38,7 @@ male_ports_lst = (
     "Male Harbour",
     "Male Airport Jetty",
 )
+RATE_LIMIT_DELAY = 0.04  # seconds -> 25 messages / second max
 
 
 async def _notify_admin_of_block(chat_id: int, reason: str, context) -> None:
@@ -364,7 +371,89 @@ _\\#maledeparture_
         return None
 
 
-RATE_LIMIT_DELAY = 0.04  # seconds -> 25 messages / second max
+def _format_channel_arrival(event: dict) -> Optional[str]:
+    """Format an arrival message for the main updates channel.
+
+    Expects a single event payload like utils.all_notify()['arrivals'][id].
+    """
+    try:
+        contact = f"\n📞 *Contact:* {event['contact']}" if event.get('contact') else ""
+        vessel_name = escape_markdown(str(event.get("name", "")).upper(), version=2)
+        arrival_time = escape_markdown(
+            _fmt_time(utc_to_maldives_time(event.get("timestamp"))), version=2
+        )
+        vessel_type = escape_markdown(event.get("vessel_type") or "Unknown", version=2)
+        last_port_name = event.get("last_port_name") or "Unknown"
+        route = escape_markdown(
+            f"{last_port_name} → {event.get('port_name') or 'Unknown'}",
+            version=2,
+        )
+        departure_time = escape_markdown(
+            (_fmt_time(event.get("departed")) if event.get("departed") else "Unknown"),
+            version=2,
+        )
+        transit_time = escape_markdown(
+            event.get("transit_time") or "Unknown", version=2
+        )
+        vessel_id = event.get("vessel_id")
+        hashtag = re.sub(r"[^0-9a-zA-Z]+", "", str(event.get("name", ""))).lower()
+        port_hashtag = re.sub(r"[^0-9a-zA-Z]+", "", str(event.get("port_name", "")))
+
+        formatted_response = f"""
+🟢⚓*[{vessel_name}](m.followme.mv/public/?id={vessel_id}) ARRIVED*⚓
+━━━━━━━━━━━━━━━━━━━━━━━
+📍 *Location:* {escape_markdown(str(event.get('port_name') or 'Unknown'), version=2)}
+⏱️ *Arrival Time:* {arrival_time}
+📋 *Type:* {vessel_type}{contact}
+
+🗺 *Route:* {route}
+📅 *Departed:* {departure_time}
+⏳ *Transit Time:* {transit_time}
+━━━━━━━━━━━━━━━━━━━━━━━
+_\#{hashtag}_
+_\#{port_hashtag}_\n_\#arrival_
+"""
+        return formatted_response
+    except Exception as e:
+        print(f"Error formatting channel arrival: {e}", flush=True)
+        return None
+
+
+def _format_channel_departure(event: dict) -> Optional[str]:
+    """Format a departure message for the main updates channel."""
+    try:
+        contact_val = event.get("contact")
+        contact = f"\n📞 *Contact:* {contact_val}" if contact_val else ""
+        vessel_name = escape_markdown(str(event.get("name", "")).upper(), version=2)
+        vessel_type = escape_markdown(event.get("vessel_type") or "Unknown", version=2)
+        departure_time = escape_markdown(
+            (
+                _fmt_time(event.get("timestamp"))
+                if event.get("timestamp")
+                else "Unknown"
+            ),
+            version=2,
+        )
+        port_stay = escape_markdown(event.get("stay_time") or "Unknown", version=2)
+        vessel_id = event.get("vessel_id")
+        hashtag = re.sub(r"[^0-9a-zA-Z]+", "", str(event.get("name", ""))).lower()
+        port_hashtag = re.sub(r"[^0-9a-zA-Z]+", "", str(event.get("port_name", "")))
+
+        formatted_response = f"""
+🔴⚓*[{vessel_name}](m.followme.mv/public/?id={vessel_id}) DEPARTED*⚓
+━━━━━━━━━━━━━━━━━━━━━━━
+📍 *Location:* {escape_markdown(str(event.get('port_name') or 'Unknown'), version=2)}
+⏱️ *Departure Time:* {departure_time}
+📋 *Type:* {vessel_type}{contact}
+⏳ *Stay Duration:* {port_stay}
+━━━━━━━━━━━━━━━━━━━━━━━
+_\#{hashtag}_
+_\#{port_hashtag}_\n_\#departure_
+"""
+        return formatted_response
+    except Exception as e:
+        print(f"Error formatting channel departure: {e}", flush=True)
+        return None
 
 
 async def arrival_notify(arrivals, context, user: User):
@@ -552,7 +641,7 @@ async def notify_job(context):
     arrivals = updates.get("arrivals", {}) or {}
     departures = updates.get("departures", {}) or {}
 
-    # 3) For each arrival log, find recipients and notify them individually
+    # 3) For each arrival log, find recipients and notify them individually and broadcast
     for log_id, payload in arrivals.items():
         try:
             port_log = PortLog.get_by_id(log_id)
@@ -564,23 +653,25 @@ async def notify_job(context):
             # pass a single-entry dict to the notifier (it expects a dict keyed by id)
             await arrival_notify({log_id: payload}, context, user)
 
-        # if everyone has been notified (no pending PortLogNotification.sent==False), mark global flag
-        pending = (
-            PortLogNotification.select()
-            .where(
-                (PortLogNotification.port_log == port_log)
-                & (PortLogNotification.sent == False)
-            )
-            .count()
-        )
-        if pending == 0:
+        # Broadcast to main channel if not yet done (using notified flag for channel broadcast)
+        if MAIN_UPDATES_CHANNEL and not bool(port_log.notified):
             try:
-                port_log.notified = True
-                port_log.save()
-            except Exception:
-                pass
+                channel_msg = _format_channel_arrival(payload)
+                if channel_msg:
+                    await context.bot.send_message(
+                        chat_id=MAIN_UPDATES_CHANNEL,
+                        text=channel_msg,
+                        parse_mode="MarkdownV2",
+                        disable_web_page_preview=True,
+                        disable_notification=True,
+                    )
+                    port_log.notified = True
+                    port_log.save()
+                    await asyncio.sleep(RATE_LIMIT_DELAY)
+            except Exception as e:
+                print(f"Channel arrival send failed for log {log_id}: {e}", flush=True)
 
-    # 4) For departures
+    # 4) For departures (individual + channel broadcast)
     for log_id, payload in departures.items():
         try:
             port_log = PortLog.get_by_id(log_id)
@@ -591,20 +682,25 @@ async def notify_job(context):
         for user in recipients:
             await departures_notify({log_id: payload}, context, user)
 
-        pending = (
-            PortLogNotification.select()
-            .where(
-                (PortLogNotification.port_log == port_log)
-                & (PortLogNotification.sent == False)
-            )
-            .count()
-        )
-        if pending == 0:
+        # Broadcast to main channel if not yet done (using notified flag)
+        if MAIN_UPDATES_CHANNEL and not bool(port_log.notified):
             try:
-                port_log.notified = True
-                port_log.save()
-            except Exception:
-                pass
+                channel_msg = _format_channel_departure(payload)
+                if channel_msg:
+                    await context.bot.send_message(
+                        chat_id=MAIN_UPDATES_CHANNEL,
+                        text=channel_msg,
+                        parse_mode="MarkdownV2",
+                        disable_web_page_preview=True,
+                        disable_notification=True,
+                    )
+                    port_log.notified = True
+                    port_log.save()
+                    await asyncio.sleep(RATE_LIMIT_DELAY)
+            except Exception as e:
+                print(
+                    f"Channel departure send failed for log {log_id}: {e}", flush=True
+                )
 
     print(
         f"{datetime.now(ZoneInfo('Europe/Istanbul')).replace(microsecond=0)} Done Updating!\n",
