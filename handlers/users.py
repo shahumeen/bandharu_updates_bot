@@ -23,10 +23,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     chat_id = chat.id
 
-    # Ensure user record exists
+    # Ensure user record exists and capture whether it's newly created
+    user_created = False
     if chat.type in ["group", "supergroup", "channel"]:
         try:
-            create_user(
+            _, user_created = create_user(
                 telegram_id=chat_id,
                 chat_type=chat.type,
                 username=None,
@@ -34,10 +35,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 last_name=None,
             )
         except Exception:
-            pass
+            user_created = False
     elif user:
         try:
-            create_user(
+            _, user_created = create_user(
                 telegram_id=chat_id,
                 chat_type=chat.type,
                 username=user.username,
@@ -45,7 +46,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 last_name=user.last_name,
             )
         except Exception:
-            pass
+            user_created = False
 
     # Compute total number of private users to show usage stats
     try:
@@ -103,50 +104,51 @@ Ask @BUBSupport to add it\! 💬
 
 `</> Made with ❤️ by` @shahumeen
 """
-    # Send and attempt to pin the branding image every /start
-    try:
-        sent_photo = await context.bot.send_photo(
-            chat_id=chat_id,
-            photo="https://followme.mv/api/images/icon_50.png",
-            caption="FollowMe",
-        )
-        # Prefer checking permissions before attempting to pin in groups
+    # Send and attempt to pin the branding image only for newly created users
+    if user_created:
         try:
-            can_pin = True
-            if chat.type in ["group", "supergroup"]:
-                # Check the bot's permissions in this chat
-                me = await context.bot.get_chat_member(chat_id, context.bot.id)
-                status = getattr(me, "status", None)
-                can_pin = status in ("administrator", "creator")
-                # If administrator, ensure the specific permission is granted
-                if can_pin and hasattr(me, "can_pin_messages"):
-                    can_pin = bool(getattr(me, "can_pin_messages", False))
-
-            if can_pin:
-                await context.bot.pin_chat_message(
-                    chat_id=chat_id,
-                    message_id=sent_photo.message_id,
-                    disable_notification=True,
-                )
-            else:
-                # Gently inform in groups if we cannot pin
+            sent_photo = await context.bot.send_photo(
+                chat_id=chat_id,
+                photo="https://followme.mv/api/images/icon_50.png",
+                caption="FollowMe",
+            )
+            # Prefer checking permissions before attempting to pin in groups
+            try:
+                can_pin = True
                 if chat.type in ["group", "supergroup"]:
-                    await context.bot.send_message(
+                    # Check the bot's permissions in this chat
+                    me = await context.bot.get_chat_member(chat_id, context.bot.id)
+                    status = getattr(me, "status", None)
+                    can_pin = status in ("administrator", "creator")
+                    # If administrator, ensure the specific permission is granted
+                    if can_pin and hasattr(me, "can_pin_messages"):
+                        can_pin = bool(getattr(me, "can_pin_messages", False))
+
+                if can_pin:
+                    await context.bot.pin_chat_message(
                         chat_id=chat_id,
-                        text=(
-                            "I don't have permission to pin messages here. "
-                            "Please pin the above image to abide by FollowMe.mv API rules."
-                        ),
+                        message_id=sent_photo.message_id,
+                        disable_notification=True,
                     )
-        except (Forbidden, BadRequest):
-            # Lacking rights or other pin restrictions; continue without failing
-            pass
+                else:
+                    # Gently inform in groups if we cannot pin
+                    if chat.type in ["group", "supergroup"]:
+                        await context.bot.send_message(
+                            chat_id=chat_id,
+                            text=(
+                                "I don't have permission to pin messages here. "
+                                "Please pin the above image to abide by FollowMe.mv API rules."
+                            ),
+                        )
+            except (Forbidden, BadRequest):
+                # Lacking rights or other pin restrictions; continue without failing
+                pass
+            except Exception:
+                # Any other unexpected error; ignore to avoid breaking /start
+                pass
         except Exception:
-            # Any other unexpected error; ignore to avoid breaking /start
+            # If image fetch fails, continue with text
             pass
-    except Exception:
-        # If image fetch fails, continue with text
-        pass
 
     await context.bot.send_message(
         chat_id=chat_id,
