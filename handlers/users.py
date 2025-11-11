@@ -200,7 +200,7 @@ _*You need at least ONE island and ONE vessel to start receiving alerts*_
 💡 *Usage Tips*
 
 *• Subscription Limits:*  
-   You can subscribe to _*10 islands*_ and _*10 vessels*_
+   You can subscribe to _*20 islands*_ and _*20 vessels*_
 
 *• Matching Logic:*  
    We notify when _*any*_ of your vessels visit _*any*_ of your islands _*or*_ for all island your vessels visit if you _*don't have*_ an island subscription\.
