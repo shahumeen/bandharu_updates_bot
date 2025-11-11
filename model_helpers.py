@@ -311,9 +311,9 @@ def subscribe_user_to_port(
     port = Port.get_or_none(Port.id == port_id)
     if not port:
         return (None, False, "no_port")
-    # enforce max 10 port subscriptions per user
+    # enforce max 20 port subscriptions per user
     current = PortSubscription.select().where(PortSubscription.user == user).count()
-    if current >= 10:
+    if current >= 20:
         return (None, False, "limit_reached")
     sub, created = PortSubscription.get_or_create(user=user, port=port)
     return (sub, created, None)
@@ -333,9 +333,9 @@ def subscribe_user_to_vessel(
     vessel = Vessel.get_or_none(Vessel.id == vessel_id)
     if not vessel:
         return (None, False, "no_vessel")
-    # enforce max 10 vessel subscriptions per user
+    # enforce max 20 vessel subscriptions per user
     current = VesselSubscription.select().where(VesselSubscription.user == user).count()
-    if current >= 10:
+    if current >= 20:
         return (None, False, "limit_reached")
     sub, created = VesselSubscription.get_or_create(user=user, vessel=vessel)
     return (sub, created, None)

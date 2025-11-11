@@ -363,7 +363,7 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if err == "limit_reached":
                 await context.bot.send_message(
                     chat_id=chat_id,
-                    text="⚠️ You’ve reached the maximum of *10* island subscriptions\\. Remove one with /unsub to add more\\.",
+                    text="⚠️ You’ve reached the maximum of *20* island subscriptions\\. Remove one with /unsub to add more\\.",
                     parse_mode="MarkdownV2",
                 )
             else:
@@ -506,7 +506,7 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if err == "limit_reached":
                 await context.bot.send_message(
                     chat_id=chat_id,
-                    text="⚠️ You’ve reached the maximum of *10* vessel subscriptions\\. Use /unsub to remove one\\.",
+                    text="⚠️ You’ve reached the maximum of *20* vessel subscriptions\\. Use /unsub to remove one\\.",
                     parse_mode="MarkdownV2",
                 )
             else:
