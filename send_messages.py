@@ -410,8 +410,8 @@ def _format_channel_arrival(event: dict) -> Optional[str]:
 📅 *Departed:* {departure_time}
 ⏳ *Transit Time:* {transit_time}
 ━━━━━━━━━━━━━━━━━━━━━━━
-_\#{hashtag}_
-_\#{port_hashtag}_\n_\#arrival_
+_\\#{hashtag}_
+_\\#{port_hashtag}_\n_\#arrival_
 """
         return formatted_response
     except Exception as e:
@@ -447,8 +447,8 @@ def _format_channel_departure(event: dict) -> Optional[str]:
 📋 *Type:* {vessel_type}{contact}
 ⏳ *Stay Duration:* {port_stay}
 ━━━━━━━━━━━━━━━━━━━━━━━
-_\#{hashtag}_
-_\#{port_hashtag}_\n_\#departure_
+_\\#{hashtag}_
+_\\#{port_hashtag}_\n_\#departure_
 """
         return formatted_response
     except Exception as e:
