@@ -336,7 +336,7 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
                 )
 
         highlights = (
-            f"⏱ _*Active Time:*_ {esc(stats['active_time'])}\n"
+            f"\n⏱ _*Active Time:*_ {esc(stats['active_time'])}\n"
             + longest_line
             + most_visited_line
             + "\n────────────────────\n"
