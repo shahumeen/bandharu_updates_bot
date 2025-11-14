@@ -463,6 +463,18 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             await cq.edit_message_text(text=f"Error retrieving stats: {str(e)}")
 
+    elif data.startswith("get_vessel_stats:"):
+        try:
+            vessel_id = int(data.split(":", 1)[1])
+            # Delete the selection message
+            await cq.message.delete()
+            # Send stats in a new message
+            from .stats import send_vessel_stats
+
+            await send_vessel_stats(context, chat_id, vessel_id)
+        except Exception as e:
+            await cq.edit_message_text(text=f"Error retrieving stats: {str(e)}")
+
     elif data.startswith("remove_channel:"):
         try:
             _, pid = data.split(":")

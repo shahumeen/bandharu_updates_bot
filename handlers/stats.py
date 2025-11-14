@@ -3,10 +3,10 @@ from telegram.ext import ContextTypes
 from telegram.helpers import escape_markdown
 import re
 
-from model_helpers import Port
-from stats_calculator import get_daily_port_stats
+from model_helpers import Port, Vessel
+from stats_calculator import get_daily_port_stats, get_vessel_stats
 from .common import esc_md
-from .users import MAP_QUERY
+from .users import MAP_QUERY, VESSEL_QUERY
 
 
 async def island_stats(
@@ -207,10 +207,173 @@ async def send_port_stats(context, chat_id, port_id):
 async def vessel_stats(
     update: Update = None, context: ContextTypes.DEFAULT_TYPE = None
 ):
-    # Placeholder while feature is in beta
-    await context.bot.send_message(
-        chat_id=context._chat_id,
-        text="🧪 Vessel stats coming soon إن شاء الله",
-        parse_mode="MarkdownV2",
-        disable_web_page_preview=True,
-    )
+    chat_id = update.effective_chat.id if update else context._chat_id
+
+    # Usage if no arguments
+    if not context.args:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=(
+                "*Usage:*\n"
+                "`/vesselstats <vessel_name or id>`\n"
+                "*Example:*\n"
+                "`/vesselstats Speed Star`"
+            ),
+            parse_mode="MarkdownV2",
+        )
+        return
+
+    q = " ".join(context.args).strip()
+
+    # If numeric, try exact id match first
+    matches = []
+    try:
+        maybe_id = int(q)
+        v = Vessel.get_or_none(Vessel.id == maybe_id)
+        if v:
+            matches = [v]
+    except Exception:
+        pass
+
+    if not matches:
+        matches = list(Vessel.select().where(Vessel.name.contains(q)).limit(10))
+
+    if not matches:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=f"😕 No vessels found matching ‘{esc_md(q)}’\.",
+            parse_mode="MarkdownV2",
+        )
+        return
+
+    # If multiple, show selection keyboard
+    if len(matches) > 1:
+        keyboard = []
+        for v in matches:
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        v.name, callback_data=f"get_vessel_stats:{v.id}"
+                    )
+                ]
+            )
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=(
+                f"🔎 Multiple vessels found matching ‘{esc_md(q)}’\. Please select one:"
+            ),
+            reply_markup=reply_markup,
+            parse_mode="MarkdownV2",
+        )
+        return
+
+    # Single match
+    vessel = matches[0]
+    await send_vessel_stats(context, chat_id, vessel.id)
+
+
+async def send_vessel_stats(context, chat_id, vessel_id: int):
+    try:
+        def esc(val):
+            return escape_markdown(str(val), version=2)
+
+        try:
+            v = Vessel.get_by_id(vessel_id)
+            vessel_name = v.name
+        except Exception:
+            vessel_name = f"Vessel {vessel_id}"
+
+        stats = get_vessel_stats(vessel_id)
+        if not stats:
+            await context.bot.send_message(
+                chat_id=chat_id, text="No statistics available for this vessel."
+            )
+            return
+
+        # Header
+        header = (
+            f"⛴ *{esc(vessel_name)}* \- 7 Day Stats\n"
+            f"_Period:_ {esc(stats['period']['start'])} → {esc(stats['period']['end'])}\n"
+            f"_Link:_ [{esc(vessel_name)}]({VESSEL_QUERY}{vessel_id})\n"
+            f"────────────────────\n"
+        )
+
+        # Inactive case
+        if stats.get("inactive"):
+            msg = header + "\n" + esc(stats.get("message", "Vessel inactive."))
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=msg,
+                parse_mode="MarkdownV2",
+                disable_web_page_preview=True,
+            )
+            return
+
+        # Highlights
+        longest = stats.get("longest_trip")
+        longest_line = (
+            f"\n🌊 _*Longest Trip:*_\n{esc(longest['duration'])} \\- {esc(longest['from'])} → {esc(longest['to'])}"
+            if longest
+            else ""
+        )
+
+        highlights = (
+            f"📈 *HIGHLIGHTS*\n"
+            f"────────────────────\n\n"
+            f"⏱ _*Active Time:*_ {esc(stats['active_time'])}\n"
+            + longest_line
+            + "\n────────────────────\n"
+        )
+
+        # Activity hours graph
+        max_minutes = max((h["minutes"] for h in stats.get("activity_hours", [])), default=1)
+        activity_lines = [
+            f" {esc(h['hour'])} {'█' * int((h['minutes']/max_minutes)*10)} {h['minutes']} min{' 🏆' if h.get('is_peak') else ''}"
+            for h in stats.get("activity_hours", [])
+        ]
+        activity_block = (
+            "\n\n⏱️*PEAK TRAVEL HOURS*\n" + "\n".join(activity_lines)
+            if activity_lines
+            else ""
+        )
+
+        # Daily trips graph
+        max_arr = max((d["arrivals"] for d in stats.get("daily_trips", [])), default=1)
+        daily_lines = [
+            f" {esc(d['day'])} {'█' * int((d['arrivals']/max_arr)*10)} {d['arrivals']} trip{'s' if d['arrivals']!=1 else ''}{' 🏆' if d.get('is_peak') else ''}"
+            for d in stats.get("daily_trips", [])
+        ]
+        daily_block = (
+            "\n\n📅*DAILY TRIPS*\n" + "\n".join(daily_lines)
+            if daily_lines
+            else ""
+        )
+
+        # History
+        history_entries = stats.get("history", [])
+        history_lines = [
+            f"• _*{esc(h['port'])}*_" + (f" x{h['count']}" if int(h.get('count', 1)) > 1 else "")
+            for h in history_entries
+        ]
+        history_block = (
+            "\n\n🧭*VISITED ISLANDS*\n" + "\n".join(history_lines)
+            if history_lines
+            else ""
+        )
+
+        text = header + highlights + activity_block + daily_block + history_block
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=text,
+            parse_mode="MarkdownV2",
+            disable_web_page_preview=True,
+        )
+    except Exception as e:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=f"Unable to get vessel stats right now\. {esc_md(str(e))}",
+            parse_mode="MarkdownV2",
+            disable_web_page_preview=True,
+        )
