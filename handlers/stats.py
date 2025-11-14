@@ -292,15 +292,14 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
             )
             return
 
-        # Header
-        # Display period as 'Nov 7 - Nov 14' using display labels if present
+        # Header and period line
         period_start = stats.get("period", {}).get("start_display") or stats.get("period", {}).get("start")
         period_end = stats.get("period", {}).get("end_display") or stats.get("period", {}).get("end")
         header = (
-                f"*[{esc(vessel_name)}]({VESSEL_QUERY}{vessel_id})* \\- 7 Day Stats\n"
-                f"_Period:_ {esc(period_start)} \\- {esc(period_end)}\n"
-                f"────────────────────\n"
-            )
+            f"📈 {esc(vessel_name.upper())} STATS\n"
+            f"{esc(period_start)} - {esc(period_end)}\n"
+            f"────────────────────\n"
+        )
 
         # Inactive case
         if stats.get("inactive"):
@@ -346,10 +345,31 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
             + "\n────────────────────\n"
         )
 
-        # Activity hours graph
-        max_minutes = max((h["minutes"] for h in stats.get("activity_hours", [])), default=1)
+        # Activity hours graph (format durations like 1d 2h 45m)
+        max_seconds = max((h.get("seconds", 0) for h in stats.get("activity_hours", [])), default=1)
+
+        def _fmt_duration(seconds: int) -> str:
+            try:
+                total = int(seconds)
+            except Exception:
+                total = 0
+            minutes = (total % 3600) // 60
+            total_hours = total // 3600
+            days = total_hours // 24
+            hours = total_hours % 24
+            parts = []
+            if days > 0:
+                parts.append(f"{days}d")
+            if hours > 0:
+                parts.append(f"{hours}h")
+            if minutes > 0:
+                parts.append(f"{minutes}m")
+            if not parts:
+                return "0m"
+            return " ".join(parts)
+
         activity_lines = [
-            f" {esc(h['hour'])} {'█' * int((h['minutes']/max_minutes)*10)} {h['minutes']} min{' 🏆' if h.get('is_peak') else ''}"
+            f" {esc(h['hour'])} {'█' * int((h.get('seconds', 0)/max_seconds)*10)} {esc(_fmt_duration(h.get('seconds', 0)))}{' 🏆' if h.get('is_peak') else ''}"
             for h in stats.get("activity_hours", [])
         ]
         activity_block = (
@@ -389,8 +409,17 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
             if history_lines
             else ""
         )
+        # Hashtags at the bottom: #<vessel> #vesselstats #Nov7_Nov14
+        start_disp = stats.get("period", {}).get("start_display") or ""
+        end_disp = stats.get("period", {}).get("end_display") or ""
+        date_tag = f"{start_disp.replace(' ', '')}_{end_disp.replace(' ', '')}" if start_disp and end_disp else ""
+        vessel_tag = re.sub(r"[^0-9a-zA-Z]+", "", vessel_name)
+        hashtags_block = (
+            ("\n\n" + f"_\\#{vessel_tag}_ _\\#vesselstats_ " + (f"_\\#{date_tag}_" if date_tag else ""))
+            if vessel_tag else ""
+        )
 
-        text = header + highlights + activity_block + daily_block + history_block
+        text = header + highlights + activity_block + daily_block + history_block + hashtags_block
         await context.bot.send_message(
             chat_id=chat_id,
             text=text,
