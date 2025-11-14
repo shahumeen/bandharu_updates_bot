@@ -576,13 +576,15 @@ def get_vessel_stats(vessel_id: int, peak_limit: int = 5) -> dict:
     ]
 
     # 8) Compose result
+    # Display period ends on yesterday (last full day of data), not today
+    display_end_mv = window_end_mv - timedelta(days=1)
     result = {
         "period": {
             "start": window_start_mv.strftime("%d %b %Y %H:%M"),
             "end": window_end_mv.strftime("%d %b %Y %H:%M"),
             # Display labels without leading zero in day (e.g., Nov 7)
             "start_display": f"{window_start_mv.strftime('%b')} {window_start_mv.day}",
-            "end_display": f"{window_end_mv.strftime('%b')} {window_end_mv.day}",
+            "end_display": f"{display_end_mv.strftime('%b')} {display_end_mv.day}",
         },
         "inactive": False,
         "message": None,
