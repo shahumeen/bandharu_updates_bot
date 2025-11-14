@@ -409,13 +409,11 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
         # Hashtags at the bottom: #<vessel> #vesselstats #Nov7_Nov14
         start_disp = stats.get("period", {}).get("start_display") or ""
         end_disp = stats.get("period", {}).get("end_display") or ""
-        date_tag = f"{start_disp.replace(' ', '')}_{end_disp.replace(' ', '')}" if start_disp and end_disp else ""
         vessel_tag = re.sub(r"[^0-9a-zA-Z]+", "", vessel_name)
         # Escape underscores in date_tag since it's content inside italic markers
-        date_tag_escaped = date_tag.replace("_", "\\_") if date_tag else ""
         hashtags_block = (
             
-            (f"\n\n────────────────────\n" + f"_\\#{vessel_tag}_ _\\#vesselstats_ " + (f"_\\#{date_tag_escaped}_" if date_tag_escaped else ""))
+            (f"\n\n────────────────────\n" + f"_\\#{vessel_tag}_ _\\#vesselstats_ ")
             if vessel_tag else ""
         )
 
