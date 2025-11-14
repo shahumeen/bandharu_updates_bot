@@ -217,7 +217,7 @@ async def vessel_stats(
                 "*Usage:*\n"
                 "`/vesselstats <vessel_name or id>`\n"
                 "*Example:*\n"
-                "`/vesselstats Speed Star`"
+                "`/vesselstats RTL 101`"
             ),
             parse_mode="MarkdownV2",
         )
@@ -241,7 +241,7 @@ async def vessel_stats(
     if not matches:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"😕 No vessels found matching ‘{esc_md(q)}’\.",
+            text=f"😕 No vessels found matching ‘{esc_md(q)}’\\.",
             parse_mode="MarkdownV2",
         )
         return
@@ -262,7 +262,7 @@ async def vessel_stats(
         await context.bot.send_message(
             chat_id=chat_id,
             text=(
-                f"🔎 Multiple vessels found matching ‘{esc_md(q)}’\. Please select one:"
+                f"🔎 Multiple vessels found matching ‘{esc_md(q)}’\\. Please select one:"
             ),
             reply_markup=reply_markup,
             parse_mode="MarkdownV2",
@@ -297,8 +297,8 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
         period_start = stats.get("period", {}).get("start_display") or stats.get("period", {}).get("start")
         period_end = stats.get("period", {}).get("end_display") or stats.get("period", {}).get("end")
         header = (
-                f"*[{esc(vessel_name)}]({VESSEL_QUERY}{vessel_id})* \- 7 Day Stats\n"
-                f"_Period:_ {esc(period_start)} - {esc(period_end)}\n"
+                f"*[{esc(vessel_name)}]({VESSEL_QUERY}{vessel_id})* \\- 7 Day Stats\n"
+                f"_Period:_ {esc(period_start)} \\- {esc(period_end)}\n"
                 f"────────────────────\n"
             )
 
@@ -400,7 +400,7 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
     except Exception as e:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"Unable to get vessel stats right now\. {esc_md(str(e))}",
+            text=f"Unable to get vessel stats right now\\. {esc_md(str(e))}",
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )
