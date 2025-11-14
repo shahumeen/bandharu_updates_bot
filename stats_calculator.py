@@ -602,7 +602,7 @@ def get_vessel_stats(vessel_id: int, peak_limit: int = 5) -> dict:
 
     if int(active_seconds) == 0:
         result["inactive"] = True
-        result["message"] = "Vessel was inactive in the last 7 days."
+        result["message"] = "Vessel was inactive in the last 7 days"
         # Trim fields that aren't meaningful when inactive
         result["history"] = []
         result["visited_islands_ranked"] = []
