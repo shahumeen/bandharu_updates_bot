@@ -5,7 +5,7 @@ import re
 
 from model_helpers import Port, Vessel
 from stats_calculator import get_daily_port_stats, get_vessel_stats
-from .common import esc_md
+from .common import esc_md, urlq
 from .users import MAP_QUERY, VESSEL_QUERY
 
 
@@ -198,7 +198,7 @@ async def send_port_stats(context, chat_id, port_id):
     except:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"Unable to get stats for _*[{esc_md(port_name)}]({MAP_QUERY}{port_name})*_\\. Try again later\\.",
+            text=f"Unable to get stats for _*[{esc_md(port_name)}]({MAP_QUERY}{urlq(port_name)})*_\\. Try again later\\.",
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )
@@ -294,7 +294,7 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
 
         # Header
         header = (
-            f"⛴ *[{esc(vessel_name)}]({VESSEL_QUERY}{vessel_id})* \- 7 Day Stats\n"
+            f"*[{esc(vessel_name)}]({VESSEL_QUERY}{vessel_id})* \- 7 Day Stats\n"
             f"_Period:_ {esc(stats['period']['start'])} → {esc(stats['period']['end'])}\n"
             f"────────────────────\n"
         )
@@ -325,13 +325,13 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
         if mvi and mvi_count:
             if len(mvi) > 1:
                 islands_joined = ", ".join(
-                    f"[{esc(name)}]({MAP_QUERY}{name})" for name in sorted(mvi)
+                    f"[{esc(name)}]({MAP_QUERY}{urlq(name)})" for name in sorted(mvi)
                 )
-                most_visited_line = f"\n🏝 _*Most Visited Island:*_\nTie: {islands_joined} (x {mvi_count})\n"
+                most_visited_line = f"\n🏝 _*Most Visited Island:*_\nTie: {islands_joined} \\(x {mvi_count}\\)\n"
             else:
                 most_visited_line = (
                     f"\n🏝 _*Most Visited Island:*_\n"
-                    f"[{esc(mvi[0])}]({MAP_QUERY}{mvi[0]}) (x {mvi_count})\n"
+                    f"[{esc(mvi[0])}]({MAP_QUERY}{urlq(mvi[0])}) \\(x {mvi_count}\\)\n"
                 )
 
         highlights = (
@@ -372,7 +372,7 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
         # Visited islands ranked (dense ranking)
         ranking = stats.get("visited_islands_ranked", [])
         history_lines = [
-            f"{entry['rank']}\\. _*[{esc(entry['port'])}]({MAP_QUERY}{entry['port']})*_ x {entry['count']}"
+            f"{entry['rank']}\\. _*[{esc(entry['port'])}]({MAP_QUERY}{urlq(entry['port'])})*_ x {entry['count']}"
             for entry in ranking
         ]
         history_block = (
