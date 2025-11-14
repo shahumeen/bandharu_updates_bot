@@ -293,11 +293,14 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
             return
 
         # Header
+        # Display period as 'Nov 7 - Nov 14' using display labels if present
+        period_start = stats.get("period", {}).get("start_display") or stats.get("period", {}).get("start")
+        period_end = stats.get("period", {}).get("end_display") or stats.get("period", {}).get("end")
         header = (
-            f"*[{esc(vessel_name)}]({VESSEL_QUERY}{vessel_id})* \- 7 Day Stats\n"
-            f"_Period:_ {esc(stats['period']['start'])} → {esc(stats['period']['end'])}\n"
-            f"────────────────────\n"
-        )
+                f"*[{esc(vessel_name)}]({VESSEL_QUERY}{vessel_id})* \- 7 Day Stats\n"
+                f"_Period:_ {esc(period_start)} - {esc(period_end)}\n"
+                f"────────────────────\n"
+            )
 
         # Inactive case
         if stats.get("inactive"):
@@ -357,11 +360,17 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
 
         # Daily trips graph
         max_arr = max((d["arrivals"] for d in stats.get("daily_trips", [])), default=1)
+        # Order daily trips from today backwards (newest → oldest)
+        ordered_daily = sorted(
+            stats.get("daily_trips", []),
+            key=lambda d: d.get("date_key") or d.get("label") or d.get("date") or d.get("day"),
+            reverse=True,
+        )
         daily_lines = [
             f" {esc(d.get('label') or d.get('date') or d.get('day'))} "
             f"{'█' * int((d['arrivals']/max_arr)*10)} "
             f"{d['arrivals']} trip{'s' if d['arrivals']!=1 else ''}{' 🏆' if d.get('is_peak') else ''}"
-            for d in stats.get("daily_trips", [])
+            for d in ordered_daily
         ]
         daily_block = (
             "\n\n📅*DAILY TRIPS*\n" + "\n".join(daily_lines)

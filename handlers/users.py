@@ -451,7 +451,7 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "*Usage:*\n"
                 "`/addvessel <vessel_name>`\n"
                 "*Example:*\n"
-                "`/addvessel Speed Star`"
+                "`/addvessel RTL 101`"
             ),
             parse_mode="MarkdownV2",
         )

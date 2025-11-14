@@ -335,8 +335,9 @@ def get_vessel_stats(vessel_id: int, peak_limit: int = 5) -> dict:
     utc = ZoneInfo("UTC")
 
     now_mv = datetime.now(mv_tz)
-    window_end_mv = now_mv
-    window_start_mv = now_mv - timedelta(days=7)
+    # Use last midnight as the window end, and 7 days before that as start
+    window_end_mv = now_mv.replace(hour=0, minute=0, second=0, microsecond=0)
+    window_start_mv = window_end_mv - timedelta(days=7)
 
     # Convert window to UTC for DB filtering
     window_start_utc = window_start_mv.astimezone(utc)
@@ -549,9 +550,10 @@ def get_vessel_stats(vessel_id: int, peak_limit: int = 5) -> dict:
         for h, secs in sorted(top_hours, key=lambda x: x[0])
     ]
 
-    # 7b) Daily trips (arrivals per day) for the last 7 days with day names
-    # Build the 7 calendar days in MV local, from oldest to newest (including today)
-    day_dates = [(now_mv - timedelta(days=delta)).date() for delta in range(6, -1, -1)]
+    # 7b) Daily trips (arrivals per day) for the last 7 full days ending yesterday
+    # Build the 7 calendar days in MV local, from oldest to newest, up to (window_end_mv - 1 day)
+    end_date = (window_end_mv - timedelta(days=1)).date()
+    day_dates = [end_date - timedelta(days=delta) for delta in range(6, -1, -1)]
     day_counts = {d: 0 for d in day_dates}
 
     for log in arrival_logs:
@@ -560,11 +562,13 @@ def get_vessel_stats(vessel_id: int, peak_limit: int = 5) -> dict:
             day_counts[log_date] += 1
 
     max_daily = max(day_counts.values()) if day_counts else 0
+    # Include a sortable YYYY-MM-DD key so UIs can reliably order newest→oldest
     daily_trips = [
         {
             "day": d.strftime("%a"),  # Sun, Mon, ... (kept for compatibility)
             "date": d.strftime("%d %b"),  # 07 Nov
             "label": d.strftime("%b %d"),  # Nov 07 — uniform width for charts
+            "date_key": d.strftime("%Y-%m-%d"),  # 2025-11-14
             "arrivals": cnt,
             "is_peak": cnt == max_daily and max_daily > 0,
         }
@@ -576,6 +580,9 @@ def get_vessel_stats(vessel_id: int, peak_limit: int = 5) -> dict:
         "period": {
             "start": window_start_mv.strftime("%d %b %Y %H:%M"),
             "end": window_end_mv.strftime("%d %b %Y %H:%M"),
+            # Display labels without leading zero in day (e.g., Nov 7)
+            "start_display": f"{window_start_mv.strftime('%b')} {window_start_mv.day}",
+            "end_display": f"{window_end_mv.strftime('%b')} {window_end_mv.day}",
         },
         "inactive": False,
         "message": None,
