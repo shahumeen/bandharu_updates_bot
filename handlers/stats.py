@@ -297,7 +297,7 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
         period_end = stats.get("period", {}).get("end_display") or stats.get("period", {}).get("end")
         header = (
             f"📈 {esc(vessel_name.upper())} STATS\n"
-            f"{esc(period_start)} - {esc(period_end)}\n"
+            f"{esc(period_start)} \\- {esc(period_end)}\n"
             f"────────────────────\n"
         )
 
@@ -373,7 +373,7 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
             for h in stats.get("activity_hours", [])
         ]
         activity_block = (
-            "\n\n⏱️*PEAK TRAVEL HOURS*\n" + "\n".join(activity_lines)
+            "\n\n⏱️ *PEAK TRAVEL HOURS*\n" + "\n".join(activity_lines)
             if activity_lines
             else ""
         )
@@ -393,7 +393,7 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
             for d in ordered_daily
         ]
         daily_block = (
-            "\n\n📅*DAILY TRIPS*\n" + "\n".join(daily_lines)
+            "\n\n📅 *DAILY TRIPS*\n" + "\n".join(daily_lines)
             if daily_lines
             else ""
         )
