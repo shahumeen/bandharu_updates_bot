@@ -296,8 +296,7 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
         period_start = stats.get("period", {}).get("start_display") or stats.get("period", {}).get("start")
         period_end = stats.get("period", {}).get("end_display") or stats.get("period", {}).get("end")
         header = (
-            f"📈 {esc(vessel_name.upper())} STATS\n"
-            f"{esc(period_start)} \\- {esc(period_end)}\n"
+            f"📈 *{esc(vessel_name.upper())} STATS* — _{esc(period_start)} \\- {esc(period_end)}_\n"
             f"────────────────────\n"
         )
 
@@ -315,7 +314,7 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
         # Highlights
         longest = stats.get("longest_trip")
         longest_line = (
-            f"\n🌊 _*Longest Trip:*_\n{esc(longest['duration'])} \\- {esc(longest['from'])} → {esc(longest['to'])}"
+            f"\n🌊 _*Longest Trip:*_\n{esc(longest['duration'])} \\- {esc(longest['from'])} → {esc(longest['to'])}\n"
             if longest
             else ""
         )
@@ -337,7 +336,6 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
                 )
 
         highlights = (
-            f"📈 *HIGHLIGHTS*\n"
             f"────────────────────\n\n"
             f"⏱ _*Active Time:*_ {esc(stats['active_time'])}\n"
             + longest_line
@@ -405,7 +403,7 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
             for entry in ranking
         ]
         history_block = (
-            "\n\n🧭*VISITED ISLANDS*\n" + "\n".join(history_lines)
+            "\n\n🧭 *VISITED ISLANDS*\n" + "\n".join(history_lines)
             if history_lines
             else ""
         )
