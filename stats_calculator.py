@@ -459,7 +459,7 @@ def get_vessel_stats(vessel_id: int, peak_limit: int = 5) -> dict:
     for s, e in travel_intervals:
         accumulate_hourly(s, e)
 
-    # 5) Vessel history (arrivals in window) ordered by arrival time, with counts
+    # 5) Vessel history and visited island counts
     arrival_logs = [
         log for log in logs_in_window if getattr(log, "event", None) == "arrival"
     ]
@@ -483,6 +483,27 @@ def get_vessel_stats(vessel_id: int, peak_limit: int = 5) -> dict:
         }
         for v in sorted(seen.values(), key=lambda x: x["first_arrival"])
     ]
+
+    # Visited islands ranked by number of arrivals (dense ranking)
+    visited_counts = {name: data["count"] for name, data in seen.items()}
+    ranked = sorted(visited_counts.items(), key=lambda x: (-x[1], x[0]))
+    visited_islands_ranked = []
+    prev_count = None
+    rank = 0
+    for name, cnt in ranked:
+        if prev_count is None:
+            rank = 1
+        elif cnt < prev_count:
+            rank += 1
+        prev_count = cnt
+        visited_islands_ranked.append({"rank": rank, "port": name, "count": cnt})
+
+    most_visited_count = max(visited_counts.values()) if visited_counts else 0
+    most_visited_islands = (
+        sorted([n for n, c in visited_counts.items() if c == most_visited_count])
+        if most_visited_count > 0
+        else []
+    )
 
     # 6) Longest trip in the window (completed trips whose arrival is in window)
     longest_trip = None
@@ -541,12 +562,13 @@ def get_vessel_stats(vessel_id: int, peak_limit: int = 5) -> dict:
     max_daily = max(day_counts.values()) if day_counts else 0
     daily_trips = [
         {
-            "day": d.strftime("%a"),  # Sun, Mon, ...
-            "date": d.strftime("%d %b"),
+            "day": d.strftime("%a"),  # Sun, Mon, ... (kept for compatibility)
+            "date": d.strftime("%d %b"),  # 07 Nov
+            "label": d.strftime("%b %d"),  # Nov 07 — uniform width for charts
             "arrivals": cnt,
             "is_peak": cnt == max_daily and max_daily > 0,
         }
-        for d, cnt in sorted(day_counts.items(), key=lambda x: x[0])
+        for d, cnt in sorted(day_counts.items(), key=lambda x: x[0], reverse=True)
     ]
 
     # 8) Compose result
@@ -558,6 +580,9 @@ def get_vessel_stats(vessel_id: int, peak_limit: int = 5) -> dict:
         "inactive": False,
         "message": None,
         "history": history_compact,
+        "visited_islands_ranked": visited_islands_ranked,
+        "most_visited_islands": most_visited_islands,
+        "most_visited_count": most_visited_count if most_visited_islands else None,
         "active_time": format_duration(active_seconds),
         "active_time_seconds": int(active_seconds),
         "longest_trip": longest_trip,
@@ -571,6 +596,9 @@ def get_vessel_stats(vessel_id: int, peak_limit: int = 5) -> dict:
         result["message"] = "Vessel was inactive (always in port) in the last 7 days."
         # Trim fields that aren't meaningful when inactive
         result["history"] = []
+        result["visited_islands_ranked"] = []
+        result["most_visited_islands"] = []
+        result["most_visited_count"] = None
         result["longest_trip"] = None
         result["activity_hours"] = []
         result["daily_trips"] = []

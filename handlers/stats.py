@@ -294,9 +294,8 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
 
         # Header
         header = (
-            f"⛴ *{esc(vessel_name)}* \- 7 Day Stats\n"
+            f"⛴ *[{esc(vessel_name)}]({VESSEL_QUERY}{vessel_id})* \- 7 Day Stats\n"
             f"_Period:_ {esc(stats['period']['start'])} → {esc(stats['period']['end'])}\n"
-            f"_Link:_ [{esc(vessel_name)}]({VESSEL_QUERY}{vessel_id})\n"
             f"────────────────────\n"
         )
 
@@ -319,11 +318,28 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
             else ""
         )
 
+        # Most visited island highlight (ties handled)
+        mvi = stats.get("most_visited_islands") or []
+        mvi_count = stats.get("most_visited_count")
+        most_visited_line = ""
+        if mvi and mvi_count:
+            if len(mvi) > 1:
+                islands_joined = ", ".join(
+                    f"[{esc(name)}]({MAP_QUERY}{name})" for name in sorted(mvi)
+                )
+                most_visited_line = f"\n🏝 _*Most Visited Island:*_\nTie: {islands_joined} (x {mvi_count})\n"
+            else:
+                most_visited_line = (
+                    f"\n🏝 _*Most Visited Island:*_\n"
+                    f"[{esc(mvi[0])}]({MAP_QUERY}{mvi[0]}) (x {mvi_count})\n"
+                )
+
         highlights = (
             f"📈 *HIGHLIGHTS*\n"
             f"────────────────────\n\n"
             f"⏱ _*Active Time:*_ {esc(stats['active_time'])}\n"
             + longest_line
+            + most_visited_line
             + "\n────────────────────\n"
         )
 
@@ -342,7 +358,9 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
         # Daily trips graph
         max_arr = max((d["arrivals"] for d in stats.get("daily_trips", [])), default=1)
         daily_lines = [
-            f" {esc(d['day'])} {'█' * int((d['arrivals']/max_arr)*10)} {d['arrivals']} trip{'s' if d['arrivals']!=1 else ''}{' 🏆' if d.get('is_peak') else ''}"
+            f" {esc(d.get('label') or d.get('date') or d.get('day'))} "
+            f"{'█' * int((d['arrivals']/max_arr)*10)} "
+            f"{d['arrivals']} trip{'s' if d['arrivals']!=1 else ''}{' 🏆' if d.get('is_peak') else ''}"
             for d in stats.get("daily_trips", [])
         ]
         daily_block = (
@@ -351,11 +369,11 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
             else ""
         )
 
-        # History
-        history_entries = stats.get("history", [])
+        # Visited islands ranked (dense ranking)
+        ranking = stats.get("visited_islands_ranked", [])
         history_lines = [
-            f"• _*{esc(h['port'])}*_" + (f" x{h['count']}" if int(h.get('count', 1)) > 1 else "")
-            for h in history_entries
+            f"{entry['rank']}\\. _*[{esc(entry['port'])}]({MAP_QUERY}{entry['port']})*_ x {entry['count']}"
+            for entry in ranking
         ]
         history_block = (
             "\n\n🧭*VISITED ISLANDS*\n" + "\n".join(history_lines)
