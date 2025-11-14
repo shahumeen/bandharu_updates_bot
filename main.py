@@ -36,8 +36,8 @@ async def _post_init(application):
                 BotCommand("settings", "View your subscriptions"),
                 BotCommand("unsub", "Remove subscriptions"),
                 BotCommand("toggledepartures", "Toggle departure alerts"),
-                BotCommand("islandstats", "Yesterday's island stats"),
-                BotCommand("vesselstats", "Vessel stats (beta)"),
+                BotCommand("islandstats", "Island stats"),
+                BotCommand("vesselstats", "Vessel stats - weekly"),
                 BotCommand("islandchannels", "Island update channels"),
             ]
         )
