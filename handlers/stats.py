@@ -370,7 +370,7 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
             for h in stats.get("activity_hours", [])
         ]
         activity_block = (
-            "\n\n⏱️ *PEAK TRAVEL HOURS*\n" + "\n".join(activity_lines)
+            "\n⏱️ *PEAK TRAVEL HOURS*\n" + "\n".join(activity_lines)
             if activity_lines
             else ""
         )
