@@ -296,7 +296,7 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
         period_start = stats.get("period", {}).get("start_display") or stats.get("period", {}).get("start")
         period_end = stats.get("period", {}).get("end_display") or stats.get("period", {}).get("end")
         header = (
-            f"📈 *{esc(vessel_name.upper())} STATS* | _{esc(period_start)} \\- {esc(period_end)}_\n"
+            f"📈 *{esc(vessel_name.upper())} STATS* \\| _{esc(period_start)} \\- {esc(period_end)}_\n"
             f"────────────────────\n"
         )
 
@@ -415,7 +415,7 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
         date_tag_escaped = date_tag.replace("_", "\\_") if date_tag else ""
         hashtags_block = (
             
-            ("\n\n" + f"────────────────────\n" + f"_\\#{vessel_tag}_ _\\#vesselstats_ " + (f"_\\#{date_tag_escaped}_" if date_tag_escaped else ""))
+            (f"\n\n────────────────────\n" + f"_\\#{vessel_tag}_ _\\#vesselstats_ " + (f"_\\#{date_tag_escaped}_" if date_tag_escaped else ""))
             if vessel_tag else ""
         )
 
