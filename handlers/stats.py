@@ -292,17 +292,9 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
             )
             return
 
-        # Header and period line
-        period_start = stats.get("period", {}).get("start_display") or stats.get("period", {}).get("start")
-        period_end = stats.get("period", {}).get("end_display") or stats.get("period", {}).get("end")
-        header = (
-            f"📈 *{esc(vessel_name.upper())} STATS \\| _{esc(period_start)} \\- {esc(period_end)}_*\n"
-            f"────────────────────\n"
-        )
-
-        # Inactive case
+        # Inactive case - send message without header
         if stats.get("inactive"):
-            msg = header + "\n" + esc(stats.get("message", "Vessel inactive."))
+            msg = esc(stats.get("message", "Vessel inactive."))
             await context.bot.send_message(
                 chat_id=chat_id,
                 text=msg,
@@ -310,6 +302,14 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
                 disable_web_page_preview=True,
             )
             return
+
+        # Header and period line (only for active vessels)
+        period_start = stats.get("period", {}).get("start_display") or stats.get("period", {}).get("start")
+        period_end = stats.get("period", {}).get("end_display") or stats.get("period", {}).get("end")
+        header = (
+            f"📈 *{esc(vessel_name.upper())} STATS \\| _{esc(period_start)} \\- {esc(period_end)}_*\n"
+            f"────────────────────\n"
+        )
 
         # Highlights
         longest = stats.get("longest_trip")
