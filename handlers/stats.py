@@ -390,7 +390,7 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
             for d in ordered_daily
         ]
         daily_block = (
-            "\n\n📅 *DAILY TRIPS*\n" + "\n".join(daily_lines)
+            "\n\n📊 *DAILY TRIPS*\n" + "\n".join(daily_lines)
             if daily_lines
             else ""
         )
