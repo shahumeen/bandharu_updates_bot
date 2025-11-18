@@ -317,7 +317,7 @@ async def channelsubvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "*Usage:*\n"
                 "`/channeladdvessel <channel_username> <vessel_name>`\n"
                 "*Example:*\n"
-                "`/channeladdvessel @channel1 speedstar`"
+                "`/channeladdvessel @channel1 RTL 101`"
             ),
             parse_mode="MarkdownV2",
         )
