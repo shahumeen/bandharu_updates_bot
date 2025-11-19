@@ -268,9 +268,10 @@ def _format_male_arrival(event: dict, user: User):
             .order_by(PortLog.timestamp.desc())
             .first()
         )
+        contact_val = event.get('contact')
         contact = (
-            f"\n📞 *Contact:* {escape_markdown(event['contact'], version=2)}"
-            if event['contact']
+            f"\n📞 *Contact:* {escape_markdown(contact_val, version=2)}"
+            if contact_val
             else ""
         )
 
@@ -385,9 +386,10 @@ def _format_channel_arrival(event: dict) -> Optional[str]:
     Expects a single event payload like utils.all_notify()['arrivals'][id].
     """
     try:
+        contact_val = event.get('contact')
         contact = (
-            f"\n📞 *Contact:* {escape_markdown(event['contact'], version=2)}"
-            if event.get('contact')
+            f"\n📞 *Contact:* {escape_markdown(contact_val, version=2)}"
+            if contact_val
             else ""
         )
         vessel_name = escape_markdown(str(event.get("name", "")).upper(), version=2)
@@ -434,8 +436,8 @@ _\\#{port_hashtag}_\n_\\#arrival_
 def _format_channel_departure(event: dict) -> Optional[str]:
     """Format a departure message for the main updates channel."""
     try:
-        contact_val = escape_markdown(event.get("contact"), version=2)
-        contact = f"\n📞 *Contact:* {contact_val}" if contact_val else ""
+        contact_val = event.get("contact")
+        contact = f"\n📞 *Contact:* {escape_markdown(contact_val, version=2)}" if contact_val else ""
         vessel_name = escape_markdown(str(event.get("name", "")).upper(), version=2)
         vessel_type = escape_markdown(event.get("vessel_type") or "Unknown", version=2)
         departure_time = escape_markdown(
@@ -472,9 +474,10 @@ async def arrival_notify(arrivals, context, user: User):
     """Send arrival notifications (arrivals is a dict keyed by portlog id) to a single user/chat."""
 
     for v in arrivals:
+        contact_val = arrivals[v].get('contact')
         contact = (
-            f"\n📞 *Contact:* {escape_markdown(arrivals[v]['contact'], version=2)}"
-            if arrivals[v]['contact']
+            f"\n📞 *Contact:* {escape_markdown(contact_val, version=2)}"
+            if contact_val
             else ""
         )
 
@@ -567,15 +570,10 @@ async def departures_notify(departures, context, user: User):
             )
             continue
 
-        contact = departures[v].get("contact", None)
-        if contact is None:
-            contact = ""
-        else:
-            contact = f"\n📞 *Contact:* {escape_markdown(contact, version=2)}"
-
+        contact_val = departures[v].get("contact")
         contact = (
-            f"\n📞 *Contact:* {departures[v]['contact']}"
-            if departures[v]['contact']
+            f"\n📞 *Contact:* {escape_markdown(contact_val, version=2)}"
+            if contact_val
             else ""
         )
         island = (
