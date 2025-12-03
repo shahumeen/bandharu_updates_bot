@@ -171,4 +171,4 @@ Issues and pull requests are welcome. A few ideas:
 
 ## Support
 
-End users can reach out at @BUBSupport on Telegram. Developers can open issues on GitHub.
+End users can reach out @shahumeen on Telegram. Developers can open issues on GitHub.

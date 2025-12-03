@@ -13,7 +13,7 @@ from model_helpers import (
 )
 from .admin import ADMIN_CHAT_ID
 from .common import esc_md
-from .users import MAP_QUERY, VESSEL_QUERY
+from .users import MAP_QUERY, VESSEL_QUERY, AWAITING_VESSEL_NAME, AWAITING_ISLAND_NAME
 
 
 async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -86,6 +86,17 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         pass
                 except Exception:
                     await cq.edit_message_text(text=f"✅ Subscribed to port.")
+                
+                # Send follow-up message to invite another subscription and keep user in conversation
+                try:
+                    await cq.message.reply_text(
+                        text="_🏝 Send another island name to add more_",
+                        parse_mode="MarkdownV2",
+                    )
+                    # Keep user in AWAITING_ISLAND_NAME state to continue adding islands
+                    return AWAITING_ISLAND_NAME
+                except Exception:
+                    pass
             else:
                 if err == "limit_reached":
                     await cq.edit_message_text(
@@ -119,6 +130,17 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     )
                 except Exception:
                     await cq.edit_message_text(text=f"✅ Subscribed to vessel.")
+                
+                # Send follow-up message to invite another subscription and keep user in conversation
+                try:
+                    await cq.message.reply_text(
+                        text="_⛴ Send another vessel name to add more_",
+                        parse_mode="MarkdownV2",
+                    )
+                    # Keep user in AWAITING_VESSEL_NAME state to continue adding vessels
+                    return AWAITING_VESSEL_NAME
+                except Exception:
+                    pass
             else:
                 if err == "limit_reached":
                     await cq.edit_message_text(

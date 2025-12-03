@@ -76,59 +76,24 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception:
             pass
 
-    # Compute total number of private users to show usage stats
-    try:
-        total_private = User.select().where(User.chat_type == "private").count()
-    except Exception:
-        total_private = None
-
-    people_line = (
-        f"\n📊 _User Count: *{total_private}*_\n" if total_private is not None else ""
-    )
-
-    welcome_message = fr"""
-🏝️ Welcome to Bandharu Updates Bot\!
-━━━━━━━━━━━━━━━━━━━━━━━
+    welcome_message = f"""
+🏝️ *Welcome to Bandharu Updates Bot\\!*
 
 _Your friendly vessel tracking assistant for the Maldives_ 🌊
 
+━━━━━━━━━━━━━━━━━━━━━━━
+
 ✨ *How It Works:*
-*1* • Subscribe to islands 🏝️ and vessels ⛴️
-*2* • Get instant alerts when they match
-*3* • Stay updated with arrivals \& departures
+
+*1* • Use the buttons below and subscribe to islands 🏝️ and vessels ⛴️
+
+*2* • Get instant notifications for arrivals and departures
+
+*3* • Never miss a vessel 😇
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 
-⚡ *Quick Start Guide:*
-
-🎯 _*Add Subscriptions:*_
-• /addport \- _Subscribe to an island or port 🏝️_
-• /addvessel \- _Subscribe to a vessel ⛴️_
-
-⚙️ _*Manage Settings:*_
-• /settings \- _View your subscriptions 🔍_
-• /unsub \- _Remove subscriptions 🗑️_
-• /toggledepartures \- _Toggle departure notifications 🚦_
-
-📊 _*Get Statistics:*_
-• /islandstats \- _Island statistics 📈_
-• /vesselstats \- _Vessel statistics \(beta\) 🧪_
-
-━━━━━━━━━━━━━━━━━━━━━━━
-
-📣 *Island\-Wide Updates:*
-
-Want _*all activity*_ for specific islands\?  
-Join our dedicated [Bandharu update channels](https://telegra.ph/Island-update-Channels-11-08)
-
-_Can't find your island's channel\?_  
-Ask @BUBSupport to add it\! 💬
-
-━━━━━━━━━━━━━━━━━━━━━━━
-{people_line}
-🧑‍💻 _Are you a developer? contribute on [GitHub](https://github.com/shahumeen/bandharu_updates_bot)_
-
-👾 _Uses FollowMe\.mv API_
+👾 _Uses FollowMe\\.mv API_
 
 `</> Made with ❤️ by` @shahumeen
 """
@@ -177,90 +142,78 @@ Ask @BUBSupport to add it\! 💬
         # If image fetch fails, continue with text
         pass
 
+    # Create keyboard from main menu
+    keyboard = [
+        [KeyboardButton("🏝 Add Island"), KeyboardButton("⛴ Add Vessel")],
+        [KeyboardButton("🚦 Toggle Departures"), KeyboardButton("🗑️ Unsubscribe")],
+        [KeyboardButton("⚙️ Settings")],
+        [KeyboardButton("📈 Island Stats"), KeyboardButton("📊 Vessel Stats")],
+        [KeyboardButton("📣 Island Channels"), KeyboardButton("❓ Help")],
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=False)
+    
     await context.bot.send_message(
         chat_id=chat_id,
         text=welcome_message,
         parse_mode="MarkdownV2",
         disable_web_page_preview=True,
+        reply_markup=reply_markup,
     )
-    
-    # Send main menu
-    await send_main_menu(update, context, chat_id)
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show a friendly help with commands and examples."""
     chat_id = update.effective_chat.id
 
-    help_message = r"""
-❓🌊 *Help & Commands Guide*
+    # Compute total number of private users to show usage stats
+    try:
+        total_private = User.select().where(User.chat_type == "private").count()
+    except Exception:
+        total_private = None
 
-_Track Maldives vessel movements in real\-time and get notified when your subscribed vessels reach your favorite islands\!_
+    user_count = (
+        f"<i>📊 User Count:</i> <b>{total_private}</b>" if total_private is not None else ""
+    )
 
-*How I Work:* 🤖
-I monitor vessel movements and notify you when your subscribed ⛴ _*vessels*_ visit your subscribed 🏝 _*islands*_\.
+    help_message = f"""
+<pre>❓🌊 Help & Actions Guide</pre>
+<i>Track Maldives vessel movements in real-time and get notified when your subscribed vessels reach your favorite islands!</i>
 
-_*You need at least ONE island and ONE vessel to start receiving alerts*_
+<pre>📌 How to use the bot:</pre>
+• <b>🏝 Add Island</b> – <i>Subscribe to receive alerts for a specific island or port</i>
 
-━━━━━━━━━━━━━━━━━━━━━━━
-🎯 *How It Works:*
-• Subscribe to islands \& vessels
-• Get instant alerts when they match
-• Receive arrival \& departure notifications
+• <b>⛴ Add Vessel</b> – <i>Subscribe to track a specific vessel</i>
 
-━━━━━━━━━━━━━━━━━━━━━━━
-⚡ *Quick Commands:*
+• <b>📈 Island Stats</b> – <i>View statistics for a specific island</i>
 
-🏝️ *Island Actions:*
-• /addport \- _Subscribe to an island or port_
-• /islandstats \- _Get island statistics_
+• <b>📊 Vessel Stats</b> – <i>View statistics for a specific vessel</i>
 
-⛴️ *Vessel Actions:*
-• /addvessel \- _Subscribe to a vessel_
-• /vesselstats \- _Vessel statistics \(beta\)_
+• <b>⚙️ Settings</b> – <i>View your current island and vessel subscriptions</i>
 
-⚙️ *Manage Settings:*
-• /settings \- _View your subscriptions_
-• /unsub \- _Remove subscriptions_
-• /toggledepartures \- _Toggle departure alerts_
+• <b>🗑️ Unsubscribe</b> – <i>Remove islands or vessels from your subscriptions</i>
 
-📱 *General:*
-• /start \- _Welcome overview_
-• /help \- _This help menu_
-• /islandchannels \- _Island update channels_
+• <b>🚦 Toggle Departures</b> – <i>Turn departure alerts on or off</i>
 
-💡 *Usage Tips*
+• <b>📣 Island Channels</b> – <i>Browse public island update channels</i>
 
-*• Subscription Limits:*  
-   You can subscribe to _*20 islands*_ and _*20 vessels*_
+• <b>❓ Help</b> – <i>Show this help message again</i>
 
-*• Matching Logic:*  
-   We notify when _*any*_ of your vessels visit _*any*_ of your islands _*or*_ for all island your vessels visit if you _*don't have*_ an island subscription\.
+<pre>💡 Quick Tips:</pre>
+• You need at least <b>ONE</b> vessel subscription to get alerts
 
-*• Departure Alerts:*  
-   Use /toggledepartures to control departure notifications
+• Limits: Subscribe up to <b>20</b> islands and <b>20</b> vessels
 
-━━━━━━━━━━━━━━━━━━━━━━━
-📣 *Island Channels*
+• Keep island subscriptions empty to recieve notifications for all the islands your vessels visit
 
-Want _*all activity*_ for specific islands\?  
-Join our dedicated [Bandharu update channels](https://telegra.ph/Island-update-Channels-11-08)
+<i>For more help contact:</i> @shahumeen
 
-• Browse: /islandchannels  
-
-_Can't find your island's channel\?_  
-Ask @BUBSupport to add it\! 💬
-
-━━━━━━━━━━━━━━━━━━━━━━━
-🎯*Need More Help?*
-
-contact @BUBSupport for assistance 🤝
+{user_count}
 """
 
     await context.bot.send_message(
         chat_id=chat_id,
         text=help_message,
-        parse_mode="MarkdownV2",
+        parse_mode="HTML",
         disable_web_page_preview=True,
     )
 
@@ -273,8 +226,8 @@ async def unrecognized_command(
     if not update.message or not update.message.text:
         return
     await update.message.reply_text(
-        "🤖 I couldn’t recognize that\\. Try /help for commands\\.",
-        parse_mode="MarkdownV2",
+        "🤖 I didn't understand that message\n\n_👾 Please use the menu buttons below to interact with me_",
+        parse_mode="MarkdownV2"
     )
 
 
@@ -288,7 +241,19 @@ async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     esc_cmd = escape_markdown(cmd, version=2)
     await update.message.reply_text(
-        f"❓ Unknown command. Use /help to see available commands.",
+        f"""❓ Unknown command
+
+commands list:
+/start - start message
+/help - help message
+/addport - subscribe to port
+/addvessel - subscribe to vessel
+/toggledepartures - turn ON/OFF departure notifications
+/settings - view your subscriptions
+/islandstats - stats for any island
+/vesselstats - stats for any vessel
+/islandchannels - island channels message
+""",
         disable_web_page_preview=True,
     )
 
@@ -369,7 +334,7 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )
-        return
+        return ConversationHandler.END
 
     # If only one match and not subscribed
     if len(matches) == 1:
@@ -521,7 +486,7 @@ async def subvessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )
-        return
+        return ConversationHandler.END
 
     # If only one match and not subscribed
     if len(matches) == 1:
@@ -748,7 +713,7 @@ Want _*all activity*_ for specific islands\?
 Join our dedicated [Bandharu update channels](https://telegra.ph/Island-update-Channels-11-08)
 
 _Can't find your island's channel\?_  
-Ask @BUBSupport to add it\! 💬"""
+Ask @shahumeen to add it\! 💬"""
     await context.bot.send_message(
         chat_id=chat_id,
         text=text,
@@ -757,18 +722,13 @@ Ask @BUBSupport to add it\! 💬"""
     )
 
 
-async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /menu command - show main menu."""
-    await send_main_menu(update, context)
-
-
 # Button handlers that trigger conversation states
 async def button_add_island(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle 'Add Island' button press - ask for island name."""
     chat_id = update.effective_chat.id
     await context.bot.send_message(
         chat_id=chat_id,
-        text="🏝 *Add Island Subscription*\n\nPlease enter the island name:",
+        text="_Please send the island name to subscribe_ 🏝",
         parse_mode="MarkdownV2",
     )
     return AWAITING_ISLAND_NAME
@@ -779,7 +739,7 @@ async def button_add_vessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     await context.bot.send_message(
         chat_id=chat_id,
-        text="⛴ *Add Vessel Subscription*\n\nPlease enter the vessel name or ID:",
+        text="_Please send the vessel name to subscribe_ ⛴",
         parse_mode="MarkdownV2",
     )
     return AWAITING_VESSEL_NAME
@@ -808,7 +768,7 @@ async def button_island_stats(update: Update, context: ContextTypes.DEFAULT_TYPE
     chat_id = update.effective_chat.id
     await context.bot.send_message(
         chat_id=chat_id,
-        text="📈 *Island Statistics*\n\nPlease enter the island name:",
+        text="_Please send the island name to get stats_ 📈",
         parse_mode="MarkdownV2",
     )
     return AWAITING_ISLAND_STATS
@@ -819,7 +779,7 @@ async def button_vessel_stats(update: Update, context: ContextTypes.DEFAULT_TYPE
     chat_id = update.effective_chat.id
     await context.bot.send_message(
         chat_id=chat_id,
-        text="📊 *Vessel Statistics*\n\nPlease enter the vessel name or ID:",
+        text="_Please send the vessel name to get stats_ 📊",
         parse_mode="MarkdownV2",
     )
     return AWAITING_VESSEL_STATS
@@ -878,10 +838,10 @@ async def handle_island_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if not matches:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"😕 No islands found matching '{esc_md(name)}'\\. Try a shorter keyword\\.",
+            text=f"😕 No islands found matching _*'{esc_md(name)}'*_\n\n_Please send another_",
             parse_mode="MarkdownV2",
         )
-        return ConversationHandler.END
+        return AWAITING_ISLAND_NAME
     
     # Split matches into already subscribed and available
     already_subbed = []
@@ -896,11 +856,11 @@ async def handle_island_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if len(matches) == 1 and matches[0].id in subbed_ports:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"🔔 You're already subscribed to _*[{esc_md(matches[0].name)}]({MAP_QUERY}{matches[0].name})*_",
+            text=f"🔔 You're already subscribed to _*[{esc_md(matches[0].name)}]({MAP_QUERY}{matches[0].name})*_\n\n_Please send another_",
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )
-        return ConversationHandler.END
+        return AWAITING_ISLAND_NAME
     
     # If only one match and not subscribed
     if len(matches) == 1:
@@ -913,6 +873,13 @@ async def handle_island_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 parse_mode="MarkdownV2",
                 disable_web_page_preview=True,
             )
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=f"_🏝 Send another island name to add more_",
+                parse_mode="MarkdownV2",
+                disable_web_page_preview=True,
+            )
+            
             if not subs.get("vessels"):
                 await context.bot.send_message(
                     chat_id=chat_id,
@@ -935,7 +902,7 @@ async def handle_island_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
                     text=f"❌ Failed to subscribe to _*{esc_md(port.name)}*_\\. Please try again shortly\\.",
                     parse_mode="MarkdownV2",
                 )
-        return ConversationHandler.END
+        return AWAITING_ISLAND_NAME
     
     # Show already subscribed ports first
     msg_parts = []
@@ -955,11 +922,11 @@ async def handle_island_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
         # All matches are already subscribed
         await context.bot.send_message(
             chat_id=chat_id,
-            text="\n".join(msg_parts),
+            text=f'{"\n".join(msg_parts)}\n\n_Please send another_',
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )
-        return ConversationHandler.END
+        return AWAITING_ISLAND_NAME
     
     msg = (
         "\n".join(msg_parts + ["", "*➕ Available islands to subscribe:*"])
@@ -1026,20 +993,20 @@ async def handle_vessel_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if not matches:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"😕 No vessels found matching '{esc_md(q)}'\\. Try a shorter keyword\\.",
+            text=f"😕 No vessels found matching _*'{esc_md(q)}'*_\n\n_Please send another_",
             parse_mode="MarkdownV2",
         )
-        return ConversationHandler.END
+        return AWAITING_VESSEL_NAME
     
     # If only one match and already subscribed
     if len(matches) == 1 and matches[0].id in subbed_vessels:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"🔔 You're already subscribed to _*[{esc_md(matches[0].name)}]({VESSEL_QUERY}{matches[0].id})*_",
+            text=f"🔔 You're already subscribed to _*[{esc_md(matches[0].name)}]({VESSEL_QUERY}{matches[0].id})*_\n\n_Please send another_",
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )
-        return ConversationHandler.END
+        return AWAITING_VESSEL_NAME
     
     # If only one match and not subscribed
     if len(matches) == 1:
@@ -1052,6 +1019,13 @@ async def handle_vessel_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 parse_mode="MarkdownV2",
                 disable_web_page_preview=True,
             )
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=f"_⛴ Send another vessel name to add more_",
+                parse_mode="MarkdownV2",
+                disable_web_page_preview=True,
+            )
+            
         else:
             if err == "limit_reached":
                 await context.bot.send_message(
@@ -1065,12 +1039,12 @@ async def handle_vessel_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
                     text="❌ Failed to subscribe to vessel\\.",
                     parse_mode="MarkdownV2",
                 )
-        return ConversationHandler.END
+        return AWAITING_VESSEL_NAME
     
     # Show already subscribed vessels first
     msg_parts = []
     if already_subbed:
-        msg_parts.append("*🔔 Already subscribed:*")
+        msg_parts.append("*🔔 Already subscribed:*\n")
         for v in already_subbed:
             msg_parts.append(f"• _*[{esc_md(v.name)}]({VESSEL_QUERY}{v.id})*_")
     
@@ -1085,11 +1059,11 @@ async def handle_vessel_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
         # All matches are already subscribed
         await context.bot.send_message(
             chat_id=chat_id,
-            text="\n".join(msg_parts),
+            text=f'{"\n".join(msg_parts)}\n\n_Please send another_',
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )
-        return ConversationHandler.END
+        return AWAITING_VESSEL_NAME
     
     msg = (
         "\n".join(msg_parts + ["", "*➕ Available vessels to subscribe:*"])
@@ -1109,21 +1083,100 @@ async def handle_vessel_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 async def handle_island_stats_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle island name input for stats."""
-    from .stats import island_stats as stats_func
+    chat_id = update.effective_chat.id
+    name = update.message.text.strip()
     
-    # Simulate args from user input
-    context.args = update.message.text.strip().split()
-    await stats_func(update, context)
+    # Get matching ports
+    matches = list(Port.select().where(Port.name.contains(name)).limit(10))
+    
+    if not matches:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=f"😕 No islands found matching _*'{esc_md(name)}'*_\n\n_Please send another_",
+            parse_mode="MarkdownV2",
+        )
+        return AWAITING_ISLAND_STATS
+    
+    # If multiple matches, show selection keyboard
+    if len(matches) > 1:
+        keyboard = []
+        for port in matches:
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        port.name, callback_data=f"get_port_stats:{port.id}"
+                    )
+                ]
+            )
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=f"🔎 Multiple islands found matching '{esc_md(name)}'\\. Please select one:",
+            reply_markup=reply_markup,
+            parse_mode="MarkdownV2",
+        )
+        return ConversationHandler.END
+    
+    # Single match found, get stats directly
+    from .stats import send_port_stats
+    port = matches[0]
+    await send_port_stats(context, chat_id, port.id)
     return ConversationHandler.END
 
 
 async def handle_vessel_stats_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle vessel name input for stats."""
-    from .stats import vessel_stats as stats_func
+    chat_id = update.effective_chat.id
+    query = update.message.text.strip()
     
-    # Simulate args from user input
-    context.args = update.message.text.strip().split()
-    await stats_func(update, context)
+    # If numeric, try exact id match first
+    matches = []
+    try:
+        maybe_id = int(query)
+        v = Vessel.get_or_none(Vessel.id == maybe_id)
+        if v:
+            matches = [v]
+    except Exception:
+        pass
+
+    if not matches:
+        matches = list(Vessel.select().where(Vessel.name.contains(query)).limit(10))
+    
+    if not matches:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=f"😕 No vessels found matching _*'{esc_md(query)}'*_\n\n_Please send another_",
+            parse_mode="MarkdownV2",
+        )
+        return AWAITING_VESSEL_STATS
+    
+    # If multiple matches, show selection keyboard
+    if len(matches) > 1:
+        keyboard = []
+        for v in matches:
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        v.name, callback_data=f"get_vessel_stats:{v.id}"
+                    )
+                ]
+            )
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=f"🔎 Multiple vessels found matching '{esc_md(query)}'\\. Please select one:",
+            reply_markup=reply_markup,
+            parse_mode="MarkdownV2",
+        )
+        return ConversationHandler.END
+    
+    
+    # Single match found, get stats directly
+    from .stats import send_vessel_stats
+    vessel = matches[0]
+    await send_vessel_stats(context, chat_id, vessel.id)
     return ConversationHandler.END
 
 
@@ -1131,4 +1184,5 @@ async def cancel_conversation(update: Update, context: ContextTypes.DEFAULT_TYPE
     """Cancel conversation and return to menu."""
     await send_main_menu(update, context)
     return ConversationHandler.END
+
 

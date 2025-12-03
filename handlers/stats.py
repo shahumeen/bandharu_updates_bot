@@ -6,7 +6,7 @@ import re
 from model_helpers import Port, Vessel
 from stats_calculator import get_daily_port_stats, get_vessel_stats
 from .common import esc_md
-from .users import MAP_QUERY, VESSEL_QUERY
+from .users import MAP_QUERY
 
 
 async def island_stats(

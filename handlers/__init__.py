@@ -10,7 +10,6 @@ from .users import (
     unsub,
     islandchannels,
     toggledepartures,
-    menu_command,
     send_main_menu,
     button_add_island,
     button_add_vessel,
@@ -59,7 +58,6 @@ __all__ = [
     "unsub",
     "islandchannels",
     "toggledepartures",
-    "menu_command",
     "send_main_menu",
     # button handlers
     "button_add_island",

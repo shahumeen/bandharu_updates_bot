@@ -24,33 +24,6 @@ app = (
     .build()
 )
 
-
-async def _post_init(application):
-    """Set bot command menu for user-friendly mobile UI."""
-    try:
-        await application.bot.set_my_commands(
-            [
-                BotCommand("start", "Welcome and overview"),
-                BotCommand("menu", "Show main menu"),
-                BotCommand("help", "How to use the bot"),
-                BotCommand("addport", "Subscribe to an island"),
-                BotCommand("addvessel", "Subscribe to a vessel"),
-                BotCommand("settings", "View your subscriptions"),
-                BotCommand("unsub", "Remove subscriptions"),
-                BotCommand("toggledepartures", "Toggle departure alerts"),
-                BotCommand("islandstats", "Island stats"),
-                BotCommand("vesselstats", "Vessel stats - weekly"),
-                BotCommand("islandchannels", "Island update channels"),
-            ]
-        )
-    except Exception:
-        # Non-fatal; continue without setting commands
-        pass
-
-
-app.post_init = _post_init
-
-
 if __name__ == "__main__":
     print("Starting the bot...", flush=True)
     midnight_mle = dtime(0, 0, tzinfo=ZoneInfo("Indian/Maldives"))
@@ -77,9 +50,6 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("channelunsub", channelunsub))
     app.add_handler(CommandHandler("togglechanneldepartures", togglechanneldepartures))
     app.add_handler(CommandHandler("removechannel", removechannel))
-
-    # Add menu command
-    app.add_handler(CommandHandler("menu", menu_command))
 
     # Conversation handler for button-based interactions
     from handlers import (
@@ -130,8 +100,16 @@ if __name__ == "__main__":
             ],
         },
         fallbacks=[
-            CommandHandler("menu", cancel_conversation),
             CommandHandler("start", cancel_conversation),
+            CommandHandler("help", cancel_conversation),
+            CommandHandler("settings", cancel_conversation),
+            CommandHandler("toggledepartures", cancel_conversation),
+            CommandHandler("unsub", cancel_conversation),
+            CommandHandler("vesselstats", cancel_conversation),
+            CommandHandler("islandstats", cancel_conversation),
+            CommandHandler("addvessel", cancel_conversation),
+            CommandHandler("addport", cancel_conversation),
+            CommandHandler("islandchannels", cancel_conversation),
         ],
         allow_reentry=True,
     )

@@ -39,6 +39,7 @@ def _run_bot() -> None:
         CommandHandler,
         CallbackQueryHandler,
         MessageHandler,
+        ConversationHandler,
         ChatMemberHandler,
         filters,
     )
@@ -56,6 +57,25 @@ def _run_bot() -> None:
         vessel_stats,
         my_chat_member_update,
         unknown_command,
+        # menu / button-based handlers and conversation pieces
+        button_add_island,
+        button_add_vessel,
+        button_settings,
+        button_unsub,
+        button_toggle_departures,
+        button_island_stats,
+        button_vessel_stats,
+        button_island_channels,
+        button_help,
+        handle_island_name,
+        handle_vessel_name,
+        handle_island_stats_name,
+        handle_vessel_stats_name,
+        cancel_conversation,
+        AWAITING_ISLAND_NAME,
+        AWAITING_VESSEL_NAME,
+        AWAITING_ISLAND_STATS,
+        AWAITING_VESSEL_STATS,
         # admin
         addchannel,
         channelsubvessel,
@@ -73,35 +93,6 @@ def _run_bot() -> None:
     import logging
 
     print("Starting the bot...", flush=True)
-
-    async def _post_init(application):
-        """Set bot command menu for user-friendly mobile UI.
-
-        Populates the Telegram client-side command shortcuts so users can tap
-        instead of typing. Wrapped in try/except because failure (e.g. network
-        hiccup) is non-fatal: the bot still runs, only the menu is missing.
-        """
-        try:
-            await application.bot.set_my_commands(
-                [
-                    BotCommand("addport", "Subscribe to an island"),
-                    BotCommand("addvessel", "Subscribe to a vessel"),
-                    BotCommand("settings", "View your subscriptions"),
-                    BotCommand("unsub", "Remove subscriptions"),
-                    BotCommand("toggledepartures", "Toggle departure alerts"),
-                    BotCommand("islandstats", "Island stats - yesterday"),
-                    BotCommand("vesselstats", "Vessel stats - last week"),
-                    BotCommand("islandchannels", "Island update channels"),
-                    BotCommand("help", "How to use the bot"),
-                    BotCommand("start", "Welcome and overview"),
-                ]
-            )
-        except Exception:
-            # Non-fatal; continue without setting commands
-            pass
-
-    # Register post-init hook so Application calls this after it starts
-    bot_main.app.post_init = _post_init
 
     # Schedule background notifications job
     bot_main.app.job_queue.run_repeating(notify_job, interval=15, first=3.0)
@@ -129,6 +120,50 @@ def _run_bot() -> None:
     )
     bot_main.app.add_handler(CommandHandler("removechannel", removechannel))
     bot_main.app.add_handler(CommandHandler("broadcast", broadcast))
+
+    # Conversation handler for button-based interactions (menu buttons)
+    conversation = ConversationHandler(
+        entry_points=[
+            MessageHandler(filters.Text(["🏝 Add Island"]), button_add_island),
+            MessageHandler(filters.Text(["⛴ Add Vessel"]), button_add_vessel),
+            MessageHandler(filters.Text(["⚙️ Settings"]), button_settings),
+            MessageHandler(filters.Text(["🗑️ Unsubscribe"]), button_unsub),
+            MessageHandler(filters.Text(["🚦 Toggle Departures"]), button_toggle_departures),
+            MessageHandler(filters.Text(["📈 Island Stats"]), button_island_stats),
+            MessageHandler(filters.Text(["📊 Vessel Stats"]), button_vessel_stats),
+            MessageHandler(filters.Text(["📣 Island Channels"]), button_island_channels),
+            MessageHandler(filters.Text(["❓ Help"]), button_help),
+        ],
+        states={
+            AWAITING_ISLAND_NAME: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_island_name),
+            ],
+            AWAITING_VESSEL_NAME: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_vessel_name),
+            ],
+            AWAITING_ISLAND_STATS: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_island_stats_name),
+            ],
+            AWAITING_VESSEL_STATS: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_vessel_stats_name),
+            ],
+        },
+        fallbacks=[
+            CommandHandler("start", cancel_conversation),
+            CommandHandler("help", cancel_conversation),
+            CommandHandler("settings", cancel_conversation),
+            CommandHandler("toggledepartures", cancel_conversation),
+            CommandHandler("unsub", cancel_conversation),
+            CommandHandler("vesselstats", cancel_conversation),
+            CommandHandler("islandstats", cancel_conversation),
+            CommandHandler("addvessel", cancel_conversation),
+            CommandHandler("addport", cancel_conversation),
+            CommandHandler("islandchannels", cancel_conversation),
+        ],
+        allow_reentry=True,
+    )
+
+    bot_main.app.add_handler(conversation)
 
     # Callback queries and command fallbacks
     bot_main.app.add_handler(CallbackQueryHandler(callback_handler))
