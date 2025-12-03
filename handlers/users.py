@@ -1,6 +1,6 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from telegram.error import Forbidden, BadRequest
-from telegram.ext import ContextTypes
+from telegram.ext import ContextTypes, ConversationHandler
 
 from .common import esc_md
 from model_helpers import (
@@ -13,8 +13,44 @@ from model_helpers import (
     get_user_subscriptions,
 )
 
+
 MAP_QUERY = "https://www.google.com/maps?q="
 VESSEL_QUERY = "https://m.followme.mv/public/?pg=info&id="
+
+# Conversation states
+AWAITING_ISLAND_NAME = 1
+AWAITING_VESSEL_NAME = 2
+AWAITING_ISLAND_STATS = 3
+AWAITING_VESSEL_STATS = 4
+
+
+def send_main_menu(update: Update = None, context: ContextTypes.DEFAULT_TYPE = None, chat_id: int = None):
+    """Send main menu with reply keyboard buttons."""
+    keyboard = [
+        [KeyboardButton("🏝 Add Island"), KeyboardButton("⛴ Add Vessel")],
+        [KeyboardButton("⚙️ Settings"), KeyboardButton("🗑️ Unsubscribe")],
+        [KeyboardButton("🚦 Toggle Departures")],
+        [KeyboardButton("📈 Island Stats"), KeyboardButton("📊 Vessel Stats")],
+        [KeyboardButton("📣 Island Channels"), KeyboardButton("❓ Help")],
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=False)
+    
+    if chat_id is None and update:
+        chat_id = update.effective_chat.id
+    
+    return context.bot.send_message(
+        chat_id=chat_id,
+        text="📱 *Main Menu*\n\nChoose an action:",
+        reply_markup=reply_markup,
+        parse_mode="MarkdownV2",
+    )
+
+
+def get_back_to_menu_keyboard():
+    """Get inline keyboard with back to menu button."""
+    keyboard = [[InlineKeyboardButton("« Back to Menu", callback_data="back_to_menu")]]
+    return InlineKeyboardMarkup(keyboard)
+
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -154,6 +190,9 @@ Ask @BUBSupport to add it\! 💬
         parse_mode="MarkdownV2",
         disable_web_page_preview=True,
     )
+    
+    # Send main menu
+    await send_main_menu(update, context, chat_id)
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -723,3 +762,390 @@ Ask @BUBSupport to add it\! 💬"""
         parse_mode="MarkdownV2",
         disable_web_page_preview=True,
     )
+
+
+async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /menu command - show main menu."""
+    await send_main_menu(update, context)
+
+
+# Button handlers that trigger conversation states
+async def button_add_island(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle 'Add Island' button press - ask for island name."""
+    chat_id = update.effective_chat.id
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text="🏝 *Add Island Subscription*\n\nPlease enter the island name:",
+        parse_mode="MarkdownV2",
+    )
+    return AWAITING_ISLAND_NAME
+
+
+async def button_add_vessel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle 'Add Vessel' button press - ask for vessel name."""
+    chat_id = update.effective_chat.id
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text="⛴ *Add Vessel Subscription*\n\nPlease enter the vessel name or ID:",
+        parse_mode="MarkdownV2",
+    )
+    return AWAITING_VESSEL_NAME
+
+
+async def button_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle 'Settings' button press."""
+    await settings(update, context)
+    return ConversationHandler.END
+
+
+async def button_unsub(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle 'Unsubscribe' button press."""
+    await unsub(update, context)
+    return ConversationHandler.END
+
+
+async def button_toggle_departures(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle 'Toggle Departures' button press."""
+    await toggledepartures(update, context)
+    return ConversationHandler.END
+
+
+async def button_island_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle 'Island Stats' button press - ask for island name."""
+    chat_id = update.effective_chat.id
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text="📈 *Island Statistics*\n\nPlease enter the island name:",
+        parse_mode="MarkdownV2",
+    )
+    return AWAITING_ISLAND_STATS
+
+
+async def button_vessel_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle 'Vessel Stats' button press - ask for vessel name."""
+    chat_id = update.effective_chat.id
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text="📊 *Vessel Statistics*\n\nPlease enter the vessel name or ID:",
+        parse_mode="MarkdownV2",
+    )
+    return AWAITING_VESSEL_STATS
+
+
+async def button_island_channels(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle 'Island Channels' button press."""
+    await islandchannels(update, context)
+    return ConversationHandler.END
+
+
+async def button_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle 'Help' button press."""
+    await help_command(update, context)
+    return ConversationHandler.END
+
+
+# Text input handlers for conversation states
+async def handle_island_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle island name input after 'Add Island' button."""
+    chat = update.effective_chat
+    user = update.effective_user
+    chat_id = chat.id
+    
+    # Create user if needed
+    if chat.type in ["group", "supergroup", "channel"]:
+        try:
+            create_user(
+                telegram_id=chat_id,
+                chat_type=chat.type,
+                username=None,
+                first_name=chat.title,
+                last_name=None,
+            )
+        except Exception:
+            pass
+    elif user:
+        try:
+            create_user(
+                telegram_id=chat_id,
+                chat_type=chat.type,
+                username=user.username,
+                first_name=user.first_name,
+                last_name=user.last_name,
+            )
+        except Exception:
+            pass
+    
+    name = update.message.text.strip()
+    
+    # Get all matching ports and user's current subscriptions
+    matches = list(Port.select().where(Port.name.contains(name)).limit(10))
+    subs = get_user_subscriptions(chat_id)
+    subbed_ports = {p.id: p for p in subs.get("ports", [])}
+    
+    if not matches:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=f"😕 No islands found matching '{esc_md(name)}'\\. Try a shorter keyword\\.",
+            parse_mode="MarkdownV2",
+        )
+        return ConversationHandler.END
+    
+    # Split matches into already subscribed and available
+    already_subbed = []
+    available = []
+    for p in matches:
+        if p.id in subbed_ports:
+            already_subbed.append(p)
+        else:
+            available.append(p)
+    
+    # If only one match and already subscribed
+    if len(matches) == 1 and matches[0].id in subbed_ports:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=f"🔔 You're already subscribed to _*[{esc_md(matches[0].name)}]({MAP_QUERY}{matches[0].name})*_",
+            reply_markup=get_back_to_menu_keyboard(),
+            parse_mode="MarkdownV2",
+            disable_web_page_preview=True,
+        )
+        return ConversationHandler.END
+    
+    # If only one match and not subscribed
+    if len(matches) == 1:
+        port = matches[0]
+        sub, created, err = subscribe_user_to_port(chat_id, port.id)
+        if sub:
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=f"✅ Subscribed to _*[{esc_md(port.name)}]({MAP_QUERY}{port.name})*_",
+                reply_markup=get_back_to_menu_keyboard(),
+                parse_mode="MarkdownV2",
+                disable_web_page_preview=True,
+            )
+            if not subs.get("vessels"):
+                await context.bot.send_message(
+                    chat_id=chat_id,
+                    text=(
+                        "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\. Use the menu to add one\\."
+                    ),
+                    parse_mode="MarkdownV2",
+                    disable_web_page_preview=True,
+                )
+        else:
+            if err == "limit_reached":
+                await context.bot.send_message(
+                    chat_id=chat_id,
+                    text="⚠️ You've reached the maximum of *20* island subscriptions\\. Remove one to add more\\.",
+                    reply_markup=get_back_to_menu_keyboard(),
+                    parse_mode="MarkdownV2",
+                )
+            else:
+                await context.bot.send_message(
+                    chat_id=chat_id,
+                    text=f"❌ Failed to subscribe to _*{esc_md(port.name)}*_\\. Please try again shortly\\.",
+                    reply_markup=get_back_to_menu_keyboard(),
+                    parse_mode="MarkdownV2",
+                )
+        return ConversationHandler.END
+    
+    # Show already subscribed ports first
+    msg_parts = []
+    if already_subbed:
+        msg_parts.append("*🔔 Already subscribed:*\n")
+        for p in already_subbed:
+            msg_parts.append(f"• _*[{esc_md(p.name)}]({MAP_QUERY}{p.name})*_")
+    
+    # Then show keyboard for available ones
+    keyboard = []
+    for p in available:
+        keyboard.append(
+            [InlineKeyboardButton(p.name, callback_data=f"sub_port:{p.id}")]
+        )
+    
+    if not keyboard:
+        # All matches are already subscribed
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="\n".join(msg_parts),
+            reply_markup=get_back_to_menu_keyboard(),
+            parse_mode="MarkdownV2",
+            disable_web_page_preview=True,
+        )
+        return ConversationHandler.END
+    
+    msg = (
+        "\n".join(msg_parts + ["", "*➕ Available islands to subscribe:*"])
+        if msg_parts
+        else "*➕ Choose an island to subscribe:*"
+    )
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text=msg,
+        reply_markup=reply_markup,
+        parse_mode="MarkdownV2",
+        disable_web_page_preview=True,
+    )
+    return ConversationHandler.END
+
+
+async def handle_vessel_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle vessel name input after 'Add Vessel' button."""
+    chat = update.effective_chat
+    user = update.effective_user
+    chat_id = chat.id
+    
+    # Create user if needed
+    if chat.type in ["group", "supergroup", "channel"]:
+        try:
+            create_user(
+                telegram_id=chat_id,
+                chat_type=chat.type,
+                username=None,
+                first_name=chat.title,
+                last_name=None,
+            )
+        except Exception:
+            pass
+    elif user:
+        try:
+            create_user(
+                telegram_id=chat_id,
+                chat_type=chat.type,
+                username=user.username,
+                first_name=user.first_name,
+                last_name=user.last_name,
+            )
+        except Exception:
+            pass
+    
+    q = update.message.text.strip()
+    
+    # Get user's current subscriptions
+    subs = get_user_subscriptions(chat_id)
+    subbed_vessels = {v.id: v for v in subs.get("vessels", [])}
+    
+    # Get matches and split into already subscribed and available
+    matches = list(Vessel.select().where(Vessel.name.contains(q)).limit(10))
+    already_subbed = []
+    available = []
+    for v in matches:
+        if v.id in subbed_vessels:
+            already_subbed.append(v)
+        else:
+            available.append(v)
+    
+    if not matches:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=f"😕 No vessels found matching '{esc_md(q)}'\\. Try a shorter keyword\\.",
+            parse_mode="MarkdownV2",
+        )
+        return ConversationHandler.END
+    
+    # If only one match and already subscribed
+    if len(matches) == 1 and matches[0].id in subbed_vessels:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=f"🔔 You're already subscribed to _*[{esc_md(matches[0].name)}]({VESSEL_QUERY}{matches[0].id})*_",
+            reply_markup=get_back_to_menu_keyboard(),
+            parse_mode="MarkdownV2",
+            disable_web_page_preview=True,
+        )
+        return ConversationHandler.END
+    
+    # If only one match and not subscribed
+    if len(matches) == 1:
+        v = matches[0]
+        sub, created, err = subscribe_user_to_vessel(chat_id, v.id)
+        if sub:
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=f"✅ Subscribed to _*[{esc_md(v.name)}]({VESSEL_QUERY}{v.id})*_",
+                reply_markup=get_back_to_menu_keyboard(),
+                parse_mode="MarkdownV2",
+                disable_web_page_preview=True,
+            )
+        else:
+            if err == "limit_reached":
+                await context.bot.send_message(
+                    chat_id=chat_id,
+                    text="⚠️ You've reached the maximum of *20* vessel subscriptions\\. Use the menu to remove one\\.",
+                    reply_markup=get_back_to_menu_keyboard(),
+                    parse_mode="MarkdownV2",
+                )
+            else:
+                await context.bot.send_message(
+                    chat_id=chat_id,
+                    text="❌ Failed to subscribe to vessel\\.",
+                    reply_markup=get_back_to_menu_keyboard(),
+                    parse_mode="MarkdownV2",
+                )
+        return ConversationHandler.END
+    
+    # Show already subscribed vessels first
+    msg_parts = []
+    if already_subbed:
+        msg_parts.append("*🔔 Already subscribed:*")
+        for v in already_subbed:
+            msg_parts.append(f"• _*[{esc_md(v.name)}]({VESSEL_QUERY}{v.id})*_")
+    
+    # Then show keyboard for available ones
+    keyboard = []
+    for v in available:
+        keyboard.append(
+            [InlineKeyboardButton(f"{v.name}", callback_data=f"sub_vessel:{v.id}")]
+        )
+    
+    if not keyboard:
+        # All matches are already subscribed
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="\n".join(msg_parts),
+            reply_markup=get_back_to_menu_keyboard(),
+            parse_mode="MarkdownV2",
+            disable_web_page_preview=True,
+        )
+        return ConversationHandler.END
+    
+    msg = (
+        "\n".join(msg_parts + ["", "*➕ Available vessels to subscribe:*"])
+        if msg_parts
+        else "*➕ Choose a vessel to subscribe:*"
+    )
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text=msg,
+        reply_markup=reply_markup,
+        parse_mode="MarkdownV2",
+        disable_web_page_preview=True,
+    )
+    return ConversationHandler.END
+
+
+async def handle_island_stats_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle island name input for stats."""
+    from .stats import island_stats as stats_func
+    
+    # Simulate args from user input
+    context.args = update.message.text.strip().split()
+    await stats_func(update, context)
+    return ConversationHandler.END
+
+
+async def handle_vessel_stats_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle vessel name input for stats."""
+    from .stats import vessel_stats as stats_func
+    
+    # Simulate args from user input
+    context.args = update.message.text.strip().split()
+    await stats_func(update, context)
+    return ConversationHandler.END
+
+
+async def cancel_conversation(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Cancel conversation and return to menu."""
+    await send_main_menu(update, context)
+    return ConversationHandler.END
+

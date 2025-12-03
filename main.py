@@ -3,6 +3,7 @@ from telegram.ext import (
     CommandHandler,
     CallbackQueryHandler,
     MessageHandler,
+    ConversationHandler,
     filters,
 )
 from telegram import BotCommand
@@ -30,6 +31,7 @@ async def _post_init(application):
         await application.bot.set_my_commands(
             [
                 BotCommand("start", "Welcome and overview"),
+                BotCommand("menu", "Show main menu"),
                 BotCommand("help", "How to use the bot"),
                 BotCommand("addport", "Subscribe to an island"),
                 BotCommand("addvessel", "Subscribe to a vessel"),
@@ -75,6 +77,66 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("channelunsub", channelunsub))
     app.add_handler(CommandHandler("togglechanneldepartures", togglechanneldepartures))
     app.add_handler(CommandHandler("removechannel", removechannel))
+
+    # Add menu command
+    app.add_handler(CommandHandler("menu", menu_command))
+
+    # Conversation handler for button-based interactions
+    from handlers import (
+        button_add_island,
+        button_add_vessel,
+        button_settings,
+        button_unsub,
+        button_toggle_departures,
+        button_island_stats,
+        button_vessel_stats,
+        button_island_channels,
+        button_help,
+        handle_island_name,
+        handle_vessel_name,
+        handle_island_stats_name,
+        handle_vessel_stats_name,
+        cancel_conversation,
+        AWAITING_ISLAND_NAME,
+        AWAITING_VESSEL_NAME,
+        AWAITING_ISLAND_STATS,
+        AWAITING_VESSEL_STATS,
+    )
+
+    conversation = ConversationHandler(
+        entry_points=[
+            MessageHandler(filters.Text(["🏝 Add Island"]), button_add_island),
+            MessageHandler(filters.Text(["⛴ Add Vessel"]), button_add_vessel),
+            MessageHandler(filters.Text(["⚙️ Settings"]), button_settings),
+            MessageHandler(filters.Text(["🗑️ Unsubscribe"]), button_unsub),
+            MessageHandler(filters.Text(["🚦 Toggle Departures"]), button_toggle_departures),
+            MessageHandler(filters.Text(["📈 Island Stats"]), button_island_stats),
+            MessageHandler(filters.Text(["📊 Vessel Stats"]), button_vessel_stats),
+            MessageHandler(filters.Text(["📣 Island Channels"]), button_island_channels),
+            MessageHandler(filters.Text(["❓ Help"]), button_help),
+        ],
+        states={
+            AWAITING_ISLAND_NAME: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_island_name),
+            ],
+            AWAITING_VESSEL_NAME: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_vessel_name),
+            ],
+            AWAITING_ISLAND_STATS: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_island_stats_name),
+            ],
+            AWAITING_VESSEL_STATS: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_vessel_stats_name),
+            ],
+        },
+        fallbacks=[
+            CommandHandler("menu", cancel_conversation),
+            CommandHandler("start", cancel_conversation),
+        ],
+        allow_reentry=True,
+    )
+
+    app.add_handler(conversation)
 
     app.add_handler(CallbackQueryHandler(callback_handler))
 
