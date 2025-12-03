@@ -76,12 +76,17 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         subs = get_user_subscriptions(click_id)
                         vessels = subs.get("vessels", [])
                         if not vessels:
-                            await cq.message.reply_text(
-                                text=(
-                                    "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\. Use the menu to add one\\."
-                                ),
-                                parse_mode="MarkdownV2",
-                            )
+                            try:
+                                await cq.message.reply_text(
+                                    text=(
+                                        "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\.\n\n_Please use the menu buttons to add a vessel subscription_"
+                                    ),
+                                    parse_mode="MarkdownV2",
+                                )
+                                return
+                            except Exception:
+                                pass
+                            
                     except Exception:
                         pass
                 except Exception:
@@ -93,8 +98,6 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         text="_🏝 Send another island name to add more_",
                         parse_mode="MarkdownV2",
                     )
-                    # Keep user in AWAITING_ISLAND_NAME state to continue adding islands
-                    return AWAITING_ISLAND_NAME
                 except Exception:
                     pass
             else:
@@ -137,8 +140,6 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         text="_⛴ Send another vessel name to add more_",
                         parse_mode="MarkdownV2",
                     )
-                    # Keep user in AWAITING_VESSEL_NAME state to continue adding vessels
-                    return AWAITING_VESSEL_NAME
                 except Exception:
                     pass
             else:
@@ -210,12 +211,17 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     vessels = subs.get("vessels", [])
                     # Send warning whenever user now has zero vessel subscriptions (regardless of islands)
                     if not vessels:
-                        await cq.message.reply_text(
-                            text=(
-                                "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\. Use the menu to add one\\."
-                            ),
-                            parse_mode="MarkdownV2",
-                        )
+                        try:
+                            await cq.message.reply_text(
+                                text=(
+                                    "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\.\n\n_Please use the menu buttons to add a vessel subscription_"
+                                ),
+                                parse_mode="MarkdownV2",
+                            )
+                            return
+                        except Exception:
+                            pass
+                        
                 except Exception:
                     pass
             else:

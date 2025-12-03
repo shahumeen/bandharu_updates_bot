@@ -203,7 +203,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 • Limits: Subscribe up to <b>20</b> islands and <b>20</b> vessels
 
-• Keep island subscriptions empty to recieve notifications for all the islands your vessels visit
+• Keep island subscriptions empty to receive notifications for all the islands your vessels visit
 
 <i>For more help contact:</i> @shahumeen
 
@@ -351,7 +351,7 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.send_message(
                     chat_id=chat_id,
                     text=(
-                        "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\. Use /addvessel to add one\\."
+                        "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\.\n\n_Please use the menu buttons to add a vessel subscription_"
                     ),
                     parse_mode="MarkdownV2",
                     disable_web_page_preview=True,
@@ -589,7 +589,7 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Hint: if user has island subscriptions but no vessel subscriptions
     if port_list and not vessel_list:
         lines.append(
-            "\n━━━━━━━━━━━━━━━━━━━━━━━\n\n⚠️ To receive notifications you also need at least *ONE* vessel subscription\\. Use /addvessel to add one\\."
+            "\n━━━━━━━━━━━━━━━━━━━━━━━\n\n⚠️ To receive notifications you also need at least *ONE* vessel subscription\\.\n\n_Please use the menu buttons to add a vessel subscription_"
         ),
 
     await context.bot.send_message(
@@ -630,8 +630,7 @@ async def unsub(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(
             chat_id=chat_id,
             text=(
-                "🔎 No active subscriptions found\\. Use /addport or /addvessel to get started\\!\n\n"
-            ),
+                "🔎 No active subscriptions found\\.\n\n_Use the menu buttons to get started\\!_"),
             parse_mode="MarkdownV2",
         )
         return
@@ -873,22 +872,25 @@ async def handle_island_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 parse_mode="MarkdownV2",
                 disable_web_page_preview=True,
             )
-            await context.bot.send_message(
-                chat_id=chat_id,
-                text=f"_🏝 Send another island name to add more_",
-                parse_mode="MarkdownV2",
-                disable_web_page_preview=True,
-            )
             
             if not subs.get("vessels"):
                 await context.bot.send_message(
                     chat_id=chat_id,
                     text=(
-                        "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\. Use the menu to add one\\."
+                        "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\.\n\n_Please use the menu buttons to add a vessel subscription_"
                     ),
                     parse_mode="MarkdownV2",
                     disable_web_page_preview=True,
                 )
+                return AWAITING_VESSEL_NAME
+            else:
+                await context.bot.send_message(
+                chat_id=chat_id,
+                text=f"_🏝 Send another island name to add more_",
+                parse_mode="MarkdownV2",
+                disable_web_page_preview=True,
+            )
+
         else:
             if err == "limit_reached":
                 await context.bot.send_message(
@@ -941,7 +943,7 @@ async def handle_island_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
         parse_mode="MarkdownV2",
         disable_web_page_preview=True,
     )
-    return ConversationHandler.END
+    return AWAITING_ISLAND_NAME
 
 
 async def handle_vessel_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1078,7 +1080,7 @@ async def handle_vessel_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
         parse_mode="MarkdownV2",
         disable_web_page_preview=True,
     )
-    return ConversationHandler.END
+    return AWAITING_VESSEL_NAME
 
 
 async def handle_island_stats_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
