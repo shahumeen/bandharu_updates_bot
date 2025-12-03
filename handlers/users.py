@@ -28,8 +28,8 @@ def send_main_menu(update: Update = None, context: ContextTypes.DEFAULT_TYPE = N
     """Send main menu with reply keyboard buttons."""
     keyboard = [
         [KeyboardButton("🏝 Add Island"), KeyboardButton("⛴ Add Vessel")],
-        [KeyboardButton("⚙️ Settings"), KeyboardButton("🗑️ Unsubscribe")],
-        [KeyboardButton("🚦 Toggle Departures")],
+        [KeyboardButton("🚦 Toggle Departures"), KeyboardButton("🗑️ Unsubscribe")],
+        [KeyboardButton("⚙️ Settings")],
         [KeyboardButton("📈 Island Stats"), KeyboardButton("📊 Vessel Stats")],
         [KeyboardButton("📣 Island Channels"), KeyboardButton("❓ Help")],
     ]
@@ -44,13 +44,6 @@ def send_main_menu(update: Update = None, context: ContextTypes.DEFAULT_TYPE = N
         reply_markup=reply_markup,
         parse_mode="MarkdownV2",
     )
-
-
-def get_back_to_menu_keyboard():
-    """Get inline keyboard with back to menu button."""
-    keyboard = [[InlineKeyboardButton("« Back to Menu", callback_data="back_to_menu")]]
-    return InlineKeyboardMarkup(keyboard)
-
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -904,7 +897,6 @@ async def handle_island_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await context.bot.send_message(
             chat_id=chat_id,
             text=f"🔔 You're already subscribed to _*[{esc_md(matches[0].name)}]({MAP_QUERY}{matches[0].name})*_",
-            reply_markup=get_back_to_menu_keyboard(),
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )
@@ -918,7 +910,6 @@ async def handle_island_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
             await context.bot.send_message(
                 chat_id=chat_id,
                 text=f"✅ Subscribed to _*[{esc_md(port.name)}]({MAP_QUERY}{port.name})*_",
-                reply_markup=get_back_to_menu_keyboard(),
                 parse_mode="MarkdownV2",
                 disable_web_page_preview=True,
             )
@@ -936,14 +927,12 @@ async def handle_island_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 await context.bot.send_message(
                     chat_id=chat_id,
                     text="⚠️ You've reached the maximum of *20* island subscriptions\\. Remove one to add more\\.",
-                    reply_markup=get_back_to_menu_keyboard(),
                     parse_mode="MarkdownV2",
                 )
             else:
                 await context.bot.send_message(
                     chat_id=chat_id,
                     text=f"❌ Failed to subscribe to _*{esc_md(port.name)}*_\\. Please try again shortly\\.",
-                    reply_markup=get_back_to_menu_keyboard(),
                     parse_mode="MarkdownV2",
                 )
         return ConversationHandler.END
@@ -967,7 +956,6 @@ async def handle_island_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await context.bot.send_message(
             chat_id=chat_id,
             text="\n".join(msg_parts),
-            reply_markup=get_back_to_menu_keyboard(),
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )
@@ -1048,7 +1036,6 @@ async def handle_vessel_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await context.bot.send_message(
             chat_id=chat_id,
             text=f"🔔 You're already subscribed to _*[{esc_md(matches[0].name)}]({VESSEL_QUERY}{matches[0].id})*_",
-            reply_markup=get_back_to_menu_keyboard(),
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )
@@ -1062,7 +1049,6 @@ async def handle_vessel_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
             await context.bot.send_message(
                 chat_id=chat_id,
                 text=f"✅ Subscribed to _*[{esc_md(v.name)}]({VESSEL_QUERY}{v.id})*_",
-                reply_markup=get_back_to_menu_keyboard(),
                 parse_mode="MarkdownV2",
                 disable_web_page_preview=True,
             )
@@ -1071,14 +1057,12 @@ async def handle_vessel_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 await context.bot.send_message(
                     chat_id=chat_id,
                     text="⚠️ You've reached the maximum of *20* vessel subscriptions\\. Use the menu to remove one\\.",
-                    reply_markup=get_back_to_menu_keyboard(),
                     parse_mode="MarkdownV2",
                 )
             else:
                 await context.bot.send_message(
                     chat_id=chat_id,
                     text="❌ Failed to subscribe to vessel\\.",
-                    reply_markup=get_back_to_menu_keyboard(),
                     parse_mode="MarkdownV2",
                 )
         return ConversationHandler.END
@@ -1102,7 +1086,6 @@ async def handle_vessel_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await context.bot.send_message(
             chat_id=chat_id,
             text="\n".join(msg_parts),
-            reply_markup=get_back_to_menu_keyboard(),
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )

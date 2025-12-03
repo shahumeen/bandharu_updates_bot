@@ -189,11 +189,9 @@ async def send_port_stats(context, chat_id, port_id):
         formatted_response = (
             f"{highlights}\n{vessel_rankings}{peak_hours}{daily_totals}"
         )
-        from .users import get_back_to_menu_keyboard
         await context.bot.send_message(
             chat_id=chat_id,
             text=formatted_response,
-            reply_markup=get_back_to_menu_keyboard(),
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )
@@ -420,11 +418,9 @@ async def send_vessel_stats(context, chat_id, vessel_id: int):
         )
 
         text = header + highlights + activity_block + daily_block + history_block + hashtags_block
-        from .users import get_back_to_menu_keyboard
         await context.bot.send_message(
             chat_id=chat_id,
             text=text,
-            reply_markup=get_back_to_menu_keyboard(),
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )

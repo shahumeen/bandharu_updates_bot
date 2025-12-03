@@ -63,11 +63,9 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             sub, created, err = subscribe_user_to_port(click_id, pid)
             if sub:
                 try:
-                    from .users import get_back_to_menu_keyboard
                     port = Port.get_by_id(pid)
                     await cq.edit_message_text(
                         text=f"✅ Subscribed to _*[{esc_md(port.name)}]({MAP_QUERY}{port.name})*_",
-                        reply_markup=get_back_to_menu_keyboard(),
                         parse_mode="MarkdownV2",
                         disable_web_page_preview=True,
                     )
@@ -113,11 +111,9 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             sub, created, err = subscribe_user_to_vessel(click_id, vid)
             if sub:
                 try:
-                    from .users import get_back_to_menu_keyboard
                     v = Vessel.get_by_id(vid)
                     await cq.edit_message_text(
                         text=f"✅ Subscribed to _*[{esc_md(v.name)}]({VESSEL_QUERY}{v.id})*_",
-                        reply_markup=get_back_to_menu_keyboard(),
                         parse_mode="MarkdownV2",
                         disable_web_page_preview=True,
                     )
@@ -148,11 +144,9 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ok = unsubscribe_user_from_port(click_id, pid)
             if ok:
                 try:
-                    from .users import get_back_to_menu_keyboard
                     port = Port.get_by_id(pid)
                     await cq.edit_message_text(
                         text=f"🔕 Unsubscribed from _*[{esc_md(port.name)}]({MAP_QUERY}{port.name})*_",
-                        reply_markup=get_back_to_menu_keyboard(),
                         parse_mode="MarkdownV2",
                         disable_web_page_preview=True,
                     )
@@ -177,11 +171,9 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ok = unsubscribe_user_from_vessel(click_id, vid)
             if ok:
                 try:
-                    from .users import get_back_to_menu_keyboard
                     v = Vessel.get_by_id(vid)
                     await cq.edit_message_text(
                         text=f"🔕 Unsubscribed from  _*[{esc_md(v.name)}]({VESSEL_QUERY}{v.id})*_",
-                        reply_markup=get_back_to_menu_keyboard(),
                         parse_mode="MarkdownV2",
                         disable_web_page_preview=True,
                     )
@@ -517,18 +509,5 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception:
             await cq.edit_message_text(text="Invalid selection.")
     
-    elif data == "back_to_menu":
-        """Handle back to menu button - show main menu."""
-        try:
-            from .users import send_main_menu
-            await cq.answer("Returning to menu...")
-            # Delete the message with the back button
-            try:
-                await cq.message.delete()
-            except Exception:
-                pass
-            # Send main menu
-            await send_main_menu(context=context, chat_id=chat_id)
-        except Exception:
-            await cq.answer("Failed to return to menu.")
+
 
