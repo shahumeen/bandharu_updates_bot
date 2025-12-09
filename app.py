@@ -22,8 +22,10 @@ def _reset_portlogs_on_startup() -> None:
     try:
         from models import PortLog
 
-        # Update all portlogs to set notified=True
-        updated_count = PortLog.update({PortLog.notified: True}).execute()
+        # Update only portlogs with notified=False to set notified=True
+        updated_count = PortLog.update({PortLog.notified: True}).where(
+            PortLog.notified == False
+        ).execute()
         print(
             f"Reset {updated_count} portlogs notified status to true on startup.",
             flush=True,
