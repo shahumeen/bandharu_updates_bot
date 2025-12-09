@@ -79,7 +79,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                             try:
                                 await cq.message.reply_text(
                                     text=(
-                                        "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\.\n\n_Please use the menu buttons to add a vessel subscription_"
+                                        "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\.\n\n_Please use the menu buttons to add a vessel subscription_ ⛴"
                                     ),
                                     parse_mode="MarkdownV2",
                                 )
@@ -95,7 +95,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 # Send follow-up message to invite another subscription and keep user in conversation
                 try:
                     await cq.message.reply_text(
-                        text="_🏝 Send another island name to add more_",
+                        text="🏝 _Send another island name to add more_",
                         parse_mode="MarkdownV2",
                     )
                 except Exception:
@@ -137,7 +137,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 # Send follow-up message to invite another subscription and keep user in conversation
                 try:
                     await cq.message.reply_text(
-                        text="_⛴ Send another vessel name to add more_",
+                        text="⛴ _Send another vessel name to add more_",
                         parse_mode="MarkdownV2",
                     )
                 except Exception:
@@ -214,7 +214,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         try:
                             await cq.message.reply_text(
                                 text=(
-                                    "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\.\n\n_Please use the menu buttons to add a vessel subscription_"
+                                    "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\.\n\n_Please use the menu buttons to add a vessel subscription_ ⛴"
                                 ),
                                 parse_mode="MarkdownV2",
                             )

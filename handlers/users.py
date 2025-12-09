@@ -351,7 +351,7 @@ async def subisland(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.send_message(
                     chat_id=chat_id,
                     text=(
-                        "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\.\n\n_Please use the menu buttons to add a vessel subscription_"
+                        "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\.\n\n_Please use the menu buttons to add a vessel subscription_ ⛴"
                     ),
                     parse_mode="MarkdownV2",
                     disable_web_page_preview=True,
@@ -589,7 +589,7 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Hint: if user has island subscriptions but no vessel subscriptions
     if port_list and not vessel_list:
         lines.append(
-            "\n━━━━━━━━━━━━━━━━━━━━━━━\n\n⚠️ To receive notifications you also need at least *ONE* vessel subscription\\.\n\n_Please use the menu buttons to add a vessel subscription_"
+            "\n━━━━━━━━━━━━━━━━━━━━━━━\n\n⚠️ To receive notifications you also need at least *ONE* vessel subscription\\.\n\n_Please use the menu buttons to add a vessel subscription_ ⛴"
         ),
 
     await context.bot.send_message(
@@ -630,7 +630,7 @@ async def unsub(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(
             chat_id=chat_id,
             text=(
-                "🔎 No active subscriptions found\\.\n\n_Use the menu buttons to get started\\!_"),
+                "🔎 No active subscriptions found\\.\n\n👾 _Use the menu buttons to get started\\!_"),
             parse_mode="MarkdownV2",
         )
         return
@@ -837,7 +837,7 @@ async def handle_island_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if not matches:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"😕 No islands found matching _*'{esc_md(name)}'*_\n\n_Please send another_",
+            text=f"😕 No islands found matching _*'{esc_md(name)}'*_\n\n_Please send another_ 🏝",
             parse_mode="MarkdownV2",
         )
         return AWAITING_ISLAND_NAME
@@ -855,7 +855,7 @@ async def handle_island_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if len(matches) == 1 and matches[0].id in subbed_ports:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"🔔 You're already subscribed to _*[{esc_md(matches[0].name)}]({MAP_QUERY}{matches[0].name})*_\n\n_Please send another_",
+            text=f"🔔 You're already subscribed to _*[{esc_md(matches[0].name)}]({MAP_QUERY}{matches[0].name})*_\n\n_Please send another_ 🏝",
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )
@@ -877,7 +877,7 @@ async def handle_island_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 await context.bot.send_message(
                     chat_id=chat_id,
                     text=(
-                        "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\.\n\n_Please use the menu buttons to add a vessel subscription_"
+                        "⚠️ To receive notifications you also need at least *ONE* vessel subscription\\.\n\n_Please use the menu buttons to add a vessel subscription_ ⛴"
                     ),
                     parse_mode="MarkdownV2",
                     disable_web_page_preview=True,
@@ -886,7 +886,7 @@ async def handle_island_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
             else:
                 await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"_🏝 Send another island name to add more_",
+                text=f"🏝 _Send another island name to add more_",
                 parse_mode="MarkdownV2",
                 disable_web_page_preview=True,
             )
@@ -924,7 +924,7 @@ async def handle_island_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
         # All matches are already subscribed
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f'{"\n".join(msg_parts)}\n\n_Please send another_',
+            text=f'{"\n".join(msg_parts)}\n\n_Please send another_ 🏝',
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )
@@ -995,7 +995,7 @@ async def handle_vessel_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if not matches:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"😕 No vessels found matching _*'{esc_md(q)}'*_\n\n_Please send another_",
+            text=f"😕 No vessels found matching _*'{esc_md(q)}'*_\n\n_Please send another_ ⛴",
             parse_mode="MarkdownV2",
         )
         return AWAITING_VESSEL_NAME
@@ -1004,7 +1004,7 @@ async def handle_vessel_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if len(matches) == 1 and matches[0].id in subbed_vessels:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"🔔 You're already subscribed to _*[{esc_md(matches[0].name)}]({VESSEL_QUERY}{matches[0].id})*_\n\n_Please send another_",
+            text=f"🔔 You're already subscribed to _*[{esc_md(matches[0].name)}]({VESSEL_QUERY}{matches[0].id})*_\n\n_Please send another_ ⛴",
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )
@@ -1023,7 +1023,7 @@ async def handle_vessel_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
             )
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"_⛴ Send another vessel name to add more_",
+                text=f"⛴ _Send another vessel name to add more_",
                 parse_mode="MarkdownV2",
                 disable_web_page_preview=True,
             )
@@ -1061,7 +1061,7 @@ async def handle_vessel_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
         # All matches are already subscribed
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f'{"\n".join(msg_parts)}\n\n_Please send another_',
+            text=f'{"\n".join(msg_parts)}\n\n_Please send another_ ⛴',
             parse_mode="MarkdownV2",
             disable_web_page_preview=True,
         )
@@ -1094,7 +1094,7 @@ async def handle_island_stats_name(update: Update, context: ContextTypes.DEFAULT
     if not matches:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"😕 No islands found matching _*'{esc_md(name)}'*_\n\n_Please send another_",
+            text=f"😕 No islands found matching _*'{esc_md(name)}'*_\n\n_Please send another_ 🏝",
             parse_mode="MarkdownV2",
         )
         return AWAITING_ISLAND_STATS
@@ -1148,7 +1148,7 @@ async def handle_vessel_stats_name(update: Update, context: ContextTypes.DEFAULT
     if not matches:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"😕 No vessels found matching _*'{esc_md(query)}'*_\n\n_Please send another_",
+            text=f"😕 No vessels found matching _*'{esc_md(query)}'*_\n\n_Please send another_ ⛴",
             parse_mode="MarkdownV2",
         )
         return AWAITING_VESSEL_STATS
