@@ -38,7 +38,7 @@ male_ports_lst = (
     "Male Harbour",
     "Male Airport Jetty",
 )
-RATE_LIMIT_DELAY = 0.04  # seconds -> 25 messages / second max
+RATE_LIMIT_DELAY = 0.1
 
 
 async def _notify_admin_of_block(chat_id: int, reason: str, context) -> None:
@@ -437,7 +437,11 @@ def _format_channel_departure(event: dict) -> Optional[str]:
     """Format a departure message for the main updates channel."""
     try:
         contact_val = event.get("contact")
-        contact = f"\n📞 *Contact:* {escape_markdown(contact_val, version=2)}" if contact_val else ""
+        contact = (
+            f"\n📞 *Contact:* {escape_markdown(contact_val, version=2)}"
+            if contact_val
+            else ""
+        )
         vessel_name = escape_markdown(str(event.get("name", "")).upper(), version=2)
         vessel_type = escape_markdown(event.get("vessel_type") or "Unknown", version=2)
         departure_time = escape_markdown(
