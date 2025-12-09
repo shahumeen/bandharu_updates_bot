@@ -95,7 +95,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 # Send follow-up message to invite another subscription and keep user in conversation
                 try:
                     await cq.message.reply_text(
-                        text="🏝 _Send another island name to add more_",
+                        text="🏝 _Send an island name to add more_",
                         parse_mode="MarkdownV2",
                     )
                 except Exception:
@@ -103,7 +103,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 if err == "limit_reached":
                     await cq.edit_message_text(
-                        text="⚠️ You've reached the maximum of *20* island subscriptions\\. Remove one to add more\\.",
+                        text="⚠️ You've reached the maximum of *20* island subscriptions\\.\n\n🗑 _Remove one to add more_",
                         parse_mode="MarkdownV2",
                     )
                 else:
@@ -137,7 +137,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 # Send follow-up message to invite another subscription and keep user in conversation
                 try:
                     await cq.message.reply_text(
-                        text="⛴ _Send another vessel name to add more_",
+                        text="⛴ _Send a vessel name to add more_",
                         parse_mode="MarkdownV2",
                     )
                 except Exception:
@@ -145,7 +145,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 if err == "limit_reached":
                     await cq.edit_message_text(
-                        text="⚠️ You've reached the maximum of *20* vessel subscriptions\\. Use the menu to remove one\\.",
+                        text="⚠️ You've reached the maximum of *20* vessel subscriptions\\.\n\n🗑 _Remove one to add more_",
                         parse_mode="MarkdownV2",
                     )
                 else:

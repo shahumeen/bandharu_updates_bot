@@ -87,9 +87,9 @@ _Your friendly vessel tracking assistant for the Maldives_ 🌊
 
 *1* • Use the buttons below and subscribe to islands 🏝️ and vessels ⛴️
 
-*2* • Get instant notifications for arrivals and departures
+*2* • Get instant notifications for arrivals and departures 🔔
 
-*3* • Never miss a vessel 😇
+*3* • Never miss a vessel 😌
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -205,7 +205,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 • Keep island subscriptions empty to receive notifications for all the islands your vessels visit
 
-<i>For more help contact:</i> @shahumeen
+<i>Need more help? Contact:</i> @shahumeen
 
 {user_count}
 """
@@ -886,7 +886,7 @@ async def handle_island_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
             else:
                 await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"🏝 _Send another island name to add more_",
+                text=f"🏝 _Send an island name to add more_",
                 parse_mode="MarkdownV2",
                 disable_web_page_preview=True,
             )
@@ -895,7 +895,7 @@ async def handle_island_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
             if err == "limit_reached":
                 await context.bot.send_message(
                     chat_id=chat_id,
-                    text="⚠️ You've reached the maximum of *20* island subscriptions\\. Remove one to add more\\.",
+                    text="⚠️ You've reached the maximum of *20* island subscriptions\\.\n\n🗑 _Remove one to add more_",
                     parse_mode="MarkdownV2",
                 )
             else:
@@ -1023,7 +1023,7 @@ async def handle_vessel_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
             )
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=f"⛴ _Send another vessel name to add more_",
+                text=f"⛴ _Send a vessel name to add more_",
                 parse_mode="MarkdownV2",
                 disable_web_page_preview=True,
             )
@@ -1032,7 +1032,7 @@ async def handle_vessel_name(update: Update, context: ContextTypes.DEFAULT_TYPE)
             if err == "limit_reached":
                 await context.bot.send_message(
                     chat_id=chat_id,
-                    text="⚠️ You've reached the maximum of *20* vessel subscriptions\\. Use the menu to remove one\\.",
+                    text="⚠️ You've reached the maximum of *20* vessel subscriptions\\.\n\n🗑 _Remove one to add more_",
                     parse_mode="MarkdownV2",
                 )
             else:
