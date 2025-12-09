@@ -17,6 +17,22 @@ load_dotenv()
 FOLLOWME_API_KEY = os.getenv("FOLLOWME_API")
 
 
+def _reset_portlogs_on_startup() -> None:
+    """Reset all portlogs notified status to true on bot startup."""
+    try:
+        from models import PortLog
+
+        # Update all portlogs to set notified=True
+        updated_count = PortLog.update({PortLog.notified: True}).execute()
+        print(
+            f"Reset {updated_count} portlogs notified status to true on startup.",
+            flush=True,
+        )
+    except Exception as e:
+        print(f"Error resetting portlogs on startup: {e}", flush=True)
+        traceback.print_exc()
+
+
 def _start_api_calls_loop() -> None:
     """Start the API update loop from api_calls.py (blocking call)."""
     try:
@@ -31,6 +47,9 @@ def _start_api_calls_loop() -> None:
 
 def _run_bot() -> None:
     """Configure handlers and run the Telegram bot from main.py (blocking)."""
+    # Reset portlogs notified status on bot startup
+    _reset_portlogs_on_startup()
+
     # Import inside to ensure main.py module-level bootstrap runs once
     import main as bot_main  # noqa: WPS433 - intentional runtime import
 
@@ -128,10 +147,14 @@ def _run_bot() -> None:
             MessageHandler(filters.Text(["⛴ Add Vessel"]), button_add_vessel),
             MessageHandler(filters.Text(["⚙️ Settings"]), button_settings),
             MessageHandler(filters.Text(["🗑️ Unsubscribe"]), button_unsub),
-            MessageHandler(filters.Text(["🚦 Toggle Departures"]), button_toggle_departures),
+            MessageHandler(
+                filters.Text(["🚦 Toggle Departures"]), button_toggle_departures
+            ),
             MessageHandler(filters.Text(["📈 Island Stats"]), button_island_stats),
             MessageHandler(filters.Text(["📊 Vessel Stats"]), button_vessel_stats),
-            MessageHandler(filters.Text(["📣 Island Channels"]), button_island_channels),
+            MessageHandler(
+                filters.Text(["📣 Island Channels"]), button_island_channels
+            ),
             MessageHandler(filters.Text(["❓ Help"]), button_help),
         ],
         states={
@@ -142,10 +165,14 @@ def _run_bot() -> None:
                 MessageHandler(filters.TEXT & ~filters.COMMAND, handle_vessel_name),
             ],
             AWAITING_ISLAND_STATS: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_island_stats_name),
+                MessageHandler(
+                    filters.TEXT & ~filters.COMMAND, handle_island_stats_name
+                ),
             ],
             AWAITING_VESSEL_STATS: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_vessel_stats_name),
+                MessageHandler(
+                    filters.TEXT & ~filters.COMMAND, handle_vessel_stats_name
+                ),
             ],
         },
         fallbacks=[
