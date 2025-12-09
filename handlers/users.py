@@ -89,13 +89,11 @@ _Your friendly vessel tracking assistant for the Maldives_ 🌊
 
 *2* • Get instant notifications for arrivals and departures 🔔
 
-*3* • Never miss a vessel 😌
+*3* • Never miss a vessel 😌✨
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 
 👾 _Uses FollowMe\\.mv API_
-
-`</> Made with ❤️ by` @shahumeen
 """
     # Send and attempt to pin the branding image every /start
     try:
@@ -709,7 +707,7 @@ async def islandchannels(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = r"""📣 *Island Channels*
 
 Want _*all activity*_ for specific islands\?  
-Join our dedicated [Bandharu update channels](https://telegra.ph/Island-update-Channels-11-08)
+Join [Bandharu update channels](https://telegra.ph/Island-update-Channels-11-08)
 
 _Can't find your island's channel\?_  
 Ask @shahumeen to add it\! 💬"""
