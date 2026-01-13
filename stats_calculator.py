@@ -11,7 +11,7 @@ def get_daily_port_stats(port_id: int, peak_limit: int = 5) -> dict:
     """
     # Get yesterday's date range in MV time
     mv_tz = ZoneInfo("Indian/Maldives")
-    now = datetime.now(mv_tz)
+    now = datetime.now(timezone.utc).astimezone(mv_tz)
     yesterday = now.date() - timedelta(days=1)
     start_time = datetime.combine(yesterday, datetime.min.time()).replace(tzinfo=mv_tz)
     end_time = datetime.combine(yesterday, datetime.max.time()).replace(tzinfo=mv_tz)
@@ -334,7 +334,7 @@ def get_vessel_stats(vessel_id: int, peak_limit: int = 5) -> dict:
     mv_tz = ZoneInfo("Indian/Maldives")
     utc = ZoneInfo("UTC")
 
-    now_mv = datetime.now(mv_tz)
+    now_mv = datetime.now(timezone.utc).astimezone(mv_tz)
     # Use last midnight as the window end, and 7 days before that as start
     window_end_mv = now_mv.replace(hour=0, minute=0, second=0, microsecond=0)
     window_start_mv = window_end_mv - timedelta(days=7)
