@@ -109,7 +109,7 @@ def _run_bot() -> None:
         removechannel,
         broadcast,
     )
-    from send_messages import notify_job
+    from send_messages import notify_job, send_db_backup
     from telegram.error import NetworkError
     import logging
 
@@ -117,6 +117,9 @@ def _run_bot() -> None:
 
     # Schedule background notifications job
     bot_main.app.job_queue.run_repeating(notify_job, interval=15, first=3.0)
+
+    # Schedule database backup job (every hour)
+    bot_main.app.job_queue.run_repeating(send_db_backup, interval=3600, first=60.0)
 
     # Register command handlers (users)
     bot_main.app.add_handler(CommandHandler("start", start))

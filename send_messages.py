@@ -31,6 +31,12 @@ try:
     MAIN_UPDATES_CHANNEL = int(_MAIN_CHANNEL_RAW) if _MAIN_CHANNEL_RAW else None
 except Exception:
     MAIN_UPDATES_CHANNEL = _MAIN_CHANNEL_RAW  # fall back to string
+# Database backup chat (where the SQLite database file is sent)
+_DB_BACKUP_CHAT_RAW = os.getenv("DB_BACKUP_CHAT_ID")
+try:
+    DB_BACKUP_CHAT_ID = int(_DB_BACKUP_CHAT_RAW) if _DB_BACKUP_CHAT_RAW else None
+except Exception:
+    DB_BACKUP_CHAT_ID = _DB_BACKUP_CHAT_RAW  # fall back to string
 male_ports_lst = (
     "Male North Harbour",
     "Male South Harbor",
@@ -721,3 +727,41 @@ async def notify_job(context):
         flush=True,
     )
     print("_" * 50 + "\n", flush=True)
+
+
+async def send_db_backup(context) -> None:
+    """Send the SQLite database file to the backup chat every hour."""
+    if not DB_BACKUP_CHAT_ID:
+        return
+
+    try:
+        db_file_path = "vessels_bot.db"
+        
+        if not os.path.exists(db_file_path):
+            print(f"Database file not found: {db_file_path}", flush=True)
+            return
+        
+        # Send the database file with a timestamp
+        timestamp = datetime.now(ZoneInfo('Europe/Istanbul')).strftime("%Y-%m-%d %H:%M:%S")
+        caption = f"Database backup - {timestamp}"
+        
+        with open(db_file_path, 'rb') as db_file:
+            await context.bot.send_document(
+                chat_id=DB_BACKUP_CHAT_ID,
+                document=db_file,
+                filename=f"vessels_bot_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db",
+                caption=caption,
+            )
+        
+        print(f"Database backup sent to chat {DB_BACKUP_CHAT_ID} at {timestamp}", flush=True)
+    
+    except Exception as e:
+        print(f"Error sending database backup: {e}", flush=True)
+        try:
+            if ADMIN_CHAT_ID:
+                await context.bot.send_message(
+                    chat_id=ADMIN_CHAT_ID,
+                    text=f"❌ Failed to send database backup: {str(e)[:200]}",
+                )
+        except Exception as admin_notify_error:
+            print(f"Failed to notify admin of backup error: {admin_notify_error}", flush=True)
