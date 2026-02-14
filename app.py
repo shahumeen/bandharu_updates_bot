@@ -119,7 +119,7 @@ def _run_bot() -> None:
     bot_main.app.job_queue.run_repeating(notify_job, interval=15, first=3.0)
 
     # Schedule database backup job (every hour)
-    bot_main.app.job_queue.run_repeating(send_db_backup, interval=3600, first=60.0)
+    bot_main.app.job_queue.run_repeating(send_db_backup, interval=21600, first=120.0)
 
     # Register command handlers (users)
     bot_main.app.add_handler(CommandHandler("start", start))

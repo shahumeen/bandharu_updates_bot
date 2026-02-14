@@ -757,11 +757,28 @@ async def send_db_backup(context) -> None:
     
     except Exception as e:
         print(f"Error sending database backup: {e}", flush=True)
-        try:
-            if ADMIN_CHAT_ID:
-                await context.bot.send_message(
-                    chat_id=ADMIN_CHAT_ID,
-                    text=f"❌ Failed to send database backup: {str(e)[:200]}",
-                )
-        except Exception as admin_notify_error:
-            print(f"Failed to notify admin of backup error: {admin_notify_error}", flush=True)
+        
+        # Check if this is a retry attempt (look for a special flag in context.job_queue)
+        is_retry = getattr(context, '_db_backup_retry_scheduled', False)
+        
+        if not is_retry:
+            # First failure: schedule a retry after 30 minutes
+            print("Scheduling database backup retry in 30 minutes...", flush=True)
+            context._db_backup_retry_scheduled = True
+            context.job_queue.run_once(
+                send_db_backup,
+                when=1800,  # 30 minutes in seconds
+                name="db_backup_retry",
+            )
+        else:
+            # Retry failed: notify admin
+            print(f"Database backup retry failed after 30 minutes. Notifying admin.", flush=True)
+            context._db_backup_retry_scheduled = False
+            try:
+                if ADMIN_CHAT_ID:
+                    await context.bot.send_message(
+                        chat_id=ADMIN_CHAT_ID,
+                        text=f"⚠️ CRITICAL: Database backup failed twice. Error: {str(e)[:150]}",
+                    )
+            except Exception as admin_notify_error:
+                print(f"Failed to notify admin of backup error: {admin_notify_error}", flush=True)
