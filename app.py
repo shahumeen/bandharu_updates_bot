@@ -109,7 +109,7 @@ def _run_bot() -> None:
         removechannel,
         broadcast,
     )
-    from send_messages import notify_job, send_db_backup
+    from send_messages import notify_job, send_db_backup, update_contacts_job
     from telegram.error import NetworkError
     import logging
 
@@ -120,6 +120,9 @@ def _run_bot() -> None:
 
     # Schedule database backup job (every hour)
     bot_main.app.job_queue.run_repeating(send_db_backup, interval=21600, first=120.0)
+
+    # Schedule daily contacts update job (every 24 hours)
+    bot_main.app.job_queue.run_repeating(update_contacts_job, interval=86400, first=300.0)
 
     # Register command handlers (users)
     bot_main.app.add_handler(CommandHandler("start", start))

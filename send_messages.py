@@ -782,3 +782,42 @@ async def send_db_backup(context) -> None:
                     )
             except Exception as admin_notify_error:
                 print(f"Failed to notify admin of backup error: {admin_notify_error}", flush=True)
+
+
+async def update_contacts_job(context) -> None:
+    """Update vessel contact information daily and notify admin."""
+    try:
+        # Import get_contacts module
+        from get_contacts import update_contacts, save_to_json, load_contacts_from_file
+        
+        print("Starting daily contacts update...", flush=True)
+        timestamp = datetime.now(ZoneInfo('Europe/Istanbul')).strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Run the update functions
+        update_contacts(update_all=False)
+        save_to_json()
+        load_contacts_from_file()
+        
+        print(f"Contacts update completed at {timestamp}", flush=True)
+        
+        # Notify admin of successful update
+        if ADMIN_CHAT_ID:
+            try:
+                await context.bot.send_message(
+                    chat_id=ADMIN_CHAT_ID,
+                    text=f"✅ Daily contacts update completed at {timestamp}",
+                )
+            except Exception as notify_err:
+                print(f"Failed to notify admin of contacts update: {notify_err}", flush=True)
+    
+    except Exception as e:
+        print(f"Error during contacts update: {e}", flush=True)
+        # Notify admin of failure
+        if ADMIN_CHAT_ID:
+            try:
+                await context.bot.send_message(
+                    chat_id=ADMIN_CHAT_ID,
+                    text=f"❌ Daily contacts update failed: {str(e)[:150]}",
+                )
+            except Exception as notify_err:
+                print(f"Failed to notify admin of contacts update error: {notify_err}", flush=True)
