@@ -121,8 +121,8 @@ def _run_bot() -> None:
     # Schedule database backup job (every hour)
     bot_main.app.job_queue.run_repeating(send_db_backup, interval=21600, first=120.0)
 
-    # Schedule daily contacts update job (every 24 hours)
-    bot_main.app.job_queue.run_repeating(update_contacts_job, interval=86400, first=300.0)
+    # Schedule weekly contacts update job (every 24 hours)
+    bot_main.app.job_queue.run_repeating(update_contacts_job, interval=604800, first=300.0)
 
     # Register command handlers (users)
     bot_main.app.add_handler(CommandHandler("start", start))
