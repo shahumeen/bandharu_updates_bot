@@ -4,8 +4,9 @@ from peewee import JOIN
 from models import *
 
 
+from datetime import timezone
 def current_time():
-    return datetime.now()
+    return datetime.now(timezone.utc)
 
 
 # If a vessel just arrived, ignore a transient 'departure' for this many seconds

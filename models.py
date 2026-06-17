@@ -13,8 +13,9 @@ from peewee import (
 from datetime import datetime, timedelta
 
 
+from datetime import timezone
 def current_time():
-    return datetime.now()
+    return datetime.now(timezone.utc)
 
 
 # -------------------------
