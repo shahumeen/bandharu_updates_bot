@@ -1,6 +1,6 @@
 from telegram.helpers import escape_markdown
 from telegram.error import Forbidden, BadRequest
-from datetime import datetime
+from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 import re
 import os
@@ -17,6 +17,7 @@ from models import (
     PortLogNotification,
     Port,
 )
+from handlers.stats import send_port_stats
 from utils import _seconds_between, _format_duration, utc_to_maldives_time
 from models import Vessel
 from typing import Optional, Any
@@ -729,6 +730,8 @@ async def notify_job(context):
     )
     print("_" * 50 + "\n", flush=True)
 
+    await send_island_stats_daily_job(context)
+
 
 async def send_db_backup(context) -> None:
     """Send the SQLite database file to the backup chat every hour."""
@@ -822,3 +825,44 @@ async def update_contacts_job(context) -> None:
                 )
             except Exception as notify_err:
                 print(f"Failed to notify admin of contacts update error: {notify_err}", flush=True)
+
+# Track last sent date to avoid duplicate sends
+_last_island_stats_sent_date = None
+
+async def send_island_stats_daily_job(context) -> None:
+    """Send island stats to all island channels at 00:00 (within 5-minute window)."""
+    global _last_island_stats_sent_date
+    
+    try:
+        mv_tz = ZoneInfo("Indian/Maldives")
+        now = datetime.now(timezone.utc).astimezone(mv_tz)
+        
+        # Only allow sending during 00:00-00:05 window
+        if not (now.hour == 0 and now.minute < 5):
+            return
+        
+        # Check if we've already sent today
+        today = now.date()
+        if _last_island_stats_sent_date == today:
+            return
+        
+        print(f"Sending daily island stats at {now.strftime('%H:%M')}", flush=True)
+        
+        # Get all island channels (chat_type == 'channel' with main_port set)
+        channels = User.select().where(
+            (User.chat_type == 'channel') & 
+            (User.main_port.is_null(False))
+        )
+        
+        for channel in channels:
+            try:
+                await send_port_stats(context, channel.chat_id, channel.main_port.id)
+                await asyncio.sleep(RATE_LIMIT_DELAY)
+            except Exception as e:
+                print(f"Error sending stats to channel {channel.chat_id}: {e}", flush=True)
+        
+        _last_island_stats_sent_date = today
+        print(f"Daily island stats sent successfully", flush=True)
+        
+    except Exception as e:
+        print(f"Error in send_island_stats_daily_job: {e}", flush=True)
