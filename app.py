@@ -141,7 +141,7 @@ def _run_bot() -> None:
     bot_main.app.job_queue.run_repeating(update_contacts_job, interval=604800, first=3600.0)
 
     # Schedule daily database vacuum job
-    bot_main.app.job_queue.run_repeating(_vacuum_database_job, interval=86400, first=10.0)
+    bot_main.app.job_queue.run_repeating(_vacuum_database_job, interval=86400, first=60.0)
 
     # Register command handlers (users)
     bot_main.app.add_handler(CommandHandler("start", start))
