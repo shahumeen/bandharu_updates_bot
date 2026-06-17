@@ -10,7 +10,7 @@ from peewee import (
     IntegerField,
     Check,
 )
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 def current_time():
@@ -111,6 +111,14 @@ class PortLog(BaseModel):
     )
     # Track whether this portlog has been marked as notified globally (optional)
     notified = BooleanField(default=False, index=True)
+
+    @classmethod
+    def cleanup_old_rows(cls, days: int = 11) -> int:
+        """Delete PortLog rows older than the specified number of days. Returns number of rows deleted."""
+        
+        cutoff_time = datetime.now() - timedelta(days=days)
+        deleted = cls.delete().where(cls.timestamp < cutoff_time).execute()
+        return deleted
 
 
 class PortLogNotification(BaseModel):

@@ -20,7 +20,7 @@ FOLLOWME_API_KEY = os.getenv("FOLLOWME_API")
 def _reset_portlogs_on_startup() -> None:
     """Reset all portlogs notified status to true on bot startup."""
     try:
-        from models import PortLog
+        from models import PortLog, db
 
         # Update only portlogs with notified=False to set notified=True
         updated_count = PortLog.update({PortLog.notified: True}).where(
@@ -30,6 +30,10 @@ def _reset_portlogs_on_startup() -> None:
             f"Reset {updated_count} portlogs notified status to true on startup.",
             flush=True,
         )
+        
+        # Vacuum the database on startup
+        db.execute_sql("VACUUM")
+        print("Database vacuumed on startup", flush=True)
     except Exception as e:
         print(f"Error resetting portlogs on startup: {e}", flush=True)
         traceback.print_exc()
@@ -44,6 +48,18 @@ def _start_api_calls_loop() -> None:
         api_calls.main()
     except Exception:
         # Print full traceback to make debugging on Heroku logs easier
+        traceback.print_exc()
+
+
+async def _vacuum_database_job(context) -> None:
+    """Background job to vacuum the database daily."""
+    try:
+        from models import db
+
+        db.execute_sql("VACUUM")
+        print("Database vacuumed (daily job)", flush=True)
+    except Exception as e:
+        print(f"Error vacuuming database: {e}", flush=True)
         traceback.print_exc()
 
 
@@ -122,7 +138,10 @@ def _run_bot() -> None:
     bot_main.app.job_queue.run_repeating(send_db_backup, interval=21600, first=120.0)
 
     # Schedule weekly contacts update job (every 24 hours)
-    bot_main.app.job_queue.run_repeating(update_contacts_job, interval=604800, first=300.0)
+    bot_main.app.job_queue.run_repeating(update_contacts_job, interval=604800, first=3600.0)
+
+    # Schedule daily database vacuum job
+    bot_main.app.job_queue.run_repeating(_vacuum_database_job, interval=86400, first=10.0)
 
     # Register command handlers (users)
     bot_main.app.add_handler(CommandHandler("start", start))

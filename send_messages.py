@@ -97,6 +97,7 @@ async def _handle_send_failure(chat_id: int, e: Exception, context) -> None:
         "bot was banned from the channel chat",
         "bot is not a member of the supergroup chat",
         "bot is not a member of the channel chat",
+        "chat not found",
     ]
 
     # Ambiguous or permission-related indicators; do NOT auto-delete users/chats

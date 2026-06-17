@@ -2,6 +2,7 @@ import time
 from utils import update_db_with_api
 import os
 from dotenv import load_dotenv
+from models import PortLog
 
 load_dotenv()
 FOLLOWME_API_KEY = os.getenv("FOLLOWME_API")
@@ -15,6 +16,11 @@ def main():
             try:
                 update_db_with_api(FOLLOWME_API_KEY)
                 print("Api update done", flush=True)
+                
+                # Clean up old PortLog rows to keep table under 100k rows
+                deleted = PortLog.cleanup_old_rows()
+                if deleted > 0:
+                    print(f"Cleaned up {deleted} old portlog rows", flush=True)
             except Exception as e:
                 print(f"API update failed: {str(e)}", flush=True)
 

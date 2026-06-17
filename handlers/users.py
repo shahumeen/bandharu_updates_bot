@@ -224,7 +224,7 @@ async def unrecognized_command(
     if not update.message or not update.message.text:
         return
     await update.message.reply_text(
-        "🤖 I didn't understand that message\n\n_👾 Please use the menu buttons below to interact with me_",
+        "🤖 I didn't understand that message\n\n_👾 Please use the menu buttons below to interact with me_\n\n🆘 Send /start if you don't see the buttons",
         parse_mode="MarkdownV2"
     )
 
